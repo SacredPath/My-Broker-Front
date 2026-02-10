@@ -112,21 +112,27 @@ class SignalsPage {
 
   async loadSignals() {
     try {
-      console.log('Loading signals from API...');
+      console.log('Loading signals from database...');
       
-      // Load signals using the Edge Function API
-      const { data, error } = await this.api.fetchEdge('signals_list', {
-        method: 'GET'
-      });
+      // Load signals from signals table using service client
+      const { data, error } = await window.API.serviceClient
+        .from('signals')
+        .select("id,title,category,risk_rating,description,price_usdt,access_days,type,pdf_path,is_active,created_at")
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('API error loading signals:', error);
+        console.error('Database error loading signals:', error);
         this.signals = [];
         return;
       }
       
-      this.signals = data?.signals || [];
-      console.log('Signals loaded from API:', this.signals.length, 'signals');
+      this.signals = (data || []).map(s => ({
+        ...s,
+        price_usdt: parseFloat(s.price_usdt) || 0
+      }));
+      
+      console.log('Signals loaded from database:', this.signals.length, 'signals');
     } catch (error) {
       console.error('Failed to load signals:', error);
       this.signals = [];
@@ -135,13 +141,31 @@ class SignalsPage {
 
   async loadUserAccess() {
     try {
-      console.log('Loading user signal access via REST API...');
+      console.log('Loading user signal access from database...');
       
-      // For now, use empty array since we don't have a signal access API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getUserSignalAccess(userId);
+      // Get current user ID
+      const userId = await this.api.getCurrentUserId();
+      if (!userId) {
+        console.log('No user ID found, skipping user access loading');
+        this.userAccess = [];
+        return;
+      }
+
+      // Load user signal access from signal_purchases table
+      const { data, error } = await window.API.serviceClient
+        .from('signal_purchases')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .gt('access_expires_at', new Date().toISOString());
       
-      this.userAccess = [];
+      if (error) {
+        console.error('Database error loading user access:', error);
+        this.userAccess = [];
+        return;
+      }
+      
+      this.userAccess = data || [];
       console.log('User signal access loaded:', this.userAccess.length, 'access records');
     } catch (error) {
       console.error('Failed to load user signal access:', error);
