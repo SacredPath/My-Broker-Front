@@ -219,22 +219,15 @@ class AuthService {
       // Create user profile in database
       if (data.user && !data.session) {
         // User created but email not confirmed (auto-confirm OFF)
-        console.log('Creating user profile with data:', profileData);
-        
+        console.log('// Create user profile in database with correct schema mapping');
         const profileDataToSave = {
+          email: data.user.email,
           display_name: profileData.displayName || '',
           phone: profileData.phone || '',
-          email_verified: false, // Default false, only set by Back Office
-          // Map address fields to match schema
-          address: `${profileData.address?.address_line1 || ''}${profileData.address?.address_line2 ? ', ' + profileData.address.address_line2 : ''}`,
-          city: profileData.address?.city || '',
-          state: profileData.address?.state || '',
           country: profileData.country || '',
-          postal_code: profileData.address?.postal_code || '',
-          // Map compliance fields - note: some fields don't exist in schema
-          date_of_birth: profileData.compliance?.dob || null,
-          // Store additional data in display_name or create notes field
-          bio: `Occupation: ${profileData.compliance?.occupation || 'Not provided'}. New to investing: ${profileData.compliance?.new_to_investing || 'Not provided'}. PEP: ${profileData.compliance?.pep || 'Not specified'}. Referral: ${profileData.referralCode || 'None'}`
+          // Map address fields to bio since address columns don't exist
+          bio: `Address: ${profileData.address?.address_line1 || ''} ${profileData.address?.address_line2 || ''}, ${profileData.address?.city || ''}, ${profileData.address?.state || ''} ${profileData.address?.postal_code || ''}. Occupation: ${profileData.compliance?.occupation || 'Not provided'}. New to investing: ${profileData.compliance?.new_to_investing || 'Not provided'}. PEP: ${profileData.compliance?.pep || 'Not specified'}. Referral: ${profileData.referralCode || 'None'}`,
+          email_verified: false // Default false, only set by Back Office
         };
         
         console.log('Final profile data to save:', profileDataToSave);
