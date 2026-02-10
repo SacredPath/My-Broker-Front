@@ -15,21 +15,36 @@ FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth')
 ORDER BY trigger_schema, event_object_table, trigger_name;
 
+-- Check for recent user registrations with potential duplicate phone numbers
+SELECT 
+    u.id,
+    u.email,
+    u.phone,
+    u.created_at,
+    u.email_confirmed_at,
+    u.last_sign_in_at,
+    u.raw_user_meta_data
+FROM auth.users u
+ORDER BY u.created_at DESC
+LIMIT 50;
+
+-- Check for any duplicate phone numbers in recent registrations
+SELECT 
+    phone,
+    COUNT(*) as count,
+    ARRAY_AGG(phone) as phone_list
+FROM auth.users 
+WHERE phone IN (
+        SELECT phone FROM auth.users u
+        WHERE u.created_at >= NOW() - INTERVAL '7 days'
+    )
+    AND phone IS NOT NULL
+GROUP BY phone
+HAVING COUNT(*) > 1
+ORDER BY count DESC, phone;
+
 -- Test the trigger function directly to see what it does
 -- SELECT public.handle_new_user();
-
--- Check the problematic function that's causing registration to fail
-SELECT 
-    routine_schema,
-    routine_name,
-    routine_type,
-    routine_definition
-FROM information_schema.routines 
-WHERE routine_schema IN ('public', 'auth')
-    AND routine_name = 'handle_new_user';
-
--- Test the function directly to see if it has syntax errors
--- SELECT public.handle_new_user(); -- This might fail if there are syntax issues
 
 -- Check if there are any other issues with the profiles table
 SELECT 
@@ -102,6 +117,19 @@ SELECT
 FROM pg_indexes 
 WHERE schemaname = 'auth'
 ORDER BY tablename, indexname;
+
+-- Check for recent user signups that might be related to the issue
+SELECT 
+    id,
+    email,
+    phone,
+    created_at,
+    email_confirmed_at,
+    raw_user_meta_data
+FROM auth.users u
+WHERE created_at >= NOW() - INTERVAL '1 day'
+ORDER BY created_at DESC
+LIMIT 10;
 
 -- Temporarily disable the problematic trigger to test registration
 -- ALTER TABLE auth.users DISABLE TRIGGER on_auth_user_created;
