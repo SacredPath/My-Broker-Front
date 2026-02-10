@@ -101,72 +101,73 @@ class AuthService {
   }
 
   // Register new user with email and password
-  async registerWithEmailPassword(email, password, profileData = {}) {
+  async registerWithEmailPassword(email, password, registrationData = {}) {
     try {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
-      // Validate email
-      try {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          throw new Error('Please enter a valid email address');
-        }
-      } catch (error) {
-        if (error.message.includes('valid email')) {
-          throw error;
-        }
-        console.error('Email validation regex error:', error);
-        throw new Error('Email validation failed');
-      }
+      console.log('Attempting signup with:', { email, passwordLength: password.length, profileData: registrationData });
 
-      // Validate password
-      if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
-      }
-
+      // First, create user without any metadata to avoid database trigger issues
       const { data, error } = await client.auth.signUp({
-        email: email.toLowerCase().trim(),
+        email,
         password,
         options: {
-          data: {
-            display_name: profileData.displayName || '',
-            phone: profileData.phone || ''
-          }
+          data: {} // Empty data object to avoid any issues
         }
       });
 
       if (error) {
-        throw this.handleAuthError(error);
+        console.error('Supabase signup error:', error);
+        throw error;
       }
 
-      // Create user profile in database
-      if (data.user && !data.session) {
-        // User created but email not confirmed (auto-confirm OFF)
-        await this.createUserProfile(data.user.id, {
-          email: data.user.email,
-          display_name: profileData.displayName || '',
-          phone: profileData.phone || '',
-          email_verified: false, // Default false, only set by Back Office
-          role: 'user',
-          created_at: new Date().toISOString()
-        });
+      console.log('Supabase signup successful:', data);
 
-        // Show "Check your email" message
+      // If user was created successfully, now create the profile
+      if (data.user && registrationData) {
+        console.log('Creating user profile after successful signup...');
+        const profileResult = await this.createUserProfile(data.user.id, {
+          ...registrationData,
+          email: email
+        });
+        
+        if (!profileResult.success) {
+          console.warn('Profile creation failed but user was created:', profileResult.error);
+          // Don't throw error here - user was created successfully
+        } else {
+          console.log('User profile created successfully');
+        }
+      }
+
+      // Show email confirmation modal
+      if (data.user && !data.session) {
         if (window.UI) {
-          const modalId = window.UI.createModal({
+          const modalId = 'email-confirmation-modal';
+          window.UI.createModal(modalId, {
             title: 'Check Your Email',
             body: `
-              <div class="email-confirmation">
-                <div class="confirmation-icon">📧</div>
-                <h3>Verification Email Sent</h3>
-                <p>We've sent a verification email to <strong>${data.user.email}</strong></p>
-                <p>Please check your inbox and click the verification link to activate your account.</p>
-                <div class="confirmation-tips">
-                  <h4>Didn't receive the email?</h4>
-                  <ul>
-                    <li>Check your spam folder</li>
-                    <li>Make sure the email address is correct</li>
+              <div class="text-center">
+                <div class="mb-4">
+                  <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-2">Verification Email Sent</h3>
+                  <p class="text-gray-600 mb-4">
+                    We've sent a verification email to <strong>${data.user.email}</strong>
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    Please check your inbox and click the verification link to complete your registration.
+                  </p>
+                </div>
+                <div class="text-left bg-gray-50 p-4 rounded-lg mb-4">
+                  <p class="text-sm font-medium mb-2">What's next?</p>
+                  <ul class="text-sm text-gray-600 space-y-1">
+                    <li>✓ Check your email inbox</li>
+                    <li>✓ Click the verification link</li>
+                    <li>✓ Come back to login</li>
                     <li>Wait a few minutes and try again</li>
                   </ul>
                 </div>
@@ -193,12 +194,7 @@ class AuthService {
       return { success: true, data };
     } catch (error) {
       console.error('Registration failed:', error);
-      
-      if (window.Notify) {
-        window.Notify.error(error.message || 'Registration failed');
-      }
-
-      return { success: false, error };
+      throw this.handleAuthError(error);
     }
   }
 
