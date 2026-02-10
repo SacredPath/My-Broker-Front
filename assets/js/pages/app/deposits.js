@@ -210,7 +210,7 @@ class DepositsPage {
     if (method.method_type === 'crypto') {
       // Convert hours to minutes for crypto methods
       const processingTime = method.processing_time_hours || 0;
-      const displayTime = processingTime === 1 ? '60 minutes' : `${processingTime} hours`;
+      const displayTime = `${processingTime * 60} minutes`;
       
       keyFeatures = [
         `Network: ${method.network || 'Not set'}`,
@@ -527,7 +527,7 @@ class DepositsPage {
                 <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : 2)}</div>
                 <div style="margin-bottom: 8px;"><strong>Method:</strong> ${method.method_name}</div>
                 <div style="margin-bottom: 8px;"><strong>To:</strong> <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${paymentAddress || 'N/A'}</code></div>
-                <div><strong>Processing Time:</strong> ${method.method_type === 'crypto' && (method.processing_time_hours || 0) === 1 ? '60 minutes' : `${method.processing_time_hours || 24} hours`}</div>
+                <div><strong>Processing Time:</strong> ${method.method_type === 'crypto' ? `${(method.processing_time_hours || 0) * 60} minutes` : `${method.processing_time_hours || 24} hours`}</div>
               </div>
             </div>
           </div>
