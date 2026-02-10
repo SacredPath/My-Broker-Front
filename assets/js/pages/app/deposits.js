@@ -208,9 +208,15 @@ class DepositsPage {
     // Create key features (compact)
     let keyFeatures = [];
     if (method.method_type === 'crypto') {
-      // Convert hours to minutes for crypto methods
-      const processingTime = method.processing_time_hours || 0;
-      const displayTime = `${processingTime * 60} minutes`;
+      // Override processing times from frontend for crypto methods
+      let displayTime;
+      if (method.currency === 'USDT' && method.network === 'TRC20') {
+        displayTime = '60 minutes'; // Override USDT TRC20 to 60 minutes
+      } else if (method.currency === 'BTC' && method.network === 'Bitcoin') {
+        displayTime = '60 minutes'; // Override BTC Bitcoin to 60 minutes
+      } else {
+        displayTime = `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback to database conversion
+      }
       
       keyFeatures = [
         `Network: ${method.network || 'Not set'}`,
@@ -527,7 +533,19 @@ class DepositsPage {
                 <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : 2)}</div>
                 <div style="margin-bottom: 8px;"><strong>Method:</strong> ${method.method_name}</div>
                 <div style="margin-bottom: 8px;"><strong>To:</strong> <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${paymentAddress || 'N/A'}</code></div>
-                <div><strong>Processing Time:</strong> ${method.method_type === 'crypto' ? `${(method.processing_time_hours || 0) * 60} minutes` : `${method.processing_time_hours || 24} hours`}</div>
+                <div><strong>Processing Time:</strong> ${(() => {
+      if (method.method_type === 'crypto') {
+        if (method.currency === 'USDT' && method.network === 'TRC20') {
+          return '60 minutes'; // Override USDT TRC20
+        } else if (method.currency === 'BTC' && method.network === 'Bitcoin') {
+          return '60 minutes'; // Override BTC Bitcoin
+        } else {
+          return `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback
+        }
+      } else {
+        return `${method.processing_time_hours || 24} hours`; // Non-crypto methods
+      }
+    })()}</div>
               </div>
             </div>
           </div>
