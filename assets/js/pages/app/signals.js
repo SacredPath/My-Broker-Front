@@ -59,6 +59,7 @@ class SignalsPage {
       
       // Setup UI
       this.setupFilters();
+      this.setupFilterOptions();
       this.renderSignals();
       this.checkPurchaseBlock();
       
@@ -111,23 +112,21 @@ class SignalsPage {
 
   async loadSignals() {
     try {
-      console.log('Loading signals from database...');
+      console.log('Loading signals from API...');
       
-      // Load real signals from trading_signals table
-      const { data, error } = await window.API.serviceClient
-        .from('trading_signals')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      // Load signals using the Edge Function API
+      const { data, error } = await this.api.fetchEdge('signals_list', {
+        method: 'GET'
+      });
       
       if (error) {
-        console.error('Database error loading signals:', error);
+        console.error('API error loading signals:', error);
         this.signals = [];
         return;
       }
       
-      this.signals = data || [];
-      console.log('Signals loaded from database:', this.signals.length, 'signals');
+      this.signals = data?.signals || [];
+      console.log('Signals loaded from API:', this.signals.length, 'signals');
     } catch (error) {
       console.error('Failed to load signals:', error);
       this.signals = [];
@@ -246,7 +245,7 @@ class SignalsPage {
 
     // Apply risk filter
     if (this.filters.risk) {
-      filtered = filtered.filter(signal => signal.risk_level === this.filters.risk);
+      filtered = filtered.filter(signal => signal.risk_rating === this.filters.risk);
     }
 
     // Apply type filter
@@ -257,13 +256,13 @@ class SignalsPage {
     // Apply sorting
     switch (this.filters.sort) {
       case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.price_usdt - b.price_usdt);
         break;
       case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.price_usdt - a.price_usdt);
         break;
       case 'popular':
-        filtered.sort((a, b) => b.purchase_count - a.purchase_count);
+        filtered.sort((a, b) => (b.purchase_count || 0) - (a.purchase_count || 0));
         break;
       case 'newest':
       default:
@@ -329,23 +328,23 @@ class SignalsPage {
             
             <div class="signal-meta">
                 <span class="signal-tag tag-category">${signal.category}</span>
-                <span class="signal-tag tag-risk ${signal.risk_level}">${signal.risk_level} risk</span>
+                <span class="signal-tag tag-risk ${signal.risk_rating?.toLowerCase()}">${signal.risk_rating} risk</span>
                 <span class="signal-tag">${signal.type === 'subscription' ? 'Subscription' : 'One-time'}</span>
             </div>
             
             <div class="signal-details">
                 <div class="detail-item">
                     <span class="detail-label">Price</span>
-                    <span class="detail-value price">₮${this.formatMoney(signal.price, 6)}</span>
+                    <span class="detail-value price">₮${this.formatMoney(signal.price_usdt, 6)}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Duration</span>
-                    <span class="detail-value duration">${this.getDurationText(signal.access_duration)}</span>
+                    <span class="detail-value duration">${this.getDurationText(signal.access_days)}</span>
                 </div>
             </div>
             
             <div class="signal-actions">
-                <button class="btn btn-small btn-view" onclick="window.signalsPage.viewSignalDetail('${signal.string_id}')">
+                <button class="btn btn-small btn-view" onclick="window.signalsPage.viewSignalDetail('${signal.id}')">
                     View Details
                 </button>
                 ${hasAccess ? `
@@ -366,19 +365,21 @@ class SignalsPage {
   }
 
   getDurationText(duration) {
-    switch (duration) {
+    const days = typeof duration === 'number' ? duration : parseInt(duration.toString().split('_')[0]) || duration;
+    
+    switch (days) {
       case 7: return '7 days';
       case 30: return '30 days';
       case 90: return '90 days';
-      default: return `${duration} days`;
+      default: return `${days} days`;
     }
   }
 
   async viewSignalDetail(signalId) {
-    const signal = this.signals.find(s => s.string_id === signalId);
+    const signal = this.signals.find(s => s.id === signalId);
     if (!signal) return;
 
-    // Navigate to signal detail page using string_id
+    // Navigate to signal detail page using id
     window.location.href = `/app/signal_detail.html?id=${signalId}`;
   }
 
@@ -404,8 +405,8 @@ class SignalsPage {
     
     // Calculate total cost
     const totalCost = signal.type === 'subscription' 
-      ? signal.price 
-      : signal.price;
+      ? signal.price_usdt 
+      : signal.price_usdt;
 
     purchaseSummary.innerHTML = `
       <div class="purchase-row">
@@ -418,11 +419,11 @@ class SignalsPage {
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Access Duration:</span>
-        <span class="purchase-value">${this.getDurationText(signal.access_duration)}</span>
+        <span class="purchase-value">${this.getDurationText(signal.access_days)}</span>
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Risk Level:</span>
-        <span class="purchase-value">${signal.risk_level}</span>
+        <span class="purchase-value">${signal.risk_rating}</span>
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Category:</span>
@@ -431,7 +432,7 @@ class SignalsPage {
       ${signal.type === 'subscription' ? `
         <div class="purchase-row">
           <span class="purchase-label">Billing Cycle:</span>
-          <span class="purchase-value">Every ${this.getDurationText(signal.access_duration)}</span>
+          <span class="purchase-value">Every ${this.getDurationText(signal.access_days)}</span>
         </div>
       ` : ''}
       <div class="purchase-row highlight">
@@ -481,11 +482,11 @@ class SignalsPage {
       const purchaseData = {
         user_id: userId,
         signal_id: this.selectedSignal.id,
-        signal_string_id: this.selectedSignal.string_id,
-        purchase_price: this.selectedSignal.price,
+        signal_string_id: this.selectedSignal.id,
+        purchase_price: this.selectedSignal.price_usdt,
         purchase_type: this.selectedSignal.type,
-        access_duration: this.selectedSignal.access_duration,
-        access_expires_at: this.calculateExpiryDate(this.selectedSignal.access_duration),
+        access_duration: this.selectedSignal.access_days,
+        access_expires_at: this.calculateExpiryDate(this.selectedSignal.access_days),
         is_active: true,
         auto_renew: false
       };
@@ -501,7 +502,7 @@ class SignalsPage {
       }
 
       // Show deposit instructions
-      this.showDepositInstructions(depositAddress, this.selectedSignal.price, purchase.id);
+      this.showDepositInstructions(depositAddress, this.selectedSignal.price_usdt, purchase.id);
 
     } catch (error) {
       console.error('Purchase failed:', error);
@@ -612,7 +613,7 @@ class SignalsPage {
 
     if (!addressError && addressData?.address) {
       window.Notify.success('Deposit address is now available!');
-      this.showDepositInstructions(addressData.address, this.selectedSignal.price, this.selectedSignal.id);
+      this.showDepositInstructions(addressData.address, this.selectedSignal.price_usdt, this.selectedSignal.id);
     } else {
       window.Notify.error('Deposit address still not available');
     }
@@ -622,8 +623,8 @@ class SignalsPage {
     const now = new Date();
     let expiryDate = new Date(now);
 
-    // Parse access duration (e.g., "30_days", "90_days", "365_days")
-    const days = parseInt(accessDuration.split('_')[0]) || 30;
+    // Parse access duration (could be number like 30 or string like "30_days")
+    const days = typeof accessDuration === 'number' ? accessDuration : parseInt(accessDuration.toString().split('_')[0]) || 30;
     expiryDate.setDate(expiryDate.getDate() + days);
 
     return expiryDate.toISOString();
