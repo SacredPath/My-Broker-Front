@@ -1,10 +1,7 @@
 /**
- * Deposits Page Controller
- * Handles deposit methods, payment processing, and transaction tracking
+ * Deposits Page Controller - Fixed Version
+ * Handles database-driven deposit methods with enhanced modal interface
  */
-
-// Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
 
 class DepositsPage {
   constructor() {
@@ -13,7 +10,25 @@ class DepositsPage {
     this.depositSettings = null;
     this.currentOrder = null;
     this.timerInterval = null;
-    this.init();
+    
+    // Get API client
+    this.api = window.API || null;
+
+    if (!this.api) {
+      console.warn("DepositsPage: API client not found on load. Retrying in 500ms...");
+      setTimeout(() => this.retryInit(), 500);
+    } else {
+      this.init();
+    }
+  }
+
+  retryInit() {
+    this.api = window.API || null;
+    if (this.api) {
+      this.init();
+    } else {
+      setTimeout(() => this.retryInit(), 500);
+    }
   }
 
   async init() {
@@ -28,231 +43,717 @@ class DepositsPage {
 
   async setupPage() {
     try {
-      // Initialize app shell (sidebar, navigation, etc.)
-      if (window.AppShell) {
-        window.AppShell.initShell();
-      }
-      
       // Load data
       await this.loadUserData();
       await this.loadDepositSettings();
+      
+      // Check for upgrade context
+      this.checkUpgradeContext();
       
       // Setup UI
       this.setupMethodCards();
       this.setupForms();
       this.setupURLParameters();
       
+      // Hide fallback message
+      const fallbackMsg = document.getElementById('js-fallback-message');
+      if (fallbackMsg) {
+        fallbackMsg.style.display = 'none';
+      }
+      
       console.log('Deposits page setup complete');
     } catch (error) {
-      console.error('Error setting up deposits page:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load deposit options');
-      }
+      console.error('Failed to setup deposits page:', error);
+      this.showError('Failed to load deposit page. Please refresh.');
     }
   }
 
-  loadAppShell() {
-    const shellContainer = document.getElementById('app-shell-container');
-    if (shellContainer) {
-      fetch('/src/components/app-shell.html')
-        .then(response => response.text())
-        .then(html => {
-          shellContainer.innerHTML = html;
-          
-          if (window.AppShell) {
-            window.AppShell.setupShell();
-          }
-        })
-        .catch(error => {
-          console.error('Failed to load app shell:', error);
-        });
+  checkUpgradeContext() {
+    // Check if there's an upgrade context from tiers page
+    const upgradeContext = localStorage.getItem('upgradeContext');
+    if (!upgradeContext) return;
+
+    try {
+      const context = JSON.parse(upgradeContext);
+      
+      // Store upgrade context for later use
+      this.upgradeContext = context;
+      
+      // Show upgrade notification
+      if (window.Notify) {
+        window.Notify.info(`🚀 Upgrade in progress: Need to deposit ${context.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(context.upgradeAmount, context.currency === 'USDT' ? 6 : 2)} to upgrade to tier ${context.targetTierId}`);
+      }
+      
+      console.log('Upgrade context loaded:', context);
+      
+    } catch (error) {
+      console.error('Error parsing upgrade context:', error);
+      localStorage.removeItem('upgradeContext');
     }
   }
 
   async loadUserData() {
     try {
-      this.currentUser = await window.AuthService.getCurrentUserWithProfile();
-      
-      if (!this.currentUser) {
-        throw new Error('User not authenticated');
-      }
+      const userId = await this.api.getCurrentUserId();
+      this.currentUser = { id: userId };
+      console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
-      throw error;
+      this.currentUser = null;
     }
   }
 
   async loadDepositSettings() {
     try {
-      // Fetch deposit settings from app_settings
-      const { data, error } = await window.API.fetchEdge('deposit_settings', {
-        method: 'GET'
-      });
+      console.log('Loading deposit methods from database...');
+      
+      // Load deposit methods from database
+      const { data, error } = await window.API.serviceClient
+        .from('deposit_methods')
+        .select('*')
+        .eq('is_active', true)
+        .order('method_type', { ascending: true });
 
       if (error) {
-        throw error;
+        console.error('Database error loading deposit methods:', error);
+        throw new Error(`Failed to load deposit methods: ${error.message}`);
       }
-
-      // Use real settings from database
-      const settings = data.settings || {};
+      
       this.depositSettings = {
-        methods: {
-          usdt_trc20: {
-            enabled: true,
-            name: 'USDT TRC20',
-            description: 'Direct USDT transfer',
-            features: [`${settings.usdt_match_window_minutes || 30}-minute window`, 'Auto-detection'],
-            min_amount: 10,
-            matching_window_minutes: settings.usdt_match_window_minutes || 30,
-            address: settings.usdt_trc20_address,
-            overpay_tolerance: settings.usdt_overpay_tolerance || 5000
-          },
-          stripe: {
-            enabled: true,
-            name: 'Stripe Payment',
-            description: 'Credit/debit card payment',
-            features: ['Instant verification', 'Secure processing'],
-            min_amount: 50,
-            payment_link: settings.stripe_hosted_link
-          },
-          paypal: {
-            enabled: true,
-            name: 'PayPal Invoice',
-            description: 'PayPal invoice system',
-            features: ['Invoice generation', 'Global support'],
-            min_amount: 50,
-            invoice_link: settings.paypal_invoice_link
-          },
-          bank: {
-            enabled: true,
-            name: 'Bank Transfer',
-            description: 'Direct bank transfer',
-            features: ['Manual verification', 'Supports all banks'],
-            min_amount: 100,
-            details: settings.bank_details
-          }
-        }
+        methods: data || [],
+        currencies: [...new Set((data || []).map(method => method.currency))],
+        methodTypes: [...new Set((data || []).map(method => method.method_type))]
       };
+      
+      console.log('Deposit methods loaded from database:', this.depositSettings.methods.length, 'methods');
     } catch (error) {
-      console.error('Failed to load deposit settings:', error);
-      
-      // Handle 401/Authentication errors
-      if (error.code === 'AUTH_REQUIRED' || error.message.includes('401') || error.message.includes('Authentication required')) {
-        this.showSessionExpiredModal();
-        return;
+      console.error('Failed to load deposit methods:', error);
+      if (window.Notify) {
+        window.Notify.error('Failed to load deposit methods. Please try again.');
       }
-      
-      // Show empty state for other errors
-      this.renderEmptyState('Failed to load deposit options');
+      this.depositSettings = {
+        methods: [],
+        currencies: [],
+        methodTypes: []
+      };
     }
-  }
-
-  showSessionExpiredModal() {
-    if (window.showModal) {
-      window.showModal({
-        title: 'Session expired',
-        message: 'Please log in again to continue.',
-        primaryText: 'Go to login',
-        primaryAction: () => {
-          window.location.href = '/login.html';
-        }
-      });
-    } else {
-      alert('Session expired. Please log in again.');
-      window.location.href = '/login.html';
-    }
-  }
-
-  renderEmptyState(message) {
-    const methodsContainer = document.getElementById('deposit-methods');
-    if (!methodsContainer) return;
-    
-    methodsContainer.innerHTML = `
-      <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="15" y1="9" x2="9" y2="15"></line>
-          <line x1="9" y1="9" x2="15" y2="15"></line>
-        </svg>
-        <h3>Deposit options unavailable</h3>
-        <p>${message}</p>
-      </div>
-    `;
   }
 
   setupMethodCards() {
     const methodsContainer = document.getElementById('deposit-methods');
-    if (!methodsContainer) return;
+    if (!methodsContainer) {
+      console.error('Deposit methods container not found');
+      return;
+    }
 
-    const methods = [
-      {
-        id: 'bank',
-        name: this.depositSettings.methods.bank.name,
-        description: this.depositSettings.methods.bank.description,
-        features: this.depositSettings.methods.bank.features,
-        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="7" y1="21" x2="17" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>'
-      },
-      {
-        id: 'stripe',
-        name: this.depositSettings.methods.stripe.name,
-        description: this.depositSettings.methods.stripe.description,
-        features: this.depositSettings.methods.stripe.features,
-        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>'
-      },
-      {
-        id: 'paypal',
-        name: this.depositSettings.methods.paypal.name,
-        description: this.depositSettings.methods.paypal.description,
-        features: this.depositSettings.methods.paypal.features,
-        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"></path><path d="M12 14H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"></path></svg>'
-      },
-      {
-        id: 'usdt_trc20',
-        name: this.depositSettings.methods.usdt_trc20.name,
-        description: this.depositSettings.methods.usdt_trc20.description,
-        features: this.depositSettings.methods.usdt_trc20.features,
-        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>'
+    console.log('DEBUG: setupMethodCards called with methods:', this.depositSettings.methods);
+    console.log('DEBUG: Methods array length:', this.depositSettings.methods?.length);
+    console.log('DEBUG: About to map methods and create cards...');
+
+    console.log('Setting up deposit methods:', this.depositSettings);
+
+    if (!this.depositSettings.methods || this.depositSettings.methods.length === 0) {
+      console.log('No deposit methods available, showing empty state');
+      methodsContainer.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+          <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.6;">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+          <h3 style="color: #000000; margin: 16px 0 8px 0; font-weight: 700; text-shadow: 0 2px 4px rgba(255,255,255,0.5);">No Deposit Methods Available</h3>
+          <p style="color: #1F2937; margin: 0; font-weight: 500; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">Deposit methods are currently not available. Please contact support or check back later.</p>
+          <button onclick="window.location.reload()" style="margin-top: 20px; background: #3B82F6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+            Refresh Page
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    console.log('Creating', this.depositSettings.methods.length, 'deposit method cards');
+
+    // Create grid container for cards with enhanced styling
+    const cardsHTML = this.depositSettings.methods.map(method => {
+      console.log('DEBUG: Mapping method:', method.method_name, 'type:', method.method_type);
+      return this.createMethodCard(method);
+    }).join('');
+    
+    console.log('DEBUG: Generated cards HTML length:', cardsHTML.length);
+    
+    methodsContainer.innerHTML = `
+      <div class="deposit-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0;">
+        ${cardsHTML}
+      </div>
+    `;
+
+    console.log('Deposit methods cards created successfully');
+  }
+
+  createMethodCard(method) {
+    console.log('DEBUG: createMethodCard called with:', {
+      method_name: method.method_name,
+      method_type: method.method_type,
+      currency: method.currency,
+      network: method.network,
+      is_active: method.is_active
+    });
+    
+    // Unique colors for each specific method
+    const methodSpecificColors = {
+      'USDT TRC20': { bg: '#10B981', border: '#059669', hover: '#047857' },
+      'USDT ERC20': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' },
+      'ACH Bank Transfer': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' },
+      'PayPal Payment': { bg: '#F59E0B', border: '#D97706', hover: '#B45309' }
+    };
+
+    // Fallback colors for method types
+    const methodTypeColors = {
+      'crypto': { bg: '#10B981', border: '#059669', hover: '#047857' },
+      'ach': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' }, 
+      'paypal': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' }
+    };
+
+    const colors = methodSpecificColors[method.method_name] || methodTypeColors[method.method_type] || { bg: '#6B7280', border: '#4B5563', hover: '#374151' };
+    
+    // Method icons
+    const methodIcons = {
+      'crypto': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>',
+      'ach': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="7" y1="21" x2="17" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+      'paypal': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"></path><path d="M12 14H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"></path></svg>'
+    };
+    
+    // Create key features (compact)
+    let keyFeatures = [];
+    if (method.method_type === 'crypto') {
+      // Override processing times from frontend for crypto methods
+      let displayTime;
+      console.log('DEBUG: Processing crypto method:', {
+        method_name: method.method_name,
+        currency: method.currency,
+        network: method.network,
+        processing_time_hours: method.processing_time_hours
+      });
+      
+      if (method.currency === 'USDT') {
+        displayTime = '60 minutes'; // Override all USDT to 60 minutes
+        console.log('DEBUG: USDT override applied - displayTime:', displayTime);
+      } else if (method.currency === 'BTC') {
+        displayTime = '60 minutes'; // Override all BTC to 60 minutes
+        console.log('DEBUG: BTC override applied - displayTime:', displayTime);
+      } else {
+        displayTime = `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback to database conversion
+        console.log('DEBUG: Fallback applied - displayTime:', displayTime);
       }
-    ];
+      
+      keyFeatures = [
+        `Network: ${method.network || 'Not set'}`,
+        `Currency: ${method.currency}`,
+        `Min: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`,
+        `Processing: ${displayTime}`
+      ];
+      
+      console.log('DEBUG: Final keyFeatures:', keyFeatures);
+    } else if (method.method_type === 'ach') {
+      keyFeatures = [
+        `Bank: ${method.bank_name || 'Not set'}`,
+        `Account: ${method.account_number || '****1234'}`,
+        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
+        `Processing: ${method.processing_time_hours || 72} hours`
+      ];
+    } else if (method.method_type === 'paypal') {
+      keyFeatures = [
+        `Email: ${method.paypal_email || 'Not set'}`,
+        `Business: ${method.paypal_business_name || 'Not set'}`,
+        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
+        `Processing: ${method.processing_time_hours || 24} hours`
+      ];
+    }
 
-    methodsContainer.innerHTML = methods.map(method => `
-      <div class="method-card" data-method="${method.id}" onclick="window.depositsPage.selectMethod('${method.id}')">
-        <div class="method-header">
-          <div class="method-icon">${method.icon}</div>
-          <div class="method-info">
-            <div class="method-name">${method.name}</div>
-            <div class="method-description">${method.description}</div>
+    return `
+      <div class="deposit-method-card" data-method="${method.id}" onclick="window.depositsPage.selectMethod('${method.id}')" style="background: linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%); border: 2px solid ${colors.border}; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; min-height: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" onmouseover="this.style.transform='translateY(-3px) scale(1.02)'; this.style.boxShadow='0 8px 25px ${colors.bg}60'; this.style.borderColor='${colors.hover}'; this.style.background='linear-gradient(135deg, ${colors.bg}50 0%, ${colors.bg}70 100%)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'; this.style.borderColor='${colors.border}'; this.style.background='linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%)';">
+        ${this.upgradeContext ? `
+          <div style="position: absolute; top: 8px; right: 8px; background: #10B981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 10;">
+            🚀 UPGRADE
+          </div>
+        ` : ''}
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${colors.bg}, ${colors.hover});"></div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <div style="background: ${colors.bg}20; color: ${colors.bg}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px; transition: all 0.3s ease; border: 1px solid ${colors.bg}30;" onmouseover="this.style.background='${colors.bg}30'; this.style.transform='scale(1.1)'; this.style.borderColor='${colors.bg}50';" onmouseout="this.style.background='${colors.bg}20'; this.style.transform='scale(1)'; this.style.borderColor='${colors.bg}30';">
+            ${methodIcons[method.method_type] || methodIcons['crypto']}
+          </div>
+          <div style="flex: 1;">
+            <h3 style="color: #000000; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${method.method_name}</h3>
+            <p style="color: #1F2937; margin: 0; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.3);">${method.method_type.toUpperCase()}</p>
           </div>
         </div>
-        <div class="method-features">
-          ${method.features.map(feature => `
-            <div class="feature-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              ${feature}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+          ${keyFeatures.map((feature, index) => `
+            <div style="color: #000000; display: flex; align-items: center; padding: 3px 0; font-weight: 600;">
+              <span style="color: ${colors.bg}; margin-right: 4px; font-size: 9px; font-weight: 700;">●</span>
+              <span style="line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${feature}</span>
             </div>
           `).join('')}
         </div>
+        
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: #000000; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">
+              ${this.upgradeContext ? `Upgrade Amount: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : 2)}` : 'Click for details'}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: ${colors.bg}; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(2px)';" onmouseout="this.style.transform='translateX(0)';">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
       </div>
-    `).join('');
+    `;
+  }
+
+  selectMethod(methodId) {
+    // Find method data
+    const method = this.depositSettings.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    // Open deposit modal with method details
+    this.openDepositModal(method);
+  }
+
+  openDepositModal(method) {
+    const modal = document.getElementById('deposit-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    if (!modal || !modalContent) {
+      console.error('Modal elements not found');
+      return;
+    }
+
+    // Generate modal content
+    modalContent.innerHTML = this.generateModalContent(method);
+    
+    // Position modal above cards with higher z-index
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.right = '0';
+    modal.style.bottom = '0';
+    modal.style.zIndex = '9999';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.background = 'rgba(0, 0, 0, 0.8)';
+    modal.style.backdropFilter = 'blur(5px)';
+    
+    // Modal content styling
+    modalContent.style.position = 'relative';
+    modalContent.style.zIndex = '10000';
+    modalContent.style.maxWidth = '90%';
+    modalContent.style.maxHeight = '90vh';
+    modalContent.style.overflow = 'auto';
+    modalContent.style.animation = 'modalSlideIn 0.3s ease-out';
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    // Animate in
+    setTimeout(() => {
+      modal.classList.add('active');
+    }, 10);
+    
+    // Add click outside to close
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        this.closeDepositModal();
+      }
+    };
+  }
+
+  closeDepositModal() {
+    const modal = document.getElementById('deposit-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  generateModalContent(method) {
+    const methodColors = {
+      'crypto': '#10B981',
+      'ach': '#3B82F6', 
+      'paypal': '#8B5CF6'
+    };
+
+    const color = methodColors[method.method_type] || '#6B7280';
+    
+    let paymentInfoHTML = '';
+    if (method.method_type === 'crypto') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Network:</strong> ${method.network || 'N/A'}<br>
+          <strong>Address:</strong> <code>${method.address || 'N/A'}</code>
+        </div>
+      `;
+    } else if (method.method_type === 'ach') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Bank:</strong> ${method.bank_name || 'N/A'}<br>
+          <strong>Account:</strong> ${method.account_number || 'N/A'}<br>
+          <strong>Routing:</strong> ${method.routing_number || 'N/A'}
+        </div>
+      `;
+    } else if (method.method_type === 'paypal') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Email:</strong> ${method.paypal_email || 'N/A'}<br>
+          <strong>Business:</strong> ${method.paypal_business_name || 'N/A'}
+        </div>
+      `;
+    }
+
+    return `
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 600px; margin: 0 auto; max-height: 90vh; overflow-y: auto;">
+        <div style="padding: 24px; border-bottom: 1px solid #333;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h2 style="color: white; font-size: 24px; font-weight: 600;">${method.method_name}</h2>
+            <button onclick="window.depositsPage.closeDepositModal()" style="background: transparent; border: 1px solid #666; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer;">×</button>
+          </div>
+        </div>
+        
+        <div style="padding: 24px;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.5;">${method.instructions}</p>
+          </div>
+          
+          <!-- Amount Input Section -->
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h4 style="color: white; font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+              ${this.upgradeContext ? '💰 Upgrade Amount' : '💰 Enter Deposit Amount'}
+            </h4>
+            ${this.upgradeContext ? `
+              <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="color: white; font-size: 14px; line-height: 1.5;">
+                  <div style="margin-bottom: 8px;"><strong>Upgrade Target:</strong> Tier ${this.upgradeContext.targetTierId}</div>
+                  <div style="margin-bottom: 8px;"><strong>Required Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : 2)}</div>
+                  <div><strong>After deposit:</strong> You'll be automatically upgraded!</div>
+                </div>
+              </div>
+            ` : ''}
+            <div style="display: grid; gap: 12px;">
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 8px;">Amount (${method.currency})</label>
+                <input type="number" 
+                       id="deposit-amount" 
+                       min="${method.min_amount || 1}" 
+                       max="${method.max_amount || 999999}" 
+                       step="0.01" 
+                       placeholder="0.00"
+                       value="${this.upgradeContext ? this.upgradeContext.upgradeAmount : ''}"
+                       style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 16px; font-weight: 500;"
+                       oninput="window.depositsPage.updateDepositAmount(this.value)"
+                       ${this.upgradeContext ? 'readonly' : ''}>
+                <div style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.6);">
+                  Minimum: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}
+                  ${method.max_amount ? ` | Maximum: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}` : ''}
+                  ${this.upgradeContext ? '<br><span style="color: #10B981;">✓ Amount pre-filled for upgrade</span>' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: ${color}10; border: 1px solid ${color}30; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h4 style="color: white; font-size: 18px; font-weight: 600;">📱 ${method.method_type === 'crypto' ? 'Crypto' : method.method_type === 'ach' ? 'Bank' : 'PayPal'} Deposit Information</h4>
+            <div style="display: grid; gap: 16px;">
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Network' : method.method_type === 'ach' ? 'Bank' : 'Email'}</label>
+                <div style="color: white; font-size: 16px; font-weight: 500;">${method.method_type === 'crypto' ? method.network || 'NULL' : method.method_type === 'ach' ? method.bank_name || 'NULL' : method.paypal_email || 'NULL'}</div>
+              </div>
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Wallet Address' : method.method_type === 'ach' ? 'Account Number' : 'Business Name'}</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace; word-break: break-all;">${method.method_type === 'crypto' ? method.address || 'NULL' : method.method_type === 'ach' ? method.account_number || 'NULL' : method.paypal_business_name || 'NULL'}</div>
+                  <button onclick="window.depositsPage.copyAddress('${method.method_type === 'crypto' ? method.address : method.method_type === 'ach' ? method.account_number : method.paypal_email}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                </div>
+              </div>
+              ${method.method_type === 'ach' ? `
+                <div>
+                  <label style="color: rgba(255,255,255,0.7); font-size: 12px;">Routing Number</label>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace;">${method.routing_number || 'NULL'}</div>
+                    <button onclick="window.depositsPage.copyAddress('${method.routing_number}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding: 24px; border-top: 1px solid #333; display: flex; gap: 12px; justify-content: flex-end;">
+          <button onclick="window.depositsPage.closeDepositModal()" style="background: #666; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">Close</button>
+          <button onclick="window.depositsPage.initiateDeposit('${method.id}')" style="background: ${color}; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;" id="deposit-submit-btn">💰 I've Sent Payment</button>
+        </div>
+      </div>
+    `;
+  }
+
+  updateDepositAmount(amount) {
+    this.currentDepositAmount = parseFloat(amount) || 0;
+    const submitBtn = document.getElementById('deposit-submit-btn');
+    if (submitBtn) {
+      submitBtn.textContent = `💰 I've Sent Payment (${this.formatMoney(this.currentDepositAmount, 2)})`;
+    }
+  }
+
+  initiateDeposit(methodId) {
+    // Find method
+    const method = this.depositSettings.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    // Validate amount
+    if (!this.currentDepositAmount || this.currentDepositAmount < (method.min_amount || 1)) {
+      if (window.Notify) {
+        window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`);
+      } else {
+        alert(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`);
+      }
+      return;
+    }
+
+    if (method.max_amount && this.currentDepositAmount > method.max_amount) {
+      if (window.Notify) {
+        window.Notify.error(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}`);
+      } else {
+        alert(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}`);
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    this.showConfirmationDialog(method);
+  }
+
+  showConfirmationDialog(method) {
+    const modal = document.getElementById('deposit-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    if (!modal || !modalContent) return;
+
+    // Get payment address
+    const paymentAddress = method.method_type === 'crypto' ? method.address : 
+                         method.method_type === 'ach' ? method.account_number : 
+                         method.paypal_email;
+
+    // Generate confirmation dialog content
+    modalContent.innerHTML = `
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 500px; margin: 0 auto;">
+        <div style="padding: 24px; border-bottom: 1px solid #333;">
+          <h3 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">⚠️ Confirm Deposit</h3>
+        </div>
+        
+        <div style="padding: 24px;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: rgba(255,255,255,0.8); margin: 0 0 16px 0; line-height: 1.5;">
+              Please confirm that you have sent the payment. Once confirmed, your deposit will be submitted for admin approval.
+            </p>
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <h4 style="color: #EF4444; margin: 0 0 8px 0;">⚠️ Confirmation Required</h4>
+              <div style="color: white; font-size: 16px; font-weight: 500; line-height: 1.5;">
+                <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : 2)}</div>
+                <div style="margin-bottom: 8px;"><strong>Method:</strong> ${method.method_name}</div>
+                <div style="margin-bottom: 8px;"><strong>To:</strong> <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${paymentAddress || 'N/A'}</code></div>
+                <div><strong>Processing Time:</strong> ${(() => {
+      console.log('DEBUG: Confirmation dialog processing time for:', {
+        method_name: method.method_name,
+        method_type: method.method_type,
+        currency: method.currency,
+        processing_time_hours: method.processing_time_hours
+      });
+      
+      if (method.method_type === 'crypto') {
+        if (method.currency === 'USDT') {
+          console.log('DEBUG: Confirmation USDT override applied');
+          return '60 minutes'; // Override all USDT
+        } else if (method.currency === 'BTC') {
+          console.log('DEBUG: Confirmation BTC override applied');
+          return '60 minutes'; // Override all BTC
+        } else {
+          console.log('DEBUG: Confirmation fallback applied');
+          return `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback
+        }
+      } else {
+        console.log('DEBUG: Non-crypto method, using hours');
+        return `${method.processing_time_hours || 24} hours`; // Non-crypto methods
+      }
+    })()}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="color: #3B82F6; margin: 0 0 8px 0;">📋 Important</h4>
+            <div style="color: white; font-size: 14px; line-height: 1.5;">
+              <div style="margin-bottom: 8px;">• Make sure you have sent the exact amount</div>
+              <div style="margin-bottom: 8px;">• Include your account ID in the payment reference</div>
+              <div style="margin-bottom: 8px;">• Keep your payment confirmation details</div>
+              <div>• Processing will begin once confirmed</div>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button onclick="window.depositsPage.closeDepositModal()" style="background: #666; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            <button onclick="window.depositsPage.submitDepositForApproval('${method.id}')" style="background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600;">✅ Yes, I've Sent Payment</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async submitDepositForApproval(methodId) {
+    const method = this.depositSettings.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    try {
+      // Show loading state
+      const modal = document.getElementById('deposit-modal');
+      const modalContent = modal.querySelector('.modal-content');
+      
+      modalContent.innerHTML = `
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 400px; margin: 0 auto; text-align: center; padding: 40px;">
+          <div style="color: white;">
+            <div style="width: 40px; height: 40px; margin: 0 auto 20px; border: 3px solid #10B981; border-radius: 50%; border-top-color: #10B981; border-right-color: #10B981; border-bottom-color: #10B981; border-left-color: #10B981; animation: spin 1s linear infinite;"></div>
+            <h3 style="margin: 0 0 16px 0;">Submitting for Approval...</h3>
+            <p style="color: rgba(255,255,255,0.7);">Please wait while we process your deposit request.</p>
+          </div>
+        </div>
+      `;
+
+      // Get user ID
+      const userId = await this.api.getCurrentUserId();
+      
+      // Create deposit request
+      const depositData = {
+        user_id: userId,
+        method_id: methodId,
+        method_name: method.method_name,
+        method_type: method.method_type,
+        currency: method.currency,
+        amount: this.currentDepositAmount,
+        network: method.network,
+        address: method.address,
+        bank_name: method.bank_name,
+        account_number: method.account_number,
+        routing_number: method.routing_number,
+        paypal_email: method.paypal_email,
+        paypal_business_name: method.paypal_business_name,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      // Insert into deposit_requests table
+      const { data, error } = await window.API.serviceClient
+        .from('deposit_requests')
+        .insert(depositData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating deposit request:', error);
+        throw new Error(`Failed to submit deposit request: ${error.message}`);
+      }
+
+      console.log('Deposit request created:', data);
+
+      // Show success message
+      modalContent.innerHTML = `
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 400px; margin: 0 auto; text-align: center; padding: 40px;">
+          <div style="color: white;">
+            <div style="width: 40px; height: 40px; margin: 0 auto 20px; background: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                <polyline points="20 6 9 17 4 4 12"></polyline>
+              </svg>
+            </div>
+            <h3 style="margin: 0 0 16px 0;">Deposit Submitted!</h3>
+            <p style="color: rgba(255,255,255,0.7); margin: 0 0 8px 0;">Your deposit request has been submitted for admin approval.</p>
+            <p style="color: rgba(255,255,255,0.7); margin: 0 0 16px 0;">Reference ID: ${data.id}</p>
+            <p style="color: rgba(255,255,255,0.7); font-size: 12px;">You will be notified once your deposit is approved.</p>
+          </div>
+          
+          <button onclick="window.depositsPage.closeDepositModal()" style="background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-top: 20px;">Done</button>
+        </div>
+      `;
+
+      // Close modal after delay
+      setTimeout(() => {
+        this.closeDepositModal();
+      }, 3000);
+
+      if (window.Notify) {
+        window.Notify.success('Deposit request submitted successfully! Awaiting admin approval.');
+      }
+
+    } catch (error) {
+      console.error('Error submitting deposit for approval:', error);
+      
+      // Show error state
+      const modal = document.getElementById('deposit-modal');
+      const modalContent = modal.querySelector('.modal-content');
+      
+      modalContent.innerHTML = `
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 400px; margin: 0 auto; text-align: center; padding: 40px;">
+          <div style="color: white;">
+            <div style="width: 40px; height: 40px; margin: 0 auto 20px; background: #EF4444; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </div>
+            <h3 style="margin: 0 0 16px 0;">Submission Failed</h3>
+            <p style="color: rgba(255,255,255,0.7); margin: 0 0 8px 0;">There was an error submitting your deposit request.</p>
+            <p style="color: rgba(255,255,255,0.7); font-size: 12px;">Please try again or contact support.</p>
+          </div>
+          
+          <button onclick="window.depositsPage.closeDepositModal()" style="background: #EF4444; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-top: 20px;">Close</button>
+        </div>
+      `;
+
+      if (window.Notify) {
+        window.Notify.error('Failed to submit deposit request. Please try again.');
+      }
+    }
+  }
+
+  copyAddress(address) {
+    if (!address) {
+      if (window.Notify) {
+        window.Notify.error('No address to copy');
+      }
+      return;
+    }
+    
+    navigator.clipboard.writeText(address).then(() => {
+      if (window.Notify) {
+        window.Notify.success('Address copied to clipboard!');
+      } else {
+        console.log('Address copied to clipboard');
+      }
+    }).catch(() => {
+      if (window.Notify) {
+        window.Notify.error('Failed to copy address');
+      }
+    });
+  }
+
+  formatMoney(amount, decimals = 2) {
+    if (amount === null || amount === undefined) return '0.00';
+    return parseFloat(amount).toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   setupForms() {
-    // Setup amount input listeners for conversion preview
-    const amountInputs = document.querySelectorAll('.amount-input');
-    amountInputs.forEach(input => {
-      input.addEventListener('input', (e) => {
-        const formId = e.target.id.replace('-amount', '');
-        this.updateConversionPreview(formId, e.target.value);
-      });
-    });
-
-    // Setup file upload for bank method
-    const bankFileInput = document.getElementById('bank-proof-file');
-    if (bankFileInput) {
-      bankFileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-    }
+    // Minimal setup since we're using modal-based approach
+    console.log('Deposit forms setup complete - using modal system');
   }
 
   setupURLParameters() {
@@ -270,643 +771,31 @@ class DepositsPage {
   }
 
   prefillForTierUpgrade(amount, tierId) {
-    // Select USDT method for tier upgrades
-    this.selectMethod('usdt_trc20');
-    
-    // Pre-fill amount
-    const usdtInput = document.getElementById('usdt-amount');
-    if (usdtInput) {
-      usdtInput.value = amount;
-      this.updateConversionPreview('usdt', amount);
-    }
-
     // Store tier upgrade context
     this.tierUpgradeContext = {
       target: 'tier_upgrade',
       tier_id: parseInt(tierId),
       amount: parseFloat(amount)
     };
-  }
-
-  selectMethod(methodId) {
-    // Update selected method
-    this.selectedMethod = methodId;
-
-    // Update UI
-    const methodCards = document.querySelectorAll('.method-card');
-    methodCards.forEach(card => {
-      card.classList.remove('selected');
-    });
     
-    const selectedCard = document.querySelector(`[data-method="${methodId}"]`);
-    if (selectedCard) {
-      selectedCard.classList.add('selected');
-    }
-
-    // Show corresponding form
-    const forms = document.querySelectorAll('.deposit-form');
-    forms.forEach(form => {
-      form.classList.remove('active');
-    });
-    
-    const selectedForm = document.getElementById(`${methodId}-form`);
-    if (selectedForm) {
-      selectedForm.classList.add('active');
-    }
+    console.log('Tier upgrade context set:', this.tierUpgradeContext);
   }
 
-  async updateConversionPreview(formId, amount) {
-    if (!amount || parseFloat(amount) <= 0) {
-      const preview = document.getElementById(`${formId}-conversion`);
-      if (preview) {
-        preview.style.display = 'none';
-      }
-      return;
-    }
-
-    const usdtAmount = parseFloat(amount);
-    const conversion = await this.calculateConversion(usdtAmount);
-    
-    const preview = document.getElementById(`${formId}-conversion`);
-    if (preview) {
-      if (conversion.error) {
-        preview.innerHTML = `
-          <div class="conversion-row">
-            <span class="conversion-label">Conversion Error:</span>
-            <span class="conversion-value" style="color: var(--error-color)">${conversion.error}</span>
-          </div>
-        `;
-      } else {
-        preview.innerHTML = `
-          <div class="conversion-row">
-            <span class="conversion-label">USDT Amount:</span>
-            <span class="conversion-value">₮${this.formatMoney(usdtAmount, 6)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">USD Received:</span>
-            <span class="conversion-value">$${this.formatMoney(conversion.usdReceived)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">Exchange Rate:</span>
-            <span class="conversion-value">1 USDT = $${this.formatMoney(conversion.liveRate || 1.0, 6)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">Markup:</span>
-            <span class="conversion-value conversion-fee">$${this.formatMoney(conversion.markup)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">Fixed Fee:</span>
-            <span class="conversion-value conversion-fee">$${this.formatMoney(conversion.fixedFee)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">Variable Fee:</span>
-            <span class="conversion-value conversion-fee">$${this.formatMoney(conversion.variableFee)}</span>
-          </div>
-          <div class="conversion-row">
-            <span class="conversion-label">Total Fees:</span>
-            <span class="conversion-value conversion-fee">$${this.formatMoney(conversion.totalFees)}</span>
-          </div>
-        `;
-      }
-      preview.style.display = 'block';
-    }
-  }
-
-  async calculateConversion(usdtAmount) {
-    const settings = this.depositSettings.conversion;
-    
-    try {
-      // Get real live rate from API
-      const { data, error } = await window.API.fetchEdge('exchange_rate', {
-        method: 'GET',
-        params: {
-          from: 'USDT',
-          to: 'USD'
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const liveRate = data.rate || 1.0;
-      const usdEquivalent = usdtAmount * liveRate;
-      const markup = usdEquivalent * (settings.markup_percentage / 100);
-      const fixedFee = settings.fixed_fee_usd;
-      const variableFee = usdEquivalent * (settings.variable_fee_percentage / 100);
-      const totalFees = markup + fixedFee + variableFee;
-      const usdReceived = usdEquivalent - totalFees;
-      
-      return {
-        usdEquivalent,
-        markup,
-        fixedFee,
-        variableFee,
-        totalFees,
-        usdReceived,
-        liveRate
-      };
-    } catch (error) {
-      console.error('Failed to get exchange rate:', error);
-      // Return error state
-      return {
-        usdEquivalent: 0,
-        markup: 0,
-        fixedFee: 0,
-        variableFee: 0,
-        totalFees: 0,
-        usdReceived: 0,
-        error: 'Rate unavailable'
-      };
-    }
-  }
-
-  handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.match(/image\/jpeg|image\/jpg/)) {
-      window.Notify.error('Please upload a JPG image');
-      event.target.value = '';
-      return;
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      window.Notify.error('File size must be less than 5MB');
-      event.target.value = '';
-      return;
-    }
-
-    // Update UI
-    const upload = document.getElementById('bank-proof-upload');
-    const fileInfo = document.getElementById('bank-file-info');
-    const fileName = document.getElementById('bank-file-name');
-    const fileSize = document.getElementById('bank-file-size');
-
-    upload.classList.add('has-file');
-    fileInfo.style.display = 'flex';
-    fileName.textContent = file.name;
-    fileSize.textContent = this.formatFileSize(file.size);
-
-    // Store file reference
-    this.bankProofFile = file;
-  }
-
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  async submitBankDeposit() {
-    const amount = document.getElementById('bank-amount').value;
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      window.Notify.error('Please enter a valid amount');
-      return;
-    }
-
-    if (!this.bankProofFile) {
-      window.Notify.error('Please upload proof of payment');
-      return;
-    }
-
-    try {
-      this.setButtonLoading('bank-submit-btn', true);
-
-      // Create deposit order
-      const { data, error } = await window.API.fetchEdge('deposit_create_order', {
-        method: 'POST',
-        body: {
-          method: 'bank',
-          amount: parseFloat(amount),
-          currency: 'USDT',
-          proof_file: this.bankProofFile,
-          tier_upgrade_context: this.tierUpgradeContext
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Upload proof file to storage
-      await this.uploadProofFile(data.order_id, this.bankProofFile);
-
-      // Show success message
-      window.Notify.success('Bank deposit submitted successfully! Your deposit will be reviewed by our team.');
-
-      // Reset form
-      this.resetForm('bank');
-
-    } catch (error) {
-      console.error('Bank deposit failed:', error);
-      window.Notify.error(error.message || 'Failed to submit bank deposit');
-    } finally {
-      this.setButtonLoading('bank-submit-btn', false);
-    }
-  }
-
-  async submitStripeDeposit() {
-    const amount = document.getElementById('stripe-amount').value;
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      window.Notify.error('Please enter a valid amount');
-      return;
-    }
-
-    try {
-      this.setButtonLoading('stripe-submit-btn', true);
-
-      // Create deposit order
-      const { data, error } = await window.API.fetchEdge('deposit_create_order', {
-        method: 'POST',
-        body: {
-          method: 'stripe',
-          amount: parseFloat(amount),
-          currency: 'USDT',
-          tier_upgrade_context: this.tierUpgradeContext
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Redirect to Stripe payment link
-      const paymentLink = this.depositSettings.methods.stripe.payment_link;
-      window.open(`${paymentLink}?amount=${amount}&order_id=${data.order_id}`, '_blank');
-
-      // Show success message
-      window.Notify.info('Redirecting to Stripe for payment...');
-
-    } catch (error) {
-      console.error('Stripe deposit failed:', error);
-      window.Notify.error(error.message || 'Failed to initiate Stripe payment');
-    } finally {
-      this.setButtonLoading('stripe-submit-btn', false);
-    }
-  }
-
-  async submitPayPalDeposit() {
-    const amount = document.getElementById('paypal-amount').value;
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      window.Notify.error('Please enter a valid amount');
-      return;
-    }
-
-    try {
-      this.setButtonLoading('paypal-submit-btn', true);
-
-      // Create deposit order
-      const { data, error } = await window.API.fetchEdge('deposit_create_order', {
-        method: 'POST',
-        body: {
-          method: 'paypal',
-          amount: parseFloat(amount),
-          currency: 'USDT',
-          tier_upgrade_context: this.tierUpgradeContext
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Redirect to PayPal invoice
-      const invoiceLink = this.depositSettings.methods.paypal.invoice_link;
-      window.open(`${invoiceLink}?amount=${amount}&order_id=${data.order_id}`, '_blank');
-
-      // Show success message
-      window.Notify.info('Generating PayPal invoice...');
-
-    } catch (error) {
-      console.error('PayPal deposit failed:', error);
-      window.Notify.error(error.message || 'Failed to generate PayPal invoice');
-    } finally {
-      this.setButtonLoading('paypal-submit-btn', false);
-    }
-  }
-
-  async submitUSDTDeposit() {
-    const amount = document.getElementById('usdt-amount').value;
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      window.Notify.error('Please enter a valid amount');
-      return;
-    }
-
-    try {
-      this.setButtonLoading('usdt-submit-btn', true);
-
-      // Create deposit order with unique amount using real endpoint
-      const { data, error } = await window.API.fetchEdge('deposit_create_order', {
-        method: 'POST',
-        body: {
-          method: 'usdt_trc20',
-          currency: 'USDT',
-          expected_amount: parseFloat(amount)
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      this.currentOrder = data;
-
-      // Show QR code and address
-      this.showUSDTDepositInfo(data);
-
-      // Start timer
-      this.startTimer(this.depositSettings.methods.usdt_trc20.matching_window_minutes);
-
-      // Start monitoring for deposit
-      this.monitorUSDTDeposit(data.deposit_id);
-
-    } catch (error) {
-      console.error('USDT deposit failed:', error);
-      window.Notify.error(error.detail || error.message || 'Failed to generate deposit address');
-    } finally {
-      this.setButtonLoading('usdt-submit-btn', false);
-    }
-  }
-
-  showUSDTDepositInfo(orderData) {
-    const qrCode = document.getElementById('usdt-qr-code');
-    const address = document.getElementById('usdt-address');
-    const timer = document.getElementById('usdt-timer');
-    const status = document.getElementById('usdt-status');
-    const submitBtn = document.getElementById('usdt-submit-btn');
-
-    // Use real payment instructions from endpoint
-    const paymentInstructions = orderData.payment_instructions;
-    if (!paymentInstructions) {
-      window.Notify.error('Payment instructions not available');
-      return;
-    }
-
-    // Use real address from payment_instructions or fallback to settings
-    const depositAddress = paymentInstructions.address || this.depositSettings.methods.usdt_trc20.address;
-    if (!depositAddress) {
-      window.Notify.error('Deposit address not configured');
-      return;
-    }
-
-    // Generate QR code for address
-    const qrImage = document.getElementById('qr-image');
-    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${depositAddress}`;
-
-    // Show address and amount
-    address.textContent = depositAddress;
-    
-    // Show unique amount if available
-    const amountDisplay = document.getElementById('usdt-amount-display');
-    if (amountDisplay && paymentInstructions.amount) {
-      amountDisplay.textContent = `Amount: ₮${this.formatMoney(paymentInstructions.amount, 6)}`;
-    }
-
-    // Show elements
-    qrCode.style.display = 'block';
-    timer.style.display = 'block';
-    status.style.display = 'block';
-
-    // Hide submit button
-    submitBtn.style.display = 'none';
-
-    // Update status
-    this.updateDepositStatus('pending', 'Waiting for payment', `Transfer ₮${this.formatMoney(paymentInstructions.amount, 6)} to the address above`);
-  }
-
-  startTimer(minutes) {
-    let remainingSeconds = minutes * 60;
-    
-    this.timerInterval = setInterval(() => {
-      const minutes = Math.floor(remainingSeconds / 60);
-      const seconds = remainingSeconds % 60;
-      const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      
-      const timerElement = document.getElementById('timer-remaining');
-      if (timerElement) {
-        timerElement.textContent = display;
-      }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(this.timerInterval);
-        this.handleTimerExpired();
-      }
-
-      remainingSeconds--;
-    }, 1000);
-  }
-
-  handleTimerExpired() {
-    const timer = document.getElementById('usdt-timer');
-    if (timer) {
-      timer.classList.add('expired');
-      timer.innerHTML = 'Payment window expired';
-    }
-
-    this.updateDepositStatus('error', 'Payment Expired', 'The payment window has expired. Please generate a new deposit address.');
-  }
-
-  async monitorUSDTDeposit(orderId) {
-    // Poll for deposit confirmation
-    const pollInterval = setInterval(async () => {
-      try {
-        const { data, error } = await window.API.fetchEdge('usdt_watch_trc20', {
-          method: 'GET',
-          params: { order_id: orderId }
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data.status === 'confirmed') {
-          clearInterval(pollInterval);
-          clearInterval(this.timerInterval);
-          this.handleDepositConfirmed(data);
-        } else if (data.status === 'detected') {
-          this.updateDepositStatus('pending', 'Payment Detected', 'Payment detected, awaiting confirmation...');
-        }
-
-      } catch (error) {
-        console.error('Error monitoring deposit:', error);
-      }
-    }, 5000); // Poll every 5 seconds
-  }
-
-  handleDepositConfirmed(data) {
-    this.updateDepositStatus('completed', 'Payment Confirmed', `Payment of ${data.amount} USDT confirmed and converted to USD`);
-    
-    // Show success message
-    window.Notify.success('Deposit confirmed! Funds have been added to your account.');
-
-    // Handle tier upgrade if applicable
-    if (this.tierUpgradeContext) {
-      this.handleTierUpgradeCompletion();
-    }
-
-    // Reset form after delay
-    setTimeout(() => {
-      this.resetForm('usdt');
-    }, 5000);
-  }
-
-  handleTierUpgradeCompletion() {
-    // Auto-complete tier upgrade after conversion
-    window.Notify.success('Tier upgrade completed successfully!');
-    
-    // Clear tier upgrade context
-    this.tierUpgradeContext = null;
-  }
-
-  updateDepositStatus(status, title, description) {
-    const statusContainer = document.getElementById('usdt-status');
-    if (!statusContainer) return;
-
-    const statusIcons = {
-      pending: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
-      completed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
-      error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
-    };
-
-    statusContainer.innerHTML = `
-      <div class="status-item">
-        <div class="status-icon ${status}">
-          ${statusIcons[status]}
+  showError(message) {
+    const methodsContainer = document.getElementById('deposit-methods');
+    if (methodsContainer) {
+      methodsContainer.innerHTML = `
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+          <h3 style="color: #EF4444; margin: 0 0 10px 0;">Error</h3>
+          <p style="color: rgba(255,255,255,0.8); margin: 0;">${message}</p>
         </div>
-        <div class="status-text">
-          <div class="status-title">${title}</div>
-          <div class="status-description">${description}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  copyAddress() {
-    const address = document.getElementById('usdt-address');
-    if (!address) return;
-
-    navigator.clipboard.writeText(address.textContent).then(() => {
-      const copyBtn = document.querySelector('.copy-button');
-      if (copyBtn) {
-        copyBtn.textContent = 'Copied!';
-        copyBtn.classList.add('copied');
-        
-        setTimeout(() => {
-          copyBtn.textContent = 'Copy Address';
-          copyBtn.classList.remove('copied');
-        }, 2000);
-      }
-    });
-  }
-
-  async uploadProofFile(orderId, file) {
-    // Upload file to Supabase Storage
-    const fileName = `deposits/${orderId}/proof_${Date.now()}.jpg`;
-    
-    const { error } = await window.supabaseClient.storage
-      .from('DEPOSITS_KEEP')
-      .upload(fileName, file);
-
-    if (error) {
-      throw error;
-    }
-
-    return fileName;
-  }
-
-  setButtonLoading(buttonId, loading) {
-    const button = document.getElementById(buttonId);
-    if (!button) return;
-
-    if (loading) {
-      button.disabled = true;
-      button.innerHTML = `
-        <div class="loading-spinner" style="display: inline-block; margin-right: 8px;"></div>
-        Processing...
       `;
-    } else {
-      button.disabled = false;
-      button.textContent = button.textContent.replace('Processing...', 'Submit');
     }
-  }
-
-  resetForm(formId) {
-    // Reset form inputs
-    const form = document.getElementById(`${formId}-form`);
-    if (form) {
-      const inputs = form.querySelectorAll('input');
-      inputs.forEach(input => {
-        input.value = '';
-        input.disabled = false;
-      });
-    }
-
-    // Reset file upload
-    if (formId === 'bank') {
-      const upload = document.getElementById('bank-proof-upload');
-      const fileInfo = document.getElementById('bank-file-info');
-      
-      if (upload) upload.classList.remove('has-file');
-      if (fileInfo) fileInfo.style.display = 'none';
-      
-      this.bankProofFile = null;
-    }
-
-    // Reset USDT specific elements
-    if (formId === 'usdt') {
-      const qrCode = document.getElementById('usdt-qr-code');
-      const timer = document.getElementById('usdt-timer');
-      const status = document.getElementById('usdt-status');
-      const submitBtn = document.getElementById('usdt-submit-btn');
-
-      if (qrCode) qrCode.style.display = 'none';
-      if (timer) timer.style.display = 'none';
-      if (status) status.style.display = 'none';
-      if (submitBtn) submitBtn.style.display = 'block';
-
-      // Clear intervals
-      if (this.timerInterval) {
-        clearInterval(this.timerInterval);
-      }
-    }
-
-    // Hide conversion preview
-    const preview = document.getElementById(`${formId}-conversion`);
-    if (preview) {
-      preview.style.display = 'none';
-    }
-
-    // Clear current order
-    this.currentOrder = null;
-  }
-
-  formatMoney(amount, precision = 2) {
-    if (typeof amount === 'string') {
-      amount = parseFloat(amount);
-    }
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision
-    });
   }
 
   // Cleanup method
   destroy() {
     console.log('Deposits page cleanup');
-    
-    // Clear intervals
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
   }
 }
 

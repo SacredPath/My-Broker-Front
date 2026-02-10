@@ -146,6 +146,10 @@ class DepositsPage {
       return;
     }
 
+    console.log('DEBUG: setupMethodCards called with methods:', this.depositSettings.methods);
+    console.log('DEBUG: Methods array length:', this.depositSettings.methods?.length);
+    console.log('DEBUG: About to map methods and create cards...');
+
     console.log('Setting up deposit methods:', this.depositSettings);
 
     if (!this.depositSettings.methods || this.depositSettings.methods.length === 0) {
@@ -171,9 +175,16 @@ class DepositsPage {
     console.log('Creating', this.depositSettings.methods.length, 'deposit method cards');
 
     // Create grid container for cards with enhanced styling
+    const cardsHTML = this.depositSettings.methods.map(method => {
+      console.log('DEBUG: Mapping method:', method.method_name, 'type:', method.method_type);
+      return this.createMethodCard(method);
+    }).join('');
+    
+    console.log('DEBUG: Generated cards HTML length:', cardsHTML.length);
+    
     methodsContainer.innerHTML = `
       <div class="deposit-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0;">
-        ${this.depositSettings.methods.map(method => this.createMethodCard(method)).join('')}
+        ${cardsHTML}
       </div>
     `;
 
@@ -181,6 +192,14 @@ class DepositsPage {
   }
 
   createMethodCard(method) {
+    console.log('DEBUG: createMethodCard called with:', {
+      method_name: method.method_name,
+      method_type: method.method_type,
+      currency: method.currency,
+      network: method.network,
+      is_active: method.is_active
+    });
+    
     // Unique colors for each specific method
     const methodSpecificColors = {
       'USDT TRC20': { bg: '#10B981', border: '#059669', hover: '#047857' },
@@ -208,12 +227,34 @@ class DepositsPage {
     // Create key features (compact)
     let keyFeatures = [];
     if (method.method_type === 'crypto') {
+      // Override processing times from frontend for crypto methods
+      let displayTime;
+      console.log('DEBUG: Processing crypto method:', {
+        method_name: method.method_name,
+        currency: method.currency,
+        network: method.network,
+        processing_time_hours: method.processing_time_hours
+      });
+      
+      if (method.currency === 'USDT') {
+        displayTime = '60 minutes'; // Override all USDT to 60 minutes
+        console.log('DEBUG: USDT override applied - displayTime:', displayTime);
+      } else if (method.currency === 'BTC') {
+        displayTime = '60 minutes'; // Override all BTC to 60 minutes
+        console.log('DEBUG: BTC override applied - displayTime:', displayTime);
+      } else {
+        displayTime = `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback to database conversion
+        console.log('DEBUG: Fallback applied - displayTime:', displayTime);
+      }
+      
       keyFeatures = [
         `Network: ${method.network || 'Not set'}`,
         `Currency: ${method.currency}`,
         `Min: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`,
-        `Processing: ${method.processing_time_hours || 0} hours`
+        `Processing: ${displayTime}`
       ];
+      
+      console.log('DEBUG: Final keyFeatures:', keyFeatures);
     } else if (method.method_type === 'ach') {
       keyFeatures = [
         `Bank: ${method.bank_name || 'Not set'}`,
@@ -523,7 +564,30 @@ class DepositsPage {
                 <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : 2)}</div>
                 <div style="margin-bottom: 8px;"><strong>Method:</strong> ${method.method_name}</div>
                 <div style="margin-bottom: 8px;"><strong>To:</strong> <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${paymentAddress || 'N/A'}</code></div>
-                <div><strong>Processing Time:</strong> ${method.processing_time_hours || 24} hours</div>
+                <div><strong>Processing Time:</strong> ${(() => {
+      console.log('DEBUG: Confirmation dialog processing time for:', {
+        method_name: method.method_name,
+        method_type: method.method_type,
+        currency: method.currency,
+        processing_time_hours: method.processing_time_hours
+      });
+      
+      if (method.method_type === 'crypto') {
+        if (method.currency === 'USDT') {
+          console.log('DEBUG: Confirmation USDT override applied');
+          return '60 minutes'; // Override all USDT
+        } else if (method.currency === 'BTC') {
+          console.log('DEBUG: Confirmation BTC override applied');
+          return '60 minutes'; // Override all BTC
+        } else {
+          console.log('DEBUG: Confirmation fallback applied');
+          return `${(method.processing_time_hours || 0) * 60} minutes`; // Fallback
+        }
+      } else {
+        console.log('DEBUG: Non-crypto method, using hours');
+        return `${method.processing_time_hours || 24} hours`; // Non-crypto methods
+      }
+    })()}</div>
               </div>
             </div>
           </div>
