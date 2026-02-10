@@ -146,6 +146,10 @@ class DepositsPage {
       return;
     }
 
+    console.log('DEBUG: setupMethodCards called with methods:', this.depositSettings.methods);
+    console.log('DEBUG: Methods array length:', this.depositSettings.methods?.length);
+    console.log('DEBUG: About to map methods and create cards...');
+
     console.log('Setting up deposit methods:', this.depositSettings);
 
     if (!this.depositSettings.methods || this.depositSettings.methods.length === 0) {
@@ -171,9 +175,16 @@ class DepositsPage {
     console.log('Creating', this.depositSettings.methods.length, 'deposit method cards');
 
     // Create grid container for cards with enhanced styling
+    const cardsHTML = this.depositSettings.methods.map(method => {
+      console.log('DEBUG: Mapping method:', method.method_name, 'type:', method.method_type);
+      return this.createMethodCard(method);
+    }).join('');
+    
+    console.log('DEBUG: Generated cards HTML length:', cardsHTML.length);
+    
     methodsContainer.innerHTML = `
       <div class="deposit-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0;">
-        ${this.depositSettings.methods.map(method => this.createMethodCard(method)).join('')}
+        ${cardsHTML}
       </div>
     `;
 
