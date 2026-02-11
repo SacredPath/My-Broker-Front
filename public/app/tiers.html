@@ -51,15 +51,20 @@
             margin-bottom: 32px;
         }
         
+        .tier-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
         .tier-card {
             background: var(--surface);
             border: 2px solid var(--border);
             border-radius: 16px;
             padding: 24px;
-            cursor: pointer;
+            cursor: default;
             transition: var(--transition);
             position: relative;
-            overflow: hidden;
         }
         
         .tier-card:hover {
@@ -173,11 +178,13 @@
         
         .tier-action:hover {
             background: var(--primary-dark);
+            transform: translateY(-2px);
         }
         
         .tier-action:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
         
         /* Tier Modal */
@@ -770,7 +777,7 @@
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/app-shell.js"></script>
-    <script type="module" src="/assets/js/pages/app/tiers.js?v=20260204-2"></script>
+    <script type="module" src="/assets/js/pages/app/tiers.js?v=20260211-1"></script>
     <script>
         // Debug script to check tiers functionality
         setTimeout(() => {
