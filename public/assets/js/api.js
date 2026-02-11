@@ -685,14 +685,14 @@ class APIClient {
 
   async getUserProfile(userId) {
     try {
-      console.log('[APIClient] Getting user profile via REST API...');
+      console.log('[APIClient] Getting user profile via shared Supabase client...');
       
-      if (!this.serviceClient) {
-        throw new Error('Service client not initialized');
+      if (!this.supabase) {
+        throw new Error('Shared Supabase client not initialized');
       }
 
-      // Load user profile from database
-      const { data, error } = await this.serviceClient
+      // Load user profile using the same client that works for registration
+      const { data, error } = await this.supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
