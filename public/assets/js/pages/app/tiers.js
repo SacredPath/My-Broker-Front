@@ -446,7 +446,7 @@ class TiersPage {
 
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('active')) {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
         this.closeModal();
       }
     });
@@ -664,7 +664,7 @@ class TiersPage {
     }
 
     // Show modal
-    modal.classList.add('active');
+    modal.style.display = 'flex';
   }
 
   getAssetColor(asset) {
@@ -856,7 +856,7 @@ class TiersPage {
 
   closeModal() {
     const modal = document.getElementById('tier-modal');
-    modal.classList.remove('active');
+    modal.style.display = 'none';
   }
 
   formatMoney(amount, precision = 2) {
