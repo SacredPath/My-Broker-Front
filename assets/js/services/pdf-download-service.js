@@ -218,14 +218,18 @@ class PDFDownloadService {
   }
 }
 
+// Global variable declaration
+let pdfDownloadService;
+
+function initializePDFDownloadService() {
+  pdfDownloadService = new PDFDownloadService();
+  window.pdfDownloadService = pdfDownloadService;
+  console.log('PDF Download Service initialized');
+}
+
 // Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializePDFDownloadService);
 } else {
   initializePDFDownloadService();
-}
-
-function initializePDFDownloadService() {
-  pdfDownloadService = new PDFDownloadService();
-  console.log('PDF Download Service initialized');
 }
