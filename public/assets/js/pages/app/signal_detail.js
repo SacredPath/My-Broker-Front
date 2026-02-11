@@ -366,8 +366,7 @@ class SignalDetailPage {
         status: 'active',
         created_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + (this.signal.access_days * 24 * 60 * 60 * 1000)).toISOString(),
-        price_paid: this.signal.price_usdt || this.signal.price,
-        currency: 'USDT'
+        price_paid: this.signal.price_usdt || this.signal.price
       };
 
       const { data, error } = await window.API.supabase
