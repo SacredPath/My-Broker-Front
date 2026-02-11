@@ -6,8 +6,9 @@
 class RegistrationController {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 4;
+        this.totalSteps = 5;
         this.formData = {};
+        this.investmentData = {}; // Separate object for investment data (not saved to DB)
         this.init();
     }
 
@@ -144,8 +145,8 @@ class RegistrationController {
             this.collectCurrentStepData();
             this.currentStep++;
             
-            // Update review step when reaching step 4
-            if (this.currentStep === 4) {
+            // Update review step when reaching step 5
+            if (this.currentStep === 5) {
                 console.log('About to update review step');
                 this.updateReviewStep();
             }
@@ -255,37 +256,58 @@ class RegistrationController {
         }
     }
 
-    collectCurrentStepData() {
-        const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
-        const inputs = currentStepElement.querySelectorAll('input, select, textarea');
+collectCurrentStepData() {
+    const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
+    const inputs = currentStepElement.querySelectorAll('input, select, textarea');
 
-        console.log(`Collecting data for step ${this.currentStep}, found ${inputs.length} inputs:`);
-        
+    console.log(`Collecting data for step ${this.currentStep}, found ${inputs.length} inputs:`);
+
+    // Handle investment step (Step 4) separately - not saved to database
+    if (this.currentStep === 4) {
         inputs.forEach(input => {
-            let value;
-            const fieldName = input.name || input.id; // Use id if name is not present
-            
-            if (input.type === 'checkbox') {
-                value = input.checked;
-                this.formData[fieldName] = value;
-            } else if (input.type === 'radio') {
-                // Only collect radio value if it's checked
+            if (input.type === 'radio') {
                 if (input.checked) {
-                    value = input.value;
-                    this.formData[fieldName] = value;
-                    console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
+                    this.investmentData[input.name] = input.value;
+                    console.log(`Investment data: ${input.name} = ${input.value}`);
                 }
+            } else if (input.type === 'checkbox') {
+                this.investmentData[input.id] = input.checked;
+                console.log(`Investment data: ${input.id} = ${input.checked}`);
             } else {
-                value = input.value.trim();
+                this.investmentData[input.id] = input.value;
+                console.log(`Investment data: ${input.id} = ${input.value}`);
+            }
+        });
+        console.log('Investment data collected (not saved to DB):', this.investmentData);
+        return;
+    }
+
+    // Handle regular steps (1, 2, 3, 5) - saved to database
+    inputs.forEach(input => {
+        let value;
+        const fieldName = input.name || input.id; // Use id if name is not present
+
+        if (input.type === 'checkbox') {
+            value = input.checked;
+            this.formData[fieldName] = value;
+        } else if (input.type === 'radio') {
+            // Only collect radio value if it's checked
+            if (input.checked) {
+                value = input.value;
                 this.formData[fieldName] = value;
                 console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
             }
-        });
+        } else {
+            value = input.value;
+            this.formData[fieldName] = value;
+            console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
+        }
+    });
 
-        console.log('Complete formData after step', this.currentStep, ':', this.formData);
-    }
+    console.log('Complete formData after step', this.currentStep, ':', this.formData);
+  }
 
-    updateReviewStep() {
+  updateReviewStep() {
         const reviewContent = document.getElementById('review-content');
         if (!reviewContent) return;
 
@@ -334,6 +356,19 @@ class RegistrationController {
                     </div>
                 </div>
                 
+                <div style="border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+                    <h4 style="color: var(--primary); margin: 0 0 12px 0; font-size: 16px;">📈 Investment Information</h4>
+                    <div style="display: grid; gap: 8px;">
+                        <div><strong>Investment Amount:</strong> ${this.getInvestmentAmountLabel(this.investmentData['investment-amount']) || 'Not provided'}</div>
+                        <div><strong>Risk Appetite:</strong> ${this.getRiskAppetiteLabel(this.investmentData['risk-appetite']) || 'Not provided'}</div>
+                        <div><strong>Investment Purpose:</strong> ${this.getPurposeLabel(this.investmentData['investment-purpose']) || 'Not provided'}</div>
+                        <div><strong>Investment Duration:</strong> ${this.getDurationLabel(this.investmentData['investment-duration']) || 'Not provided'}</div>
+                        <div><strong>Automatic Investing:</strong> ${this.investmentData['auto-invest'] === 'yes' ? 'Yes' : 'No' || 'Not provided'}</div>
+                        ${this.investmentData['investment-questions'] ? `<div><strong>Questions/Comments:</strong> ${this.investmentData['investment-questions']}</div>` : ''}
+                    </div>
+                    <p style="margin-top: 12px; font-size: 12px; color: var(--text-secondary); font-style: italic;">This investment information is collected for understanding your preferences and is not stored in our database.</p>
+                </div>
+                
                 <div style="background: var(--background); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary);">
                     <div style="font-weight: 600; margin-bottom: 8px;">📋 Summary</div>
                     <div style="font-size: 14px; color: var(--text-secondary);">
@@ -355,8 +390,8 @@ class RegistrationController {
             // Collect final step data
             this.collectCurrentStepData();
 
-            // Update review step if on step 4
-            if (this.currentStep === 4) {
+            // Update review step if on step 5
+            if (this.currentStep === 5) {
                 this.updateReviewStep();
             }
 
@@ -444,6 +479,53 @@ class RegistrationController {
         } else {
             alert(message);
         }
+    }
+
+    // Helper methods for investment labels
+    getInvestmentAmountLabel(value) {
+        const labels = {
+            'under-1000': 'Under $1,000',
+            '1000-5000': '$1,000 - $5,000',
+            '5000-10000': '$5,000 - $10,000',
+            '10000-25000': '$10,000 - $25,000',
+            '25000-50000': '$25,000 - $50,000',
+            'over-50000': 'Over $50,000'
+        };
+        return labels[value] || value;
+    }
+
+    getRiskAppetiteLabel(value) {
+        const labels = {
+            'conservative': 'Conservative - Low risk, steady returns',
+            'moderate': 'Moderate - Balanced risk and returns',
+            'aggressive': 'Aggressive - High risk, high returns',
+            'speculative': 'Speculative - Very high risk'
+        };
+        return labels[value] || value;
+    }
+
+    getPurposeLabel(value) {
+        const labels = {
+            'retirement': 'Retirement planning',
+            'wealth-building': 'Wealth building',
+            'education': 'Education funding',
+            'home-purchase': 'Home purchase',
+            'emergency-fund': 'Emergency fund',
+            'speculation': 'Short-term speculation',
+            'other': 'Other'
+        };
+        return labels[value] || value;
+    }
+
+    getDurationLabel(value) {
+        const labels = {
+            'less-than-1': 'Less than 1 year',
+            '1-3-years': '1-3 years',
+            '3-5-years': '3-5 years',
+            '5-10-years': '5-10 years',
+            'more-than-10': 'More than 10 years'
+        };
+        return labels[value] || value;
     }
 }
 

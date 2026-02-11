@@ -540,6 +540,10 @@
                     </div>
                     <div class="step" data-step="4">
                         <div class="step-circle">4</div>
+                        <div class="step-label">Investment Info</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-circle">5</div>
                         <div class="step-label">Review</div>
                     </div>
                 </div>
@@ -893,8 +897,93 @@
                         </div>
                     </div>
 
-                    <!-- Step 4: Review -->
+                    <!-- Step 4: Investment Information -->
                     <div class="form-step" data-step="4">
+                        <div class="form-grid">
+                            <h3 style="margin-bottom: 20px; color: var(--text-primary);">Investment Information</h3>
+                            <p style="margin-bottom: 24px; color: var(--text-secondary);">This information helps us understand your investment goals and preferences. This data is not stored in our database.</p>
+                            
+                            <div class="form-group">
+                                <label class="form-label required">How much are you willing to invest?</label>
+                                <select class="form-input form-select" id="investment-amount" required>
+                                    <option value="">Select amount range</option>
+                                    <option value="under-1000">Under $1,000</option>
+                                    <option value="1000-5000">$1,000 - $5,000</option>
+                                    <option value="5000-10000">$5,000 - $10,000</option>
+                                    <option value="10000-25000">$10,000 - $25,000</option>
+                                    <option value="25000-50000">$25,000 - $50,000</option>
+                                    <option value="over-50000">Over $50,000</option>
+                                </select>
+                                <div class="form-error" id="investment-amount-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">What is your investment risk appetite?</label>
+                                <select class="form-input form-select" id="risk-appetite" required>
+                                    <option value="">Select risk level</option>
+                                    <option value="conservative">Conservative - Low risk, steady returns</option>
+                                    <option value="moderate">Moderate - Balanced risk and returns</option>
+                                    <option value="aggressive">Aggressive - High risk, high returns</option>
+                                    <option value="speculative">Speculative - Very high risk</option>
+                                </select>
+                                <div class="form-error" id="risk-appetite-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">What are you investing for?</label>
+                                <select class="form-input form-select" id="investment-purpose" required>
+                                    <option value="">Select purpose</option>
+                                    <option value="retirement">Retirement planning</option>
+                                    <option value="wealth-building">Wealth building</option>
+                                    <option value="education">Education funding</option>
+                                    <option value="home-purchase">Home purchase</option>
+                                    <option value="emergency-fund">Emergency fund</option>
+                                    <option value="speculation">Short-term speculation</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <div class="form-error" id="investment-purpose-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">How long do you plan to invest for?</label>
+                                <select class="form-input form-select" id="investment-duration" required>
+                                    <option value="">Select duration</option>
+                                    <option value="less-than-1">Less than 1 year</option>
+                                    <option value="1-3-years">1-3 years</option>
+                                    <option value="3-5-years">3-5 years</option>
+                                    <option value="5-10-years">5-10 years</option>
+                                    <option value="more-than-10">More than 10 years</option>
+                                </select>
+                                <div class="form-error" id="investment-duration-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Are you willing to invest automatically and accrue daily?</label>
+                                <div class="form-radio-group">
+                                    <label class="form-radio">
+                                        <input type="radio" name="auto-invest" value="yes" required>
+                                        <span class="radio-indicator"></span>
+                                        Yes, I want to invest automatically
+                                    </label>
+                                    <label class="form-radio">
+                                        <input type="radio" name="auto-invest" value="no" required>
+                                        <span class="radio-indicator"></span>
+                                        No, I prefer manual investing
+                                    </label>
+                                </div>
+                                <div class="form-error" id="auto-invest-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Any worthy questions or additional information?</label>
+                                <textarea class="form-input" id="investment-questions" rows="4" placeholder="Please share any questions or additional information you'd like us to know..."></textarea>
+                                <div class="form-error" id="investment-questions-error"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Review -->
+                    <div class="form-step" data-step="5">
                         <div class="form-grid">
                             <h3 style="margin-bottom: 20px;">Review Your Information</h3>
                             <div id="review-content" style="background: var(--background); padding: 20px; border-radius: 12px; line-height: 1.6;">
