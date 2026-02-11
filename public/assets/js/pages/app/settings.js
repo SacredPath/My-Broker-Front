@@ -1118,7 +1118,8 @@ class SettingsPage {
     });
 
     // Show selected method fields
-    const selectedFields = modal.querySelector(`#${type}-fields`);
+    let fieldId = type === 'crypto_wallet' ? 'crypto-fields' : `${type}-fields`;
+    const selectedFields = modal.querySelector(`#${fieldId}`);
     if (selectedFields) {
       selectedFields.style.display = 'block';
     }
