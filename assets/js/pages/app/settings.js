@@ -1113,7 +1113,6 @@ class SettingsPage {
       
       let methodData = {
         method_type: methodType,
-        method_name: this.getMethodName(methodType),
         currency: modal.querySelector('#method-currency').value,
         is_active: true
       };
@@ -1164,7 +1163,7 @@ class SettingsPage {
       let data, error;
       if (methodId) {
         // Update existing method
-        ({ data, error } = await this.api.serviceClient
+        ({ data, error } = await this.api.supabase
           .from('payout_methods')
           .update(methodData)
           .eq('id', methodId)
@@ -1172,7 +1171,7 @@ class SettingsPage {
           .single());
       } else {
         // Create new method
-        ({ data, error } = await this.api.serviceClient
+        ({ data, error } = await this.api.supabase
           .from('payout_methods')
           .insert(methodData)
           .select()
@@ -1251,7 +1250,7 @@ class SettingsPage {
       const method = this.payoutMethods.find(m => m.id === methodId);
       if (!method) return;
 
-      const { data, error } = await this.api.serviceClient
+      const { data, error } = await this.api.supabase
         .from('payout_methods')
         .update({ is_active: !method.is_active })
         .eq('id', methodId)
