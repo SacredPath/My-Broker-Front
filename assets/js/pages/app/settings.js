@@ -1025,13 +1025,13 @@ class SettingsPage {
             <div class="form-group">
               <label class="form-label">Method Type</label>
               <select class="form-input form-select" id="method-type" name="method-type" ${isEdit ? 'disabled' : ''}>
-                <option value="bank" ${method?.type === 'bank' ? 'selected' : ''}>Bank Account</option>
-                <option value="paypal" ${method?.type === 'paypal' ? 'selected' : ''}>PayPal</option>
-                <option value="crypto" ${method?.type === 'crypto' ? 'selected' : ''}>Cryptocurrency</option>
+                <option value="bank_transfer" ${method?.method_type === 'bank_transfer' ? 'selected' : ''}>Bank Account</option>
+                <option value="paypal" ${method?.method_type === 'paypal' ? 'selected' : ''}>PayPal</option>
+                <option value="crypto_wallet" ${method?.method_type === 'crypto_wallet' ? 'selected' : ''}>Cryptocurrency</option>
               </select>
             </div>
             
-            <div id="bank-fields" class="method-fields" style="${method?.type === 'bank' || !method ? '' : 'display: none;'}">
+            <div id="bank-fields" class="method-fields" style="${method?.method_type === 'bank_transfer' || !method ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Account Name</label>
                 <input type="text" class="form-input" id="account-name" name="account-name" value="${method?.details?.account_name || ''}" required>
@@ -1050,14 +1050,14 @@ class SettingsPage {
               </div>
             </div>
             
-            <div id="paypal-fields" class="method-fields" style="${method?.type === 'paypal' ? '' : 'display: none;'}">
+            <div id="paypal-fields" class="method-fields" style="${method?.method_type === 'paypal' ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">PayPal Email</label>
                 <input type="email" class="form-input" id="paypal-email" name="paypal-email" value="${method?.details?.email || ''}" required>
               </div>
             </div>
             
-            <div id="crypto-fields" class="method-fields" style="${method?.type === 'crypto' ? '' : 'display: none;'}">
+            <div id="crypto-fields" class="method-fields" style="${method?.method_type === 'crypto_wallet' ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Network</label>
                 <select class="form-input form-select" id="crypto-network" name="crypto-network">
@@ -1114,7 +1114,8 @@ class SettingsPage {
       let methodData = {
         method_type: methodType,
         currency: modal.querySelector('#method-currency').value,
-        is_active: true
+        is_active: true,
+        is_default: false
       };
 
       // Collect method-specific data
