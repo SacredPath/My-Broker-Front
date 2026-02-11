@@ -429,6 +429,52 @@ class APIClient {
     }, 10 * 60 * 1000); // 10 minutes
   }
 
+  async getCurrentUserId() {
+    try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
+      const { data: { session }, error } = await this.supabase.auth.getSession();
+      
+      if (error) {
+        throw new Error(`Failed to get session: ${error.message}`);
+      }
+
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      return session.user.id;
+    } catch (error) {
+      console.error('[APIClient] Failed to get current user ID:', error);
+      return null;
+    }
+  }
+
+  async getUserProfile(userId) {
+    try {
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data: profile, error } = await this.serviceClient
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Not found error
+        throw error;
+      }
+
+      return { profile };
+    } catch (error) {
+      console.error('[APIClient] Failed to get user profile:', error);
+      return { profile: null };
+    }
+  }
+
   destroy() {
     // Clear keep-alive interval
     this.supabase = null;

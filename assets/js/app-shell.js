@@ -496,6 +496,15 @@ class AppShell {
     try {
       console.log('[AppShell] Loading notifications from database...');
       
+      // Wait for API client to be available
+      let attempts = 0;
+      const maxAttempts = 30; // 3 seconds max wait
+      
+      while (!window.API?.getCurrentUserId && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
       // Get current user ID
       const userId = await window.API?.getCurrentUserId();
       if (!userId) {

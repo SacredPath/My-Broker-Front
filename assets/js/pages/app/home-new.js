@@ -38,6 +38,19 @@ class HomePage {
 
   async setupPage() {
     try {
+      // Wait for API client to be available
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max wait
+      
+      while (!window.API && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (!window.API) {
+        throw new Error('API client not available');
+      }
+      
       // Initialize app shell FIRST - this handles all sidebar and theme functionality (like portfolio.js)
       if (window.AppShell) {
         window.AppShell.initShell();
