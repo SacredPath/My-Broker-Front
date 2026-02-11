@@ -34,37 +34,12 @@ class AuthService {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
-      // Defensive validation (in addition to controller validation)
-      if (!email || typeof email !== 'string') {
-        throw new Error('Email is required');
-      }
-      
-      if (!password || typeof password !== 'string') {
-        throw new Error('Password is required');
-      }
-
-      const normalizedEmail = email.trim().toLowerCase();
-      if (!normalizedEmail || !normalizedEmail.includes('@')) {
-        throw new Error('Valid email is required');
-      }
-
-      if (password.length === 0) {
-        throw new Error('Password is required');
-      }
-
       const { data, error } = await client.auth.signInWithPassword({
-        email: normalizedEmail,
+        email: email.toLowerCase().trim(),
         password
       });
 
       if (error) {
-        // Safe error diagnostics
-        console.debug('[auth] signInWithPassword failed', {
-          status: error?.status ?? null,
-          code: error?.code ?? null,
-          message: error?.message ?? String(error),
-          isAuthError: error?.__isAuthError ?? false
-        });
         throw this.handleAuthError(error);
       }
 
@@ -79,11 +54,6 @@ class AuthService {
       if (window.Notify) {
         window.Notify.success('Welcome back!');
       }
-
-      // Redirect to dashboard after successful login
-      setTimeout(() => {
-        window.location.href = '/app/home.html';
-      }, 1000);
 
       return { success: true, data };
     } catch (error) {
@@ -106,7 +76,7 @@ class AuthService {
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback.html`,
+          redirectTo: `${window.location.origin}/src/pages/auth/callback.html`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -131,68 +101,95 @@ class AuthService {
   }
 
   // Register new user with email and password
-  async registerWithEmailPassword(email, password, profileData = {}) {
+  async registerWithEmailPassword(email, password, registrationData = {}) {
     try {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
-      // Validate email
-      try {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          throw new Error('Please enter a valid email address');
-        }
-      } catch (error) {
-        if (error.message.includes('valid email')) {
-          throw error;
-        }
-        console.error('Email validation regex error:', error);
-        throw new Error('Email validation failed');
-      }
+      console.log('Attempting signup with:', { email, passwordLength: password.length, profileData: registrationData });
 
-      // Validate password
-      if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
-      }
-
+      // Create user without any metadata to avoid database trigger issues
       const { data, error } = await client.auth.signUp({
-        email: email.toLowerCase().trim(),
+        email,
         password,
         options: {
-          data: {
-            display_name: profileData.displayName || '',
-            phone: profileData.phone || ''
-          }
+          data: {} // Empty data object to avoid any issues
         }
       });
 
       if (error) {
-        throw this.handleAuthError(error);
+        console.error('Supabase signup error:', error);
+        throw error;
       }
 
-      // Create user profile in database
-      if (data.user && !data.session) {
-        // User created but email not confirmed (auto-confirm OFF)
-        await this.createUserProfile(data.user.id, {
-          email: data.user.email,
-          display_name: profileData.displayName || '',
-          phone: profileData.phone || '',
-          email_verified: false, // Default false, only set by Back Office
-          role: 'user',
-          created_at: new Date().toISOString()
-        });
+      console.log('Supabase signup successful:', data);
 
-        // Show success message and redirect to login (rule B - no email verification required)
-        if (window.Notify) {
-          window.Notify.success('Account created successfully! You can now log in.');
+      // If user was created successfully, wait a moment for trigger to complete, then update profile
+      if (data.user && registrationData) {
+        console.log('Waiting for trigger to create initial profile...');
+        
+        // Wait a moment for trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Updating user profile with comprehensive data...');
+        const profileResult = await this.updateUserProfile(data.user.id, {
+          ...registrationData,
+          email: email
+        });
+        
+        if (!profileResult.success) {
+          console.warn('Profile update failed but user was created:', profileResult.error);
+          // Don't throw error here - user was created successfully
+        } else {
+          console.log('User profile updated successfully');
+        }
+      }
+
+      // Show email confirmation modal
+      if (data.user && !data.session) {
+        if (window.UI) {
+          const modalId = 'email-confirmation-modal';
+          window.UI.createModal(modalId, {
+            title: 'Check Your Email',
+            body: `
+              <div class="text-center">
+                <div class="mb-4">
+                  <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-2">Verification Email Sent</h3>
+                  <p class="text-gray-600 mb-4">
+                    We've sent a verification email to <strong>${data.user.email}</strong>
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    Please check your inbox and click on verification link to complete your registration.
+                  </p>
+                </div>
+                <div class="text-left bg-gray-50 p-4 rounded-lg mb-4">
+                  <p class="text-sm font-medium mb-2">What's next?</p>
+                  <ul class="text-sm text-gray-600 space-y-1">
+                    <li>✓ Check your email inbox</li>
+                    <li>✓ Click on verification link</li>
+                    <li>✓ Come back to login</li>
+                    <li>Wait a few minutes and try again</li>
+                  </ul>
+                </div>
+              </div>
+            `,
+            footer: `
+              <button class="btn btn-secondary" onclick="window.UI.closeAllModals()">Got it</button>
+              <button class="btn btn-ghost" onclick="window.authService.resendVerificationEmail('${data.user.email}')">Resend Email</button>
+            `,
+            closeOnOverlay: false,
+            persistent: true
+          });
+          
+          window.UI.openModal(modalId);
         }
 
-        // Redirect to login after short delay
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 2000);
-
-        return { success: true, data, redirectToLogin: true };
+        return { success: true, data, emailConfirmationRequired: true };
       }
 
       if (window.Notify) {
@@ -200,14 +197,10 @@ class AuthService {
       }
 
       return { success: true, data };
+
     } catch (error) {
       console.error('Registration failed:', error);
-      
-      if (window.Notify) {
-        window.Notify.error(error.message || 'Registration failed');
-      }
-
-      return { success: false, error };
+      throw this.handleAuthError(error);
     }
   }
 
@@ -232,7 +225,7 @@ class AuthService {
 
       // Redirect to home page
       setTimeout(() => {
-        window.location.href = '/index.html';
+        window.location.href = '/src/pages/index.html';
       }, 1000);
 
       return { success: true };
@@ -253,12 +246,40 @@ class AuthService {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
+      // Prepare comprehensive profile data
+      const fullProfileData = {
+        id: userId,
+        email: profileData.email || '',
+        display_name: profileData.displayName || '',
+        first_name: profileData.firstName || '',
+        last_name: profileData.lastName || '',
+        phone: profileData.phone || '',
+        country: profileData.country || '',
+        email_verified: false, // Default false, only set by Back Office
+        role: 'user',
+        created_at: new Date().toISOString(),
+        
+        // Address information
+        address_line1: profileData.address?.address_line1 || '',
+        address_line2: profileData.address?.address_line2 || '',
+        city: profileData.address?.city || '',
+        state: profileData.address?.state || '',
+        postal_code: profileData.address?.postal_code || '',
+        
+        // Compliance information
+        new_to_investing: profileData.compliance?.new_to_investing || '',
+        pep: profileData.compliance?.pep || '',
+        pep_details: profileData.compliance?.pep_details || '',
+        occupation: profileData.compliance?.occupation || '',
+        dob: profileData.compliance?.dob || '',
+        
+        // Additional metadata
+        referral_code: profileData.referralCode || ''
+      };
+
       const { data, error } = await client
         .from('profiles')
-        .insert({
-          id: userId,
-          ...profileData
-        })
+        .insert(fullProfileData)
         .select()
         .single();
 
@@ -266,6 +287,7 @@ class AuthService {
         throw error;
       }
 
+      console.log('User profile created successfully:', data);
       return { success: true, data };
     } catch (error) {
       console.error('Failed to create user profile:', error);
@@ -281,12 +303,12 @@ class AuthService {
       const client = await this.supabaseClient.getClient();
 
       // Remove sensitive fields that shouldn't be updated directly
-      const { user_id, email_verified, role, created_at, ...safeProfileData } = profileData;
+      const { id, email_verified, role, created_at, ...safeProfileData } = profileData;
 
       const { data, error } = await client
         .from('profiles')
         .update(safeProfileData)
-        .eq('user_id', userId)
+        .eq('id', userId)
         .select()
         .single();
 
@@ -319,31 +341,16 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .eq('id', userId)
+        .single();
 
       if (error) {
-        console.debug('[auth] profile query error:', error.status, error.message);
         throw error;
-      }
-
-      // Handle missing profile gracefully
-      if (!data) {
-        console.debug('[auth] no profile found for user:', userId);
-        return { success: true, data: null };
       }
 
       return { success: true, data };
     } catch (error) {
-      // Handle missing session gracefully
-      if (error.message?.includes('Auth session missing') || 
-          error.message?.includes('No active session') ||
-          error.message?.includes('Not authenticated')) {
-        console.debug('[auth] user not authenticated, returning null profile');
-        return { success: true, data: null };
-      }
-
-      console.debug('[auth] failed to get user profile:', error.status, error.message);
+      console.error('Failed to get user profile:', error);
       return { success: false, error };
     }
   }
@@ -357,15 +364,13 @@ class AuthService {
       const { error } = await client
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) {
-        console.debug('[auth] failed to update last login:', error.status, error.message);
-      } else {
-        console.debug('[auth] last login updated successfully');
+        console.error('Failed to update last login:', error);
       }
     } catch (error) {
-      console.debug('[auth] failed to update last login:', error.message);
+      console.error('Failed to update last login:', error);
     }
   }
 
@@ -429,57 +434,26 @@ class AuthService {
         window.Notify.error(error.message || 'Failed to send password reset email');
       }
 
-      throw error;
+      return { success: false, error };
     }
-  }
-
-  // Request password reset (alias for resetPassword)
-  async requestPasswordReset(email) {
-    return this.resetPassword(email);
   }
 
   // Handle auth errors and provide user-friendly messages
   handleAuthError(error) {
-    // ...
-    if (error.message) {
-      // Email not confirmed errors - treat as generic login failure (rule B)
-      if (error.message.includes('Email not confirmed') || 
-          error.message.includes('email_not_confirmed') ||
-          error.message.includes('Email confirmation required')) {
-        console.debug('[auth] Email confirmation error treated as generic login failure');
-        return new Error('Login failed. Contact support.');
-      }
-      
-      // Invalid credentials
-      if (error.message.includes('Invalid login credentials') ||
-          error.message.includes('invalid_credentials') ||
-          error.message.includes('Invalid email or password')) {
-        return new Error('Invalid email or password.');
-      }
-      
-      // User not found
-      if (error.message.includes('User not found') ||
-          error.message.includes('user_not_found')) {
-        return new Error('Invalid email or password.');
-      }
-      
-      // Rate limiting
-      if (error.message.includes('Too many requests') ||
-          error.message.includes('rate_limit') ||
-          error.message.includes('Too many login attempts')) {
-        return new Error('Too many login attempts. Please wait a moment and try again.');
-      }
-      
-      // Network/connection issues
-      if (error.message.includes('NetworkError') ||
-          error.message.includes('Failed to fetch') ||
-          error.message.includes('CONNECTION_FAILED')) {
-        return new Error('Connection failed. Please check your internet connection and try again.');
-      }
-    }
+    const errorMap = {
+      'Invalid login credentials': 'Invalid email or password',
+      'Email not confirmed': 'Please verify your email address',
+      'User already registered': 'An account with this email already exists',
+      'Password should be at least 6 characters': 'Password must be at least 6 characters long',
+      'Weak password': 'Password is too weak. Please choose a stronger password',
+      'Invalid email': 'Please enter a valid email address',
+      'Signup disabled': 'Registration is currently disabled',
+      'Rate limit exceeded': 'Too many attempts. Please try again later'
+    };
 
-    // Generic fallback
-    return new Error('Login failed. Please try again.');
+    const userMessage = errorMap[error.message] || error.message || 'Authentication failed';
+    
+    return new Error(userMessage);
   }
 
   // Check if user is authenticated
@@ -532,7 +506,7 @@ class AuthService {
         await this.updateLastLogin(data.session.user.id);
         
         // Redirect to intended destination or dashboard
-        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/app/home.html';
+        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/src/pages/dashboard.html';
         sessionStorage.removeItem('intendedDestination');
         
         window.location.href = intendedDestination;
@@ -573,7 +547,6 @@ export const {
   getUserProfile,
   resendVerificationEmail,
   resetPassword,
-  requestPasswordReset,
   isAuthenticated,
   getCurrentUserWithProfile,
   handleAuthCallback

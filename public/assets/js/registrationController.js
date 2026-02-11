@@ -273,13 +273,13 @@ class RegistrationController {
                 if (input.checked) {
                     value = input.value;
                     this.formData[fieldName] = value;
+                    console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
                 }
             } else {
                 value = input.value.trim();
                 this.formData[fieldName] = value;
+                console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
             }
-            
-            console.log(`Input: ${fieldName} (${input.type}) = ${value}`);
         });
 
         console.log('Complete formData after step', this.currentStep, ':', this.formData);
