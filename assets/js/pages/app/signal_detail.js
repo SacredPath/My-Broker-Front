@@ -419,7 +419,7 @@ class SignalDetailPage {
       }
 
       // Use PDF download service
-      if (window.pdfDownloadService && this.signal) {
+      if (false && window.pdfDownloadService && this.signal) { // TEMPORARILY DISABLED
         // Show PDF list in a modal or expand section
         const pdfContainer = document.getElementById('pdf-downloads-container');
         if (pdfContainer) {
@@ -442,7 +442,7 @@ class SignalDetailPage {
           window.pdfDownloadService.renderPDFList(this.signal.id, 'pdf-list-container');
         }
       } else {
-        window.Notify.error('PDF download service not available');
+        window.Notify.error('PDF download service temporarily disabled');
       }
       
     } catch (error) {
