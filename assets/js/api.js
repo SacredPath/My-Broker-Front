@@ -452,6 +452,68 @@ class APIClient {
     }
   }
 
+  async getKYCStatus(userId) {
+    try {
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data: kycData, error } = await this.serviceClient
+        .from('kyc_status')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Not found error
+        throw error;
+      }
+
+      // Return default status if no record found
+      if (!kycData) {
+        return {
+          status: 'not_submitted',
+          submitted_at: null,
+          reviewed_at: null,
+          rejection_reason: null
+        };
+      }
+
+      return kycData;
+    } catch (error) {
+      console.error('[APIClient] Failed to get KYC status:', error);
+      // Return default status on error
+      return {
+        status: 'not_submitted',
+        submitted_at: null,
+        reviewed_at: null,
+        rejection_reason: null
+      };
+    }
+  }
+
+  async getPayoutMethods(userId) {
+    try {
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('payout_methods')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[APIClient] Failed to get payout methods:', error);
+      return [];
+    }
+  }
+
   async getUserProfile(userId) {
     try {
       if (!this.serviceClient) {
