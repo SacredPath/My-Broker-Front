@@ -218,8 +218,14 @@ class PDFDownloadService {
   }
 }
 
-// Initialize globally
-let pdfDownloadService;
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePDFDownloadService);
+} else {
+  initializePDFDownloadService();
+}
+
+function initializePDFDownloadService() {
   pdfDownloadService = new PDFDownloadService();
-});
+  console.log('PDF Download Service initialized');
+}

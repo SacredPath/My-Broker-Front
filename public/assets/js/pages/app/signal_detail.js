@@ -200,7 +200,7 @@ class SignalDetailPage {
         
         <div class="signal-meta">
             <span class="signal-tag tag-category">${this.signal.category}</span>
-            <span class="signal-tag tag-risk ${this.signal.risk_level}">${this.signal.risk_level} risk</span>
+            <span class="signal-tag tag-risk ${this.getRiskLevel(this.signal.risk_rating || this.signal.risk_level)}">${this.getRiskLevel(this.signal.risk_rating || this.signal.risk_level)} risk</span>
             <span class="signal-tag">${this.signal.type === 'subscription' ? 'Subscription' : 'One-time'}</span>
         </div>
         
@@ -252,11 +252,11 @@ class SignalDetailPage {
             </div>
             <div class="stat-row">
                 <span class="stat-label">Created:</span>
-                <span class="stat-value">${new Date(this.signal.created_at).toLocaleDateString()}</span>
+                <span class="stat-value">${this.formatDate(this.signal.created_at)}</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Last Updated:</span>
-                <span class="stat-value">${new Date(this.signal.updated_at).toLocaleDateString()}</span>
+                <span class="stat-value">${this.formatDate(this.signal.updated_at)}</span>
             </div>
         </div>
       </div>
@@ -313,8 +313,8 @@ class SignalDetailPage {
     return `
       <div class="purchase-card">
         <div class="purchase-header">
-            <div class="purchase-price">₮${this.formatMoney(this.signal.price, 6)}</div>
-            <div class="purchase-duration">${this.getDurationText(this.signal.access_duration)}</div>
+            <div class="purchase-price">₮${this.formatMoney(this.signal.price_usdt || this.signal.price, 6)}</div>
+            <div class="purchase-duration">${this.getDurationText(this.signal.access_days)}</div>
         </div>
         
         <div class="purchase-features">
@@ -334,7 +334,7 @@ class SignalDetailPage {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span>${this.getDurationText(this.signal.access_duration)} access</span>
+                <span>${this.getDurationText(this.signal.access_days)} access</span>
             </div>
             <div class="feature-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -354,7 +354,7 @@ class SignalDetailPage {
       ${this.signal.type === 'subscription' ? `
         <div class="subscription-info">
             <h4>Subscription Information</h4>
-            <p>This is a subscription signal. You will be billed every ${this.getDurationText(this.signal.access_duration)}. Cancel anytime from settings.</p>
+            <p>This is a subscription signal. You will be billed every ${this.getDurationText(this.signal.access_days)}. Cancel anytime from settings.</p>
         </div>
       ` : ''}
     `;
@@ -450,6 +450,43 @@ class SignalDetailPage {
     } catch (error) {
       console.error('Download failed:', error);
       window.Notify.error(error.message || 'Failed to open PDF downloads');
+    }
+  }
+
+  getRiskLevel(risk) {
+    // Normalize risk level for CSS classes
+    const riskLevel = (risk || '').toLowerCase();
+    switch (riskLevel) {
+      case 'low':
+        return 'low';
+      case 'medium':
+        return 'medium';
+      case 'high':
+        return 'high';
+      default:
+        return 'medium'; // Default fallback
+    }
+  }
+
+  formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return 'N/A';
     }
   }
 
