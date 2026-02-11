@@ -701,6 +701,44 @@ class APIClient {
       if (error) {
         console.error('[APIClient] User profile query error:', error);
         
+        // Check if profile doesn't exist (0 rows) and create one
+        if (error.code === 'PGRST116' || error.message?.includes('0 rows') || error.message?.includes('single JSON object')) {
+          console.warn('[APIClient] No profile found for user, creating one...');
+          
+          try {
+            // Get current user info
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (user) {
+              // Create basic profile
+              const { data: newProfile, error: createError } = await this.supabase
+                .from('profiles')
+                .insert({
+                  id: user.id,
+                  user_id: user.id,
+                  email: user.email,
+                  display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+                  phone: user.phone || '',
+                  email_verified: user.email_confirmed_at ? true : false,
+                  role: 'user',
+                  created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+              if (createError) {
+                console.error('[APIClient] Failed to create profile:', createError);
+                throw new Error('Profile creation failed: ' + createError.message);
+              }
+
+              console.log('[APIClient] Profile created successfully:', newProfile);
+              return newProfile;
+            }
+          } catch (createError) {
+            console.error('[APIClient] Profile creation failed:', createError);
+            throw new Error('Unable to create user profile');
+          }
+        }
+        
         // Check if table doesn't exist
         if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
           console.warn('[APIClient] Profiles table does not exist yet.');
