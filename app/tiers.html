@@ -56,10 +56,9 @@
             border: 2px solid var(--border);
             border-radius: 16px;
             padding: 24px;
-            cursor: pointer;
+            cursor: default;
             transition: var(--transition);
             position: relative;
-            overflow: hidden;
         }
         
         .tier-card:hover {
@@ -190,7 +189,8 @@
         .tier-action {
             pointer-events: auto !important;
             position: relative !important;
-            z-index: 100 !important;
+            z-index: 1000 !important;
+            cursor: pointer !important;
         }
         
         .tier-card {
@@ -204,7 +204,14 @@
         /* Prevent card from capturing button clicks */
         .tier-card:hover .tier-action {
             transform: scale(1.02);
-            z-index: 101 !important;
+            z-index: 1001 !important;
+        }
+        
+        /* Ensure button is always on top */
+        .tier-action:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+            z-index: 1002 !important;
         }
         
         /* Tier Modal */
