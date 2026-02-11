@@ -168,7 +168,7 @@ class WithdrawPage {
       
       const { data, error } = await window.API.supabase
         .from('profiles')
-        .select('email_verified, email_verified_at, email_verified_by, email_verification_notes')
+        .select('email_verified')
         .eq('user_id', userId)
         .limit(1);
 
