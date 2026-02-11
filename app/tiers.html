@@ -68,6 +68,10 @@
             box-shadow: 0 8px 32px rgba(0, 212, 170, 0.2);
         }
         
+        .tier-card:hover .tier-action {
+            transform: scale(1.02);
+        }
+        
         .tier-card.current {
             border-color: var(--primary);
             background: linear-gradient(135deg, var(--surface) 0%, rgba(0, 212, 170, 0.05) 100%);
@@ -169,6 +173,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
+            z-index: 10;
         }
         
         .tier-action:hover {
@@ -178,6 +184,15 @@
         .tier-action:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        
+        /* Ensure buttons are clickable and prevent card interference */
+        .tier-action {
+            pointer-events: auto !important;
+        }
+        
+        .tier-card * {
+            pointer-events: auto;
         }
         
         /* Tier Modal */
