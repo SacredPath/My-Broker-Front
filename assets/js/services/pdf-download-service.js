@@ -1,4 +1,8 @@
 // PDF Download Service for USDT-based signal purchases
+
+// Global variable declaration
+let pdfDownloadService;
+
 class PDFDownloadService {
   constructor() {
     this.baseURL = 'https://your-cdn.com/signals/pdfs/'; // Hardcoded PDF storage
@@ -217,9 +221,6 @@ class PDFDownloadService {
     }
   }
 }
-
-// Global variable declaration
-let pdfDownloadService;
 
 function initializePDFDownloadService() {
   pdfDownloadService = new PDFDownloadService();
