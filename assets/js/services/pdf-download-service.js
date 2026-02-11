@@ -229,11 +229,8 @@ function initializePDFDownloadService() {
 }
 
 // Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
-// TEMPORARILY DISABLED TO ISOLATE ERROR
-/*
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializePDFDownloadService);
 } else {
   initializePDFDownloadService();
 }
-*/
