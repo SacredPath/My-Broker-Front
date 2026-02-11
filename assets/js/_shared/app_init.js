@@ -31,16 +31,13 @@ if (window.__APP_SHELL_INIT__) {
    * Apply theme from localStorage
    */
   function applyTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
     const html = document.documentElement;
     
-    // Remove existing theme classes
-    html.classList.remove('theme-dark', 'theme-light');
+    // Apply theme using data-attribute
+    html.setAttribute('data-theme', savedTheme);
     
-    // Apply new theme
-    html.classList.add(`theme-${savedTheme}`);
-    
-    console.log(`🎨 Applied theme: theme-${savedTheme}`);
+    console.log(`🎨 Applied theme: ${savedTheme}`);
   }
 
   /**
@@ -185,16 +182,15 @@ if (window.__APP_SHELL_INIT__) {
    * Handle theme toggle
    */
   function handleThemeToggle() {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
+    const currentTheme = localStorage.getItem('theme') || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
     // Update localStorage
     localStorage.setItem('theme', newTheme);
     
-    // Update HTML classes
+    // Update HTML data-attribute
     const html = document.documentElement;
-    html.classList.remove('theme-dark', 'theme-light');
-    html.classList.add(`theme-${newTheme}`);
+    html.setAttribute('data-theme', newTheme);
     
     // Update toggle text if it exists
     const toggleText = document.querySelector('[data-action="toggle-theme"] span');
@@ -202,7 +198,7 @@ if (window.__APP_SHELL_INIT__) {
       toggleText.textContent = newTheme === 'dark' ? 'Light mode' : 'Dark mode';
     }
     
-    console.log(`🎨 Theme changed to: theme-${newTheme}`);
+    console.log(`🎨 Theme changed to: ${newTheme}`);
     
     // Close dropdown
     closeDropdown();

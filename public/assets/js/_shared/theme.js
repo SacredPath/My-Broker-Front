@@ -24,11 +24,8 @@ class ThemeManager {
   setTheme(theme) {
     const html = document.documentElement;
     
-    // Remove existing theme classes
-    html.classList.remove('theme-dark', 'theme-light');
-    
-    // Add new theme class
-    html.classList.add(`theme-${theme}`);
+    // Set data-theme attribute
+    html.setAttribute('data-theme', theme);
     
     // Save to localStorage
     localStorage.setItem(this.storageKey, theme);

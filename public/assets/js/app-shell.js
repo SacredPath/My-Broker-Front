@@ -687,10 +687,8 @@ class AppShell {
     // Get saved theme or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
     
-    // Apply theme immediately
+    // Apply theme immediately using data-attribute only
     document.documentElement.setAttribute('data-theme', savedTheme);
-    document.documentElement.classList.toggle('theme-light', savedTheme === 'light');
-    document.documentElement.classList.toggle('theme-dark', savedTheme === 'dark');
     
     // Update theme toggle icon
     this.updateThemeToggleIcon(savedTheme);
@@ -704,10 +702,6 @@ class AppShell {
     
     // Update theme attribute
     document.documentElement.setAttribute('data-theme', newTheme);
-    
-    // Update CSS classes for compatibility
-    document.documentElement.classList.toggle('theme-light', newTheme === 'light');
-    document.documentElement.classList.toggle('theme-dark', newTheme === 'dark');
     
     // Save to localStorage
     localStorage.setItem('theme', newTheme);

@@ -137,8 +137,8 @@ html.sidebar-open [data-role="sidebar-overlay"] {
   --transition-slow: 350ms ease;
 }
 
-/* Light mode theme */
-.theme-light {
+/* Light mode theme using data-theme attribute */
+[data-theme="light"] {
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-bg-tertiary: #e9ecef;
@@ -153,6 +153,7 @@ html.sidebar-open [data-role="sidebar-overlay"] {
   
   --color-accent-subtle: rgba(0, 213, 75, 0.08);
 }
+
 
 /* Base styles */
 * {
