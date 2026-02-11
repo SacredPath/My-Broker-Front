@@ -1141,6 +1141,7 @@ class SettingsPage {
       
       let methodData = {
         method_type: methodType,
+        method_name: this.getMethodName(methodType),
         currency: modal.querySelector('#method-currency').value,
         is_active: true,
         is_default: false
