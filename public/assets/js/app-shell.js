@@ -300,15 +300,6 @@ class AppShell {
     } else {
         // Open sidebar
         html.classList.add('sidebar-open');
-        
-        // Properly show overlay
-        if (overlay) {
-          overlay.style.display = 'block';
-          overlay.style.visibility = 'visible';
-          overlay.style.opacity = '1';
-          overlay.style.pointerEvents = 'auto';
-        }
-        
         // Optional: force focus management or trap focus
         sidebar.focus?.();
         console.log('Sidebar → opened');
@@ -321,15 +312,6 @@ class AppShell {
     const overlay = document.querySelector('[data-role="sidebar-overlay"]');
     
     html.classList.remove('sidebar-open');
-    
-    // Properly hide overlay to prevent it from being stuck
-    if (overlay) {
-      overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
-    }
-    
     console.log('Sidebar closed');
   }
 
@@ -513,6 +495,15 @@ class AppShell {
   async loadNotifications() {
     try {
       console.log('[AppShell] Loading notifications from database...');
+      
+      // Wait for API client to be available
+      let attempts = 0;
+      const maxAttempts = 30; // 3 seconds max wait
+      
+      while (!window.API?.getCurrentUserId && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
       
       // Get current user ID
       const userId = await window.API?.getCurrentUserId();

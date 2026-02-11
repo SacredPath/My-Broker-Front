@@ -8,12 +8,36 @@ class BalanceService {
   constructor() {
     this.cache = new Map();
     this.cacheTimeout = 30000; // 30 seconds cache
-    this.api = window.API || null;
+    this.api = null;
+    this.initPromise = this.init();
+  }
+
+  async init() {
+    // Wait for API client to be available
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
     
-    if (!this.api) {
-      console.error('[BalanceService] API client not available');
-      return;
+    while (!window.API && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
     }
+    
+    if (window.API) {
+      this.api = window.API;
+      console.log('[BalanceService] API client connected');
+    } else {
+      console.error('[BalanceService] API client not available after timeout');
+    }
+  }
+
+  async ensureApi() {
+    if (!this.api) {
+      await this.initPromise;
+      if (!this.api) {
+        throw new Error('API client not available');
+      }
+    }
+    return this.api;
   }
 
   /**
@@ -24,6 +48,7 @@ class BalanceService {
    */
   async getUserBalances(userId, forceRefresh = false) {
     try {
+      const api = await this.ensureApi();
       const cacheKey = `balances_${userId}`;
       const cached = this.cache.get(cacheKey);
       
@@ -36,7 +61,7 @@ class BalanceService {
       console.log('[BalanceService] Fetching fresh balances from database');
       
       // Fetch from wallet_balances table (single source of truth)
-      const { data, error } = await this.api.serviceClient
+      const { data, error } = await api.serviceClient
         .from('wallet_balances')
         .select('*')
         .eq('user_id', userId);
@@ -225,7 +250,8 @@ class BalanceService {
    */
   async preloadCurrentUserBalances() {
     try {
-      const userId = await this.api.getCurrentUserId();
+      const api = await this.ensureApi();
+      const userId = await api.getCurrentUserId();
       if (!userId) {
         throw new Error('User not authenticated');
       }
