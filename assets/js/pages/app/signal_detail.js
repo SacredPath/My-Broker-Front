@@ -420,7 +420,7 @@ class SignalDetailPage {
         return;
       }
 
-      // Use PDF download service
+      // Use PDF download service with safety check
       if (window.pdfDownloadService && this.signal) {
         // Show PDF list in a modal or expand section
         const pdfContainer = document.getElementById('pdf-downloads-container');
