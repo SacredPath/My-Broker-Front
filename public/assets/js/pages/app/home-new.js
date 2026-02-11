@@ -118,6 +118,7 @@ class HomePage {
       console.error('HomePage: Failed to load recent activity:', error);
     }
   }
+}
 
-  // Initialize page controller
-  window.homePage = new HomePage();
+// Initialize page controller
+window.homePage = new HomePage();
