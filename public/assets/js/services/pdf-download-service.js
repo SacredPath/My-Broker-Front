@@ -1,4 +1,9 @@
 // PDF Download Service for USDT-based signal purchases
+// Version: 1.0.3 - Fixed loading and variable issues
+
+// Global variable declaration
+let pdfDownloadService;
+
 class PDFDownloadService {
   constructor() {
     this.baseURL = 'https://your-cdn.com/signals/pdfs/'; // Hardcoded PDF storage
@@ -218,14 +223,15 @@ class PDFDownloadService {
   }
 }
 
+function initializePDFDownloadService() {
+  pdfDownloadService = new PDFDownloadService();
+  window.pdfDownloadService = pdfDownloadService;
+  console.log('PDF Download Service initialized');
+}
+
 // Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializePDFDownloadService);
 } else {
   initializePDFDownloadService();
-}
-
-function initializePDFDownloadService() {
-  pdfDownloadService = new PDFDownloadService();
-  console.log('PDF Download Service initialized');
 }

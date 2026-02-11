@@ -240,6 +240,10 @@ class AuthGuard {
       console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
       sessionStorage.removeItem('intendedDestination');
       window.location.href = intendedDestination;
+    } else {
+      // Default redirect to dashboard
+      console.log('AuthGuard: Redirecting to default dashboard');
+      window.location.href = '/app/home.html';
     }
   }
 
