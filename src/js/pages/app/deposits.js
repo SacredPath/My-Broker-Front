@@ -250,7 +250,7 @@ class DepositsPage {
       keyFeatures = [
         `Network: ${method.network || 'Not set'}`,
         `Currency: ${method.currency}`,
-        `Min: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`,
+        `Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`,
         `Processing: ${displayTime}`
       ];
       
@@ -302,7 +302,7 @@ class DepositsPage {
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3);">
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <span style="color: #000000; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">
-              ${this.upgradeContext ? `Upgrade Amount: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : 2)}` : 'Click for details'}
+              ${this.upgradeContext ? `Upgrade Amount: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : 'Click for details'}
             </span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: ${colors.bg}; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(2px)';" onmouseout="this.style.transform='translateX(0)';">
               <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -436,7 +436,7 @@ class DepositsPage {
               <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                 <div style="color: white; font-size: 14px; line-height: 1.5;">
                   <div style="margin-bottom: 8px;"><strong>Upgrade Target:</strong> Tier ${this.upgradeContext.targetTierId}</div>
-                  <div style="margin-bottom: 8px;"><strong>Required Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : 2)}</div>
+                  <div style="margin-bottom: 8px;"><strong>Required Amount:</strong> ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(this.upgradeContext.upgradeAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}</div>
                   <div><strong>After deposit:</strong> You'll be automatically upgraded!</div>
                 </div>
               </div>
@@ -455,8 +455,8 @@ class DepositsPage {
                        oninput="window.depositsPage.updateDepositAmount(this.value)"
                        ${this.upgradeContext ? 'readonly' : ''}>
                 <div style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.6);">
-                  Minimum: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}
-                  ${method.max_amount ? ` | Maximum: ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}` : ''}
+                  Minimum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}
+                  ${method.max_amount ? ` | Maximum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : ''}
                   ${this.upgradeContext ? '<br><span style="color: #10B981;">✓ Amount pre-filled for upgrade</span>' : ''}
                 </div>
               </div>
@@ -514,18 +514,18 @@ class DepositsPage {
     // Validate amount
     if (!this.currentDepositAmount || this.currentDepositAmount < (method.min_amount || (method.currency === 'BTC' ? 100 : 1))) {
       if (window.Notify) {
-        window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`);
+        window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
       } else {
-        alert(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`);
+        alert(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
       }
       return;
     }
 
     if (method.max_amount && this.currentDepositAmount > method.max_amount) {
       if (window.Notify) {
-        window.Notify.error(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}`);
+        window.Notify.error(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
       } else {
-        alert(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : 2)}`);
+        alert(`Maximum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
       }
       return;
     }
@@ -561,7 +561,7 @@ class DepositsPage {
             <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
               <h4 style="color: #EF4444; margin: 0 0 8px 0;">⚠️ Confirmation Required</h4>
               <div style="color: white; font-size: 16px; font-weight: 500; line-height: 1.5;">
-                <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : 2)}</div>
+                <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(this.currentDepositAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}</div>
                 <div style="margin-bottom: 8px;"><strong>Method:</strong> ${method.method_name}</div>
                 <div style="margin-bottom: 8px;"><strong>To:</strong> <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${paymentAddress || 'N/A'}</code></div>
                 <div><strong>Processing Time:</strong> ${(() => {
