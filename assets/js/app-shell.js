@@ -666,8 +666,8 @@ class AppShell {
   }
 
   initializeTheme() {
-    // Get saved theme or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    // Get saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
     
     // Apply theme immediately
     document.documentElement.setAttribute('data-theme', savedTheme);

@@ -10,9 +10,9 @@ class ThemeManager {
   }
 
   init() {
-    // Load saved theme or default to dark
+    // Load saved theme or default to light
     const savedTheme = localStorage.getItem(this.storageKey);
-    const theme = savedTheme || 'dark';
+    const theme = savedTheme || 'light';
     
     // Apply theme (this will log the theme)
     this.setTheme(theme);
@@ -40,7 +40,7 @@ class ThemeManager {
   }
 
   toggle() {
-    const currentTheme = localStorage.getItem(this.storageKey) || 'dark';
+    const currentTheme = localStorage.getItem(this.storageKey) || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     this.setTheme(newTheme);
   }
@@ -82,7 +82,7 @@ class ThemeManager {
     }
 
     // Update initial text
-    this.updateToggleText(localStorage.getItem(this.storageKey) || 'dark');
+    this.updateToggleText(localStorage.getItem(this.storageKey) || 'light');
   }
 
   updateToggleText(theme) {
