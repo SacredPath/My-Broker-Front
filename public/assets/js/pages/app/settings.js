@@ -1062,6 +1062,10 @@ class SettingsPage {
                 <label class="form-label">Bank Name</label>
                 <input type="text" class="form-input" id="bank-name" name="bank-name" value="${method?.details?.bank_name || ''}" required>
               </div>
+              <div class="form-group">
+                <label class="form-label">SWIFT Code</label>
+                <input type="text" class="form-input" id="swift-code" name="swift-code" value="${method?.details?.swift_code || ''}" required>
+              </div>
             </div>
             
             <div id="paypal-fields" class="method-fields" style="${method?.method_type === 'paypal' ? '' : 'display: none;'}">
