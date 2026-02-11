@@ -252,11 +252,11 @@ class SignalDetailPage {
             </div>
             <div class="stat-row">
                 <span class="stat-label">Created:</span>
-                <span class="stat-value">${new Date(this.signal.created_at).toLocaleDateString()}</span>
+                <span class="stat-value">${this.formatDate(this.signal.created_at)}</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Last Updated:</span>
-                <span class="stat-value">${new Date(this.signal.updated_at).toLocaleDateString()}</span>
+                <span class="stat-value">${this.formatDate(this.signal.updated_at)}</span>
             </div>
         </div>
       </div>
@@ -450,6 +450,28 @@ class SignalDetailPage {
     } catch (error) {
       console.error('Download failed:', error);
       window.Notify.error(error.message || 'Failed to open PDF downloads');
+    }
+  }
+
+  formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return 'N/A';
     }
   }
 
