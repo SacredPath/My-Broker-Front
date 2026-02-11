@@ -5,6 +5,10 @@
 
 // Import shared app initializer
 import '/assets/js/_shared/app_init.js';
+// Import USDT purchase modal
+import '/assets/js/components/usdt-purchase-modal.js';
+// Import USDT purchase modal styles
+import '/assets/css/usdt-purchase-modal.css';
 
 class SignalDetailPage {
   constructor() {
@@ -143,13 +147,14 @@ class SignalDetailPage {
         return;
       }
 
-      // Load user signal access from signal_access table
+      // Load user signal access from signal_usdt_purchases table
       const { data, error } = await window.API.supabase
-        .from('signal_access')
+        .from('signal_usdt_purchases')
         .select('*')
         .eq('user_id', userId)
         .eq('signal_id', this.signalId)
-        .gt('expires_at', new Date().toISOString())
+        .eq('confirmed', true)
+        .gt('pdf_access_until', new Date().toISOString())
         .limit(1);
 
       if (error) {
@@ -184,7 +189,7 @@ class SignalDetailPage {
     const signalContent = document.getElementById('signal-content');
     if (!signalContent || !this.signal) return;
 
-    const hasAccess = this.userAccess && new Date(this.userAccess.expires_at) > new Date();
+    const hasAccess = this.userAccess && new Date(this.userAccess.pdf_access_until) > new Date();
     const hasActivePositions = this.userPositions.some(position => 
       position.status === 'active' && new Date(position.matures_at) > new Date()
     );
@@ -259,7 +264,7 @@ class SignalDetailPage {
   }
 
   renderAccessStatus() {
-    const isExpired = new Date(this.userAccess.expires_at) <= new Date();
+    const isExpired = new Date(this.userAccess.pdf_access_until) <= new Date();
     
     return `
       <div class="access-status">
@@ -376,38 +381,24 @@ class SignalDetailPage {
         return;
       }
 
-      // Create signal purchase in signal_access table
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
+      // Show USDT purchase modal
+      if (window.usdtPurchaseModal && this.signal) {
+        const signalData = {
+          id: this.signal.id,
+          title: this.signal.title,
+          description: this.signal.description,
+          price: this.signal.price_usdt || this.signal.price,
+          access_days: this.signal.access_days
+        };
+        
+        window.usdtPurchaseModal.show(signalData);
+      } else {
+        window.Notify.error('USDT purchase modal not available');
       }
-
-      const accessData = {
-        user_id: userId,
-        signal_id: this.signalId,
-        starts_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + (this.signal.access_days * 24 * 60 * 60 * 1000)).toISOString()
-      };
-
-      const { data, error } = await window.API.supabase
-        .from('signal_access')
-        .insert(accessData)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to create purchase: ${error.message}`);
-      }
-
-      // Show success message
-      window.Notify.success('Purchase completed! Signal access activated.');
-
-      // Update UI to show purchased state
-      this.renderSignal();
 
     } catch (error) {
       console.error('Purchase failed:', error);
-      window.Notify.error(error.message || 'Failed to initiate purchase');
+      window.Notify.error(error.message || 'Failed to open purchase modal');
     }
   }
 
