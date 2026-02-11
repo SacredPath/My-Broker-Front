@@ -102,27 +102,19 @@ class SignalDetailPage {
 
   async loadSignal() {
     try {
-      // Get all signals from the list API and find the one we need
-      const response = await fetch('http://localhost:3001/api/signals', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await this.getAuthToken()}`
-        }
-      });
+      // Get signal from database using shared client
+      const { data, error } = await window.API.supabase
+        .from('signals')
+        .select('*')
+        .eq('id', this.signalId)
+        .single();
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
       }
-
-      const data = await response.json();
       
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Find the specific signal by string_id
-      this.signal = data.signals.find(s => s.string_id === this.signalId);
+      // Set the signal directly since we get single signal
+      this.signal = data;
       
       if (!this.signal) {
         throw new Error('Signal not found');
@@ -361,32 +353,39 @@ class SignalDetailPage {
         return;
       }
 
-      // Create signal purchase via REST API
-      const response = await fetch(`http://localhost:3001/api/signals/${this.signalUUID}/purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await this.getAuthToken()}`
-        },
-        body: JSON.stringify({
-          signal_id: this.signalUUID,
-          price: this.signal.price || this.signal.price_usdt,
-          currency: 'USDT'
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      // Create signal purchase in signal_access table
+      const userId = await this.api.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
       }
 
-      const purchaseData = await response.json();
+      const accessData = {
+        user_id: userId,
+        signal_id: this.signalUUID,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + (this.signal.access_days * 24 * 60 * 60 * 1000)).toISOString(),
+        price_paid: this.signal.price_usdt || this.signal.price,
+        currency: 'USDT'
+      };
+
+      const { data, error } = await window.API.supabase
+        .from('signal_access')
+        .insert(accessData)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create purchase: ${error.message}`);
+      }
 
       // Show success message
-      window.Notify.success('Purchase initiated! Please complete payment to activate access.');
-      
-      console.log('Purchase created:', purchaseData);
-      
+      window.Notify.success('Purchase completed! Signal access activated.');
+
+      // Update UI to show purchased state
+      this.renderSignalDetails();
+      this.checkPurchaseBlock();
+
     } catch (error) {
       console.error('Purchase failed:', error);
       window.Notify.error(error.message || 'Failed to initiate purchase');
