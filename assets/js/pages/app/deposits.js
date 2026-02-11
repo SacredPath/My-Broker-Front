@@ -446,8 +446,8 @@ class DepositsPage {
                 <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 8px;">Amount (${method.currency})</label>
                 <input type="number" 
                        id="deposit-amount" 
-                       min="${method.min_amount || 1}" 
-                       max="${method.max_amount || 999999}" 
+                       min="${method.min_amount || (method.currency === 'BTC' ? 100 : 1)}" 
+                       max="${method.max_amount || (method.currency === 'BTC' ? 1000000 : 999999)}" 
                        step="0.01" 
                        placeholder="0.00"
                        value="${this.upgradeContext ? this.upgradeContext.upgradeAmount : ''}"
@@ -512,7 +512,7 @@ class DepositsPage {
     if (!method) return;
 
     // Validate amount
-    if (!this.currentDepositAmount || this.currentDepositAmount < (method.min_amount || 1)) {
+    if (!this.currentDepositAmount || this.currentDepositAmount < (method.min_amount || (method.currency === 'BTC' ? 100 : 1))) {
       if (window.Notify) {
         window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(method.min_amount || 0, method.currency === 'USDT' ? 6 : 2)}`);
       } else {
