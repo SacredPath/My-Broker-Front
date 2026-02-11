@@ -80,7 +80,7 @@ class WithdrawPage {
       }
 
       // Load user profile from database
-      const { data, error } = await window.API.serviceClient
+      const { data, error } = await window.API.supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
@@ -122,7 +122,7 @@ class WithdrawPage {
       console.log('Creating user profile for withdrawal validation...');
       
       // Get user data from Supabase auth
-      const { data: userData, error: authError } = await window.API.serviceClient.auth.getUser();
+      const { data: userData, error: authError } = await window.API.supabase.auth.getUser();
       
       if (authError) {
         console.error('Error getting user data from auth:', authError);
@@ -143,7 +143,7 @@ class WithdrawPage {
         ...(userMetaData.avatar_url && { avatar_url: userMetaData.avatar_url })
       };
       
-      const { data, error } = await window.API.serviceClient
+      const { data, error } = await window.API.supabase
         .from('profiles')
         .insert(profileData)
         .select()
@@ -166,7 +166,7 @@ class WithdrawPage {
     try {
       console.log('Loading email verification status for withdrawal validation...');
       
-      const { data, error } = await window.API.serviceClient
+      const { data, error } = await window.API.supabase
         .from('profiles')
         .select('email_verified, email_verified_at, email_verified_by, email_verification_notes')
         .eq('user_id', userId)
@@ -303,21 +303,27 @@ class WithdrawPage {
 
   async loadWithdrawalMethods() {
     try {
-      console.log('Loading user withdrawal methods...');
+      console.log('Loading user payout methods...');
       
       const userId = await this.api.getCurrentUserId();
       
-      // Get user withdrawal methods from database
-      const { data, error } = await window.API.serviceClient
-        .rpc('get_user_withdrawal_methods', { p_user_id: userId });
+      // Get user payout methods from database
+      const { data, error } = await window.API.supabase
+        .from('payout_methods')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Database error loading withdrawal methods:', error);
+        console.error('Database error loading payout methods:', error);
         
         // Handle specific table not found error
-        if (error.code === 'PGRST116' && error.message.includes("function get_user_withdrawal_methods")) {
-          console.warn('get_user_withdrawal_methods function not found. Using mock data for demonstration.');
-          this.userMethods = this.getMockWithdrawalMethods();
+        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.warn('payout_methods table does not exist yet. User must add payout methods in settings first.');
+          this.userMethods = [];
+          this.showNoMethodsMessage();
           return;
         }
         
@@ -326,13 +332,18 @@ class WithdrawPage {
       }
 
       this.userMethods = data || [];
-      console.log('User withdrawal methods loaded:', this.userMethods);
+      console.log('User payout methods loaded:', this.userMethods);
       
-      // Auto-populate method dropdown
-      this.populateMethodDropdown();
+      // Check if user has any methods
+      if (this.userMethods.length === 0) {
+        this.showNoMethodsMessage();
+      } else {
+        // Auto-populate method dropdown
+        this.populateMethodDropdown();
+      }
       
     } catch (error) {
-      console.error('Failed to load withdrawal methods:', error);
+      console.error('Failed to load payout methods:', error);
       this.userMethods = [];
     }
   }
@@ -412,6 +423,30 @@ class WithdrawPage {
         option.dataset.method = JSON.stringify(method);
         methodSelect.appendChild(option);
       });
+    }
+  }
+
+  showNoMethodsMessage() {
+    const methodSelect = document.getElementById('method-select');
+    const methodDetails = document.getElementById('method-details');
+    const amountInput = document.getElementById('amount-input');
+    
+    if (methodSelect) {
+      methodSelect.innerHTML = '<option value="">No saved methods</option>';
+      methodSelect.disabled = true;
+    }
+    
+    if (amountInput) {
+      amountInput.disabled = true;
+    }
+    
+    if (methodDetails) {
+      methodDetails.style.display = 'none';
+    }
+    
+    // Show message to user
+    if (window.Notify) {
+      window.Notify.error('No payout methods found. Please add payout methods in Settings first.');
     }
   }
 
@@ -751,10 +786,13 @@ class WithdrawPage {
       return;
     }
 
+    // Extract details from JSONB field
+    const details = this.selectedMethodData.details || {};
+
     // Show method details based on method type
     let detailsHTML = '';
     
-    if (this.selectedMethodData.method_type === 'crypto') {
+    if (this.selectedMethodData.method_type === 'crypto_wallet') {
       detailsHTML = `
         <div class="method-detail-item">
           <span class="method-detail-label">Network:</span>
@@ -762,7 +800,7 @@ class WithdrawPage {
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Address:</span>
-          <span class="method-detail-value" style="font-family: 'Courier New', monospace; word-break: break-all;">${this.selectedMethodData.address || 'Not set'}</span>
+          <span class="method-detail-value" style="font-family: 'Courier New', monospace; word-break: break-all;">${this.selectedMethodData.address || details.address || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Processing Time:</span>
@@ -770,45 +808,49 @@ class WithdrawPage {
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.processing_fee_percent || 0) * 100}%</span>
+          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
         </div>
       `;
-    } else if (this.selectedMethodData.method_type === 'bank') {
+    } else if (this.selectedMethodData.method_type === 'bank_transfer') {
       detailsHTML = `
         <div class="method-detail-item">
           <span class="method-detail-label">Bank Name:</span>
-          <span class="method-detail-value">${this.selectedMethodData.bank_name || 'Not set'}</span>
+          <span class="method-detail-value">${details.bank_name || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Account Number:</span>
-          <span class="method-detail-value">${this.selectedMethodData.account_number || 'Not set'}</span>
+          <span class="method-detail-value">${details.account_number || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Routing Number:</span>
-          <span class="method-detail-value">${this.selectedMethodData.routing_number || 'Not set'}</span>
+          <span class="method-detail-value">${details.routing_number || 'Not set'}</span>
+        </div>
+        <div class="method-detail-item">
+          <span class="method-detail-label">SWIFT Code:</span>
+          <span class="method-detail-value">${details.swift_code || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Account Holder:</span>
-          <span class="method-detail-value">${this.selectedMethodData.account_holder_name || 'Not set'}</span>
+          <span class="method-detail-value">${details.account_name || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Processing Time:</span>
-          <span class="method-detail-value">${this.selectedMethodData.processing_time_hours || 48} hours</span>
+          <span class="method-detail-value">${this.selectedMethodData.processing_time_hours || 72} hours</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.processing_fee_percent || 0) * 100}%</span>
+          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
         </div>
       `;
     } else if (this.selectedMethodData.method_type === 'paypal') {
       detailsHTML = `
         <div class="method-detail-item">
           <span class="method-detail-label">PayPal Email:</span>
-          <span class="method-detail-value">${this.selectedMethodData.paypal_email || 'Not set'}</span>
+          <span class="method-detail-value">${details.email || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
-          <span class="method-detail-label">Business Name:</span>
-          <span class="method-detail-value">${this.selectedMethodData.paypal_business_name || 'Not set'}</span>
+          <span class="method-detail-label">Account ID:</span>
+          <span class="method-detail-value">${details.account_id || 'Not set'}</span>
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Processing Time:</span>
@@ -816,7 +858,7 @@ class WithdrawPage {
         </div>
         <div class="method-detail-item">
           <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.processing_fee_percent || 0) * 100}%</span>
+          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
         </div>
       `;
     }
