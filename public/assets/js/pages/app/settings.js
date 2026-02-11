@@ -1031,6 +1031,20 @@ class SettingsPage {
               </select>
             </div>
             
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select class="form-input form-select" id="method-currency" name="method-currency">
+                <option value="USD" ${method?.currency === 'USD' ? 'selected' : ''}>USD - US Dollar</option>
+                <option value="EUR" ${method?.currency === 'EUR' ? 'selected' : ''}>EUR - Euro</option>
+                <option value="GBP" ${method?.currency === 'GBP' ? 'selected' : ''}>GBP - British Pound</option>
+                <option value="CAD" ${method?.currency === 'CAD' ? 'selected' : ''}>CAD - Canadian Dollar</option>
+                <option value="AUD" ${method?.currency === 'AUD' ? 'selected' : ''}>AUD - Australian Dollar</option>
+                <option value="JPY" ${method?.currency === 'JPY' ? 'selected' : ''}>JPY - Japanese Yen</option>
+                <option value="CHF" ${method?.currency === 'CHF' ? 'selected' : ''}>CHF - Swiss Franc</option>
+                <option value="CNY" ${method?.currency === 'CNY' ? 'selected' : ''}>CNY - Chinese Yuan</option>
+              </select>
+            </div>
+            
             <div id="bank-fields" class="method-fields" style="${method?.method_type === 'bank_transfer' || !method ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Account Name</label>
