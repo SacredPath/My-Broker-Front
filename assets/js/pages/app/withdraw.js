@@ -122,7 +122,7 @@ class WithdrawPage {
       console.log('Creating user profile for withdrawal validation...');
       
       // Get user data from Supabase auth
-      const { data: userData, error: authError } = await window.API.serviceClient.auth.getUser();
+      const { data: userData, error: authError } = await window.API.supabase.auth.getUser();
       
       if (authError) {
         console.error('Error getting user data from auth:', authError);
@@ -168,7 +168,7 @@ class WithdrawPage {
       
       const { data, error } = await window.API.supabase
         .from('profiles')
-        .select('email_verified, email_verified_at, email_verified_by, email_verification_notes')
+        .select('email_verified')
         .eq('user_id', userId)
         .limit(1);
 
@@ -308,7 +308,7 @@ class WithdrawPage {
       const userId = await this.api.getCurrentUserId();
       
       // Get user payout methods from database
-      const { data, error } = await window.API.serviceClient
+      const { data, error } = await window.API.supabase
         .from('payout_methods')
         .select('*')
         .eq('user_id', userId)

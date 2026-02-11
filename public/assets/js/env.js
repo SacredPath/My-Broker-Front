@@ -34,6 +34,10 @@ if (!window.__ENV.API_RETRIES) {
   window.__ENV.API_RETRIES = '1';
 }
 
+if (!window.__ENV.USDT_ADDRESS) {
+  window.__ENV.USDT_ADDRESS = 'TMaBfLJXzYWXQeQqfG3pVjJg6XcJ6K7m8N'; // Example TRC20 USDT address - replace with actual address
+}
+
 // Add SUPABASE_LOCAL flag (default false)
 if (typeof window.__ENV.SUPABASE_LOCAL === 'undefined') {
   window.__ENV.SUPABASE_LOCAL = false;

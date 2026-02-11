@@ -1031,6 +1031,20 @@ class SettingsPage {
               </select>
             </div>
             
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select class="form-input form-select" id="method-currency" name="method-currency">
+                <option value="USD" ${method?.currency === 'USD' ? 'selected' : ''}>USD - US Dollar</option>
+                <option value="EUR" ${method?.currency === 'EUR' ? 'selected' : ''}>EUR - Euro</option>
+                <option value="GBP" ${method?.currency === 'GBP' ? 'selected' : ''}>GBP - British Pound</option>
+                <option value="CAD" ${method?.currency === 'CAD' ? 'selected' : ''}>CAD - Canadian Dollar</option>
+                <option value="AUD" ${method?.currency === 'AUD' ? 'selected' : ''}>AUD - Australian Dollar</option>
+                <option value="JPY" ${method?.currency === 'JPY' ? 'selected' : ''}>JPY - Japanese Yen</option>
+                <option value="CHF" ${method?.currency === 'CHF' ? 'selected' : ''}>CHF - Swiss Franc</option>
+                <option value="CNY" ${method?.currency === 'CNY' ? 'selected' : ''}>CNY - Chinese Yuan</option>
+              </select>
+            </div>
+            
             <div id="bank-fields" class="method-fields" style="${method?.method_type === 'bank_transfer' || !method ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Account Name</label>
@@ -1048,6 +1062,10 @@ class SettingsPage {
                 <label class="form-label">Bank Name</label>
                 <input type="text" class="form-input" id="bank-name" name="bank-name" value="${method?.details?.bank_name || ''}" required>
               </div>
+              <div class="form-group">
+                <label class="form-label">SWIFT Code</label>
+                <input type="text" class="form-input" id="swift-code" name="swift-code" value="${method?.details?.swift_code || ''}" required>
+              </div>
             </div>
             
             <div id="paypal-fields" class="method-fields" style="${method?.method_type === 'paypal' ? '' : 'display: none;'}">
@@ -1064,6 +1082,7 @@ class SettingsPage {
                   <option value="trc20" ${method?.details?.network === 'trc20' ? 'selected' : ''}>TRC20 (USDT)</option>
                   <option value="erc20" ${method?.details?.network === 'erc20' ? 'selected' : ''}>ERC20 (USDT)</option>
                   <option value="bep20" ${method?.details?.network === 'bep20' ? 'selected' : ''}>BEP20 (USDT)</option>
+                  <option value="btc" ${method?.details?.network === 'btc' ? 'selected' : ''}>BTC (Bitcoin)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1100,7 +1119,8 @@ class SettingsPage {
     });
 
     // Show selected method fields
-    const selectedFields = modal.querySelector(`#${type}-fields`);
+    let fieldId = type === 'crypto_wallet' ? 'crypto-fields' : `${type}-fields`;
+    const selectedFields = modal.querySelector(`#${fieldId}`);
     if (selectedFields) {
       selectedFields.style.display = 'block';
     }
@@ -1109,10 +1129,25 @@ class SettingsPage {
   async savePayoutMethod(methodId = '') {
     try {
       const modal = document.querySelector('dialog[open]');
-      const methodType = modal.querySelector('#method-type').value;
+      if (!modal) {
+        console.error('❌ No open modal found');
+        window.Notify.error('Modal not found. Please try again.');
+        return;
+      }
+      
+      const methodTypeSelect = modal.querySelector('#method-type');
+      if (!methodTypeSelect) {
+        console.error('❌ Method type select not found in modal');
+        window.Notify.error('Form not loaded properly. Please try again.');
+        return;
+      }
+      
+      const methodType = methodTypeSelect.value;
+      console.log('🔍 Method type found:', methodType);
       
       let methodData = {
         method_type: methodType,
+        method_name: this.getMethodName(methodType),
         currency: modal.querySelector('#method-currency').value,
         is_active: true,
         is_default: false
@@ -1136,12 +1171,20 @@ class SettingsPage {
           };
           break;
         case 'crypto_wallet':
+          const cryptoNetwork = modal.querySelector('#crypto-network');
+          const walletAddress = modal.querySelector('#wallet-address');
+          console.log('🔍 Crypto network element:', cryptoNetwork);
+          console.log('🔍 Crypto network value:', cryptoNetwork?.value);
+          console.log('🔍 Wallet address element:', walletAddress);
+          console.log('🔍 Wallet address value:', walletAddress?.value);
+          
+          const networkValue = cryptoNetwork?.value || '';
+          const addressValue = walletAddress?.value || '';
+          
           methodData.details = {
-            network: modal.querySelector('#crypto-network').value,
-            address: modal.querySelector('#wallet-address').value
+            network: networkValue,
+            address: addressValue
           };
-          methodData.network = modal.querySelector('#crypto-network').value;
-          methodData.address = modal.querySelector('#wallet-address').value;
           break;
       }
 

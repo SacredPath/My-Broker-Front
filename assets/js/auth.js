@@ -293,6 +293,20 @@ class AuthService {
     }
   }
 
+  // Helper method to extract first name from display name
+  extractFirstName(displayName) {
+    if (!displayName) return '';
+    const parts = displayName.trim().split(' ');
+    return parts[0] || '';
+  }
+
+  // Helper method to extract last name from display name
+  extractLastName(displayName) {
+    if (!displayName) return '';
+    const parts = displayName.trim().split(' ');
+    return parts.length > 1 ? parts.slice(1).join(' ') : '';
+  }
+
   // Create or update user profile (handles both cases)
   async createOrUpdateProfile(userId, profileData) {
     try {
@@ -305,8 +319,8 @@ class AuthService {
         user_id: userId, // Also include user_id for foreign key
         email: profileData.email || '',
         display_name: profileData.displayName || '',
-        first_name: profileData.firstName || '',
-        last_name: profileData.lastName || '',
+        first_name: profileData.firstName || this.extractFirstName(profileData.displayName) || '',
+        last_name: profileData.lastName || this.extractLastName(profileData.displayName) || '',
         phone: profileData.phone || '',
         country: profileData.country || '',
         email_verified: false, // Default false, only set by Back Office

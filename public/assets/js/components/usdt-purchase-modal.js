@@ -6,8 +6,8 @@ class USDTPurchaseModal {
     this.confirmationInterval = null;
     this.purchaseData = null;
     
-    // Hardcoded USDT address for signal purchases
-    this.USDT_ADDRESS = "MACSONS_ADDRESS";
+    // USDT address for signal purchases - should be configured in environment
+    this.USDT_ADDRESS = window.__ENV?.USDT_ADDRESS || "TMaBfLJXzYWXQeQqfG3pVjJg6XcJ6K7m8N"; // Example TRC20 USDT address
     
     this.init();
   }
@@ -333,8 +333,22 @@ class USDTPurchaseModal {
   }
 }
 
-// Initialize modal globally
+// Initialize modal globally and attach to window
 let usdtPurchaseModal;
-document.addEventListener('DOMContentLoaded', () => {
+
+// Function to initialize modal
+function initializeUSDTPurchaseModal() {
   usdtPurchaseModal = new USDTPurchaseModal();
-});
+  window.usdtPurchaseModal = usdtPurchaseModal;
+  console.log('USDT Purchase Modal initialized');
+}
+
+// Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeUSDTPurchaseModal);
+} else {
+  initializeUSDTPurchaseModal();
+}
+
+// Export for module usage
+export default USDTPurchaseModal;

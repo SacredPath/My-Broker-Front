@@ -114,11 +114,11 @@ class SignalsPage {
     try {
       console.log('Loading signals from database...');
       
-      // Load signals from signals table using service client
-      const { data, error } = await window.API.serviceClient
+      // Load signals from signals table using shared client
+      const { data, error } = await window.API.supabase
         .from('signals')
-        .select("id,title,category,risk_rating,description,price_usdt,access_days,type,pdf_path,is_active,created_at")
-        .eq('is_active', true)
+        .select("id,title,category,risk_rating,description,price_usdt,access_days,type,status,created_at")
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -129,7 +129,9 @@ class SignalsPage {
       
       this.signals = (data || []).map(s => ({
         ...s,
-        price_usdt: parseFloat(s.price_usdt) || 0
+        price: parseFloat(s.price_usdt) || 0,
+        risk_rating: s.risk_rating,
+        access_days: s.access_days
       }));
       
       console.log('Signals loaded from database:', this.signals.length, 'signals');
@@ -151,13 +153,12 @@ class SignalsPage {
         return;
       }
 
-      // Load user signal access from signal_purchases table
-      const { data, error } = await window.API.serviceClient
-        .from('signal_purchases')
+      // Load user signal access from signal_access table
+      const { data, error } = await window.API.supabase
+        .from('signal_access')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_active', true)
-        .gt('access_expires_at', new Date().toISOString());
+        .gt('expires_at', new Date().toISOString());
       
       if (error) {
         console.error('Database error loading user access:', error);
@@ -389,6 +390,8 @@ class SignalsPage {
   }
 
   getDurationText(duration) {
+    if (!duration) return 'Unknown duration';
+    
     const days = typeof duration === 'number' ? duration : parseInt(duration.toString().split('_')[0]) || duration;
     
     switch (days) {
