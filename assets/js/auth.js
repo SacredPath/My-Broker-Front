@@ -243,35 +243,21 @@ class AuthService {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
-      // Prepare comprehensive profile data
+      // Prepare profile data with only existing columns
       const fullProfileData = {
         id: userId,
+        user_id: userId,
         email: profileData.email || '',
-        display_name: profileData.displayName || '',
+        display_name: profileData.displayName || profileData.display_name || '',
         first_name: profileData.firstName || '',
         last_name: profileData.lastName || '',
         phone: profileData.phone || '',
         country: profileData.country || '',
+        bio: profileData.bio || '',
         email_verified: false, // Default false, only set by Back Office
-        role: 'user',
+        kyc_status: 'not_submitted', // Default KYC status
         created_at: new Date().toISOString(),
-        
-        // Address information
-        address_line1: profileData.address?.address_line1 || '',
-        address_line2: profileData.address?.address_line2 || '',
-        city: profileData.address?.city || '',
-        state: profileData.address?.state || '',
-        postal_code: profileData.address?.postal_code || '',
-        
-        // Compliance information
-        new_to_investing: profileData.compliance?.new_to_investing || '',
-        pep: profileData.compliance?.pep || '',
-        pep_details: profileData.compliance?.pep_details || '',
-        occupation: profileData.compliance?.occupation || '',
-        dob: profileData.compliance?.dob || '',
-        
-        // Additional metadata
-        referral_code: profileData.referralCode || ''
+        updated_at: new Date().toISOString()
       };
 
       const { data, error } = await client
