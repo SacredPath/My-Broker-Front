@@ -617,6 +617,61 @@ class AuthService {
       return { success: false, error };
     }
   }
+
+  // Handle password reset callback
+  async handlePasswordResetCallback() {
+    try {
+      await this.ensureInitialized();
+      const client = await this.supabaseClient.getClient();
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessToken = urlParams.get('access_token');
+      const refreshToken = urlParams.get('refresh_token');
+      
+      if (!accessToken || !refreshToken) {
+        console.warn('No reset tokens found in URL');
+        return { success: false, error: 'Invalid reset link' };
+      }
+
+      console.log('Processing password reset callback with tokens');
+
+      // Exchange the tokens for a new session
+      const { data, error } = await client.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+
+      if (error) {
+        console.error('Failed to set session from reset tokens:', error);
+        throw error;
+      }
+
+      if (data.session) {
+        console.log('Password reset successful - session established');
+        
+        if (window.Notify) {
+          window.Notify.success('Password reset successful! You can now log in.');
+        }
+
+        // Redirect to login page with success message
+        setTimeout(() => {
+          window.location.href = '/login.html?reset=success';
+        }, 2000);
+
+        return { success: true, data };
+      } else {
+        throw new Error('Failed to establish session after password reset');
+      }
+    } catch (error) {
+      console.error('Password reset callback error:', error);
+      
+      if (window.Notify) {
+        window.Notify.error('Failed to complete password reset');
+      }
+
+      return { success: false, error };
+    }
+  }
 }
 
 // Create and export singleton instance
@@ -643,5 +698,6 @@ export const {
   resetPassword,
   isAuthenticated,
   getCurrentUserWithProfile,
-  handleAuthCallback
+  handleAuthCallback,
+  handlePasswordResetCallback
 } = authService;
