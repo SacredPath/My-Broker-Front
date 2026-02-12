@@ -105,37 +105,46 @@ class APIClient {
         throw new Error('Service client not initialized');
       }
 
-      // Get user positions with tier information
-      const { data: positions, error } = await this.serviceClient
+      // Get user positions first
+      const { data: positions, error: positionsError } = await this.serviceClient
         .from('positions')
-        .select(`
-          *,
-          investment_tiers (
-            id,
-            name,
-            daily_roi,
-            investment_period_days,
-            min_amount,
-            max_amount
-          )
-        `)
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        throw error;
+      if (positionsError) {
+        throw positionsError;
       }
 
+      // Get investment tiers data separately
+      const { data: tiers, error: tiersError } = await this.serviceClient
+        .from('investment_tiers')
+        .select('*')
+        .order('id');
+
+      if (tiersError) {
+        throw tiersError;
+      }
+
+      // Map tier data to positions
+      const positionsWithTiers = positions?.map(position => {
+        const tier = tiers?.find(t => t.id === position.tier_id);
+        return {
+          ...position,
+          investment_tiers: tier || null
+        };
+      }) || [];
+
       // Calculate portfolio summary
-      const totalValue = positions?.reduce((sum, pos) => sum + (pos.amount || 0), 0) || 0;
-      const totalROI = positions?.reduce((sum, pos) => sum + (pos.accrued_roi || 0), 0) || 0;
+      const totalValue = positionsWithTiers.reduce((sum, pos) => sum + (pos.amount || 0), 0);
+      const totalROI = positionsWithTiers.reduce((sum, pos) => sum + (pos.accrued_roi || 0), 0);
 
       return {
-        positions: positions || [],
+        positions: positionsWithTiers,
         summary: {
           total_value: totalValue,
           total_roi: totalROI,
-          positions_count: positions?.length || 0
+          positions_count: positionsWithTiers.length
         },
         balances: [] // TODO: Add balances if needed
       };
@@ -233,26 +242,21 @@ class APIClient {
     try {
       console.log('[APIClient] Getting market prices...');
       
-      // For now, return mock market prices since we don't have a prices table
+      // For now, return mock market prices in array format since portfolio.js expects forEach
       // This can be updated later to fetch from a real market data API
-      const mockPrices = {
-        'BTC': 45000.00,
-        'ETH': 2800.00,
-        'USDT': 1.00,
-        'USD': 1.00
-      };
+      const mockPrices = [
+        { symbol: 'BTC', price_usd: 45000.00 },
+        { symbol: 'ETH', price_usd: 2800.00 },
+        { symbol: 'USDT', price_usd: 1.00 },
+        { symbol: 'USD', price_usd: 1.00 }
+      ];
 
       console.log('[APIClient] Market prices loaded:', mockPrices);
       return mockPrices;
     } catch (error) {
       console.error('Failed to fetch market prices:', error);
-      // Return default prices on error
-      return {
-        'BTC': 45000.00,
-        'ETH': 2800.00,
-        'USDT': 1.00,
-        'USD': 1.00
-      };
+      // Return empty array on error to match expected format
+      return [];
     }
   }
 
