@@ -434,6 +434,36 @@ class AuthService {
         .single();
 
       if (error) {
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile for user:', userId);
+          
+          // Get user email from auth
+          const { data: { user } } = await client.auth.getUser();
+          
+          const { data: newProfile, error: createError } = await client
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: user?.email || null,
+              first_name: null,
+              last_name: null,
+              phone: null,
+              country: null,
+              bio: null,
+              avatar_url: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            throw createError;
+          }
+
+          return { success: true, data: newProfile };
+        }
         throw error;
       }
 
