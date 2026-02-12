@@ -71,18 +71,16 @@ class SettingsPage {
 
   async loadUserData() {
     try {
-      console.log('Loading user data via REST API...');
+      console.log('Loading user data via AuthService...');
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
+      // Use AuthService to get user with auto-profile creation
+      const userWithProfile = await window.AuthService.getCurrentUserWithProfile();
+      
+      if (!userWithProfile) {
         throw new Error('User not authenticated');
       }
 
-      // Load user profile from database
-      const data = await this.api.getUserProfile(userId);
-      
-      this.currentUser = data;
+      this.currentUser = userWithProfile;
       console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
@@ -199,7 +197,7 @@ class SettingsPage {
     if (!this.currentUser) return;
 
     // The API returns profile data directly, not nested
-    const profile = this.currentUser || {};
+    const profile = this.currentUser?.profile || {};
     
     console.log('🔄 renderProfile called');
     console.log('👤 User data:', this.currentUser);
@@ -219,7 +217,7 @@ class SettingsPage {
     const phone = profile.phone || '';
     const country = profile.country || '';
     const bio = profile.bio || '';
-    const email = profile.auth_email || profile.email || ''; // Email from join or direct
+    const email = this.currentUser?.email || profile.email || ''; // Email from auth or profile
     
     // Store original data for reset functionality
     this.originalProfileData = {
