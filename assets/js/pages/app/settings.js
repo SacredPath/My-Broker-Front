@@ -203,15 +203,19 @@ class SettingsPage {
     console.log('👤 User data:', this.currentUser);
     console.log('📋 Profile data:', profile);
     
-    // Use proper first_name and last_name fields, fallback to display_name parsing
+    // Use database fields directly, fallback to parsing display_name if empty
     const firstName = profile.first_name || '';
     const lastName = profile.last_name || '';
     
-    // If first_name/last_name are empty, fallback to parsing display_name
-    const fallbackDisplayName = (!firstName && !lastName) ? (profile.display_name || '') : '';
-    const fallbackNameParts = fallbackDisplayName.split(' ');
-    const fallbackFirstName = firstName || fallbackNameParts[0] || '';
-    const fallbackLastName = lastName || (fallbackNameParts.length > 1 ? fallbackNameParts.slice(1).join(' ') : '');
+    // If first_name/last_name are empty, parse from display_name
+    let fallbackFirstName = firstName;
+    let fallbackLastName = lastName;
+    
+    if (!firstName && !lastName && profile.display_name) {
+      const nameParts = profile.display_name.trim().split(' ');
+      fallbackFirstName = nameParts[0] || '';
+      fallbackLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    }
     
     // Use profile data directly
     const phone = profile.phone || '';
