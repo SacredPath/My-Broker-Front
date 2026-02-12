@@ -458,11 +458,21 @@ class APIClient {
         throw new Error('Service client not initialized');
       }
 
-      const { data: kycData, error } = await this.serviceClient
-        .from('kyc_applications')
-        .select('*')
+      const { data: profile, error } = await this.serviceClient
+        .from('profiles')
+        .select('kyc_status')
         .eq('user_id', userId)
         .single();
+
+      let kycData;
+      if (profile && profile.kyc_status) {
+        kycData = {
+          status: profile.kyc_status,
+          submitted_at: null,
+          reviewed_at: null,
+          rejection_reason: null
+        };
+      }
 
       if (error && error.code !== 'PGRST116') { // Not found error
         throw error;
@@ -523,7 +533,7 @@ class APIClient {
       const { data: profile, error } = await this.serviceClient
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       if (error && error.code !== 'PGRST116') { // Not found error

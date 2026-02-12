@@ -362,7 +362,7 @@ class AuthService {
           const { data: updateResult, error: updateError } = await client
             .from('profiles')
             .update(updateData)
-            .eq('id', userId)
+            .eq('user_id', userId)
             .select()
             .single();
 
@@ -397,7 +397,7 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .update(safeProfileData)
-        .eq('id', userId)
+        .eq('user_id', userId)
         .select()
         .single();
 
@@ -430,40 +430,10 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       if (error) {
-        // If profile doesn't exist, create it
-        if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating new profile for user:', userId);
-          
-          // Get user email from auth
-          const { data: { user } } = await client.auth.getUser();
-          
-          const { data: newProfile, error: createError } = await client
-            .from('profiles')
-            .insert({
-              id: userId,
-              email: user?.email || null,
-              first_name: null,
-              last_name: null,
-              phone: null,
-              country: null,
-              bio: null,
-              avatar_url: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            throw createError;
-          }
-
-          return { success: true, data: newProfile };
-        }
         throw error;
       }
 
@@ -483,7 +453,7 @@ class AuthService {
       const { error } = await client
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Failed to update last login:', error);
