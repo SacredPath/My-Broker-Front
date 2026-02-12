@@ -244,14 +244,14 @@ class AuthService {
       const client = await this.supabaseClient.getClient();
 
       // Prepare profile data with only existing columns
-      const displayName = profileData.displayName || profileData.display_name || '';
+      const displayName = profileData.firstName || profileData.displayName || profileData.display_name || '';
       const nameParts = displayName.trim().split(' ');
       
       const fullProfileData = {
         id: userId,
         user_id: userId,
         email: profileData.email || '',
-        display_name: displayName,
+        display_name: profileData.firstName || nameParts[0] || '', // Display name is first name only
         first_name: profileData.firstName || nameParts[0] || '',
         last_name: profileData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''),
         phone: profileData.phone || '',
