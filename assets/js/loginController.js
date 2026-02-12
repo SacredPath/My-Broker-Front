@@ -343,6 +343,20 @@ class LoginController {
   }
 
   async handlePasswordReset(email) {
+    console.log('handlePasswordReset called with:', email);
+    console.log('AuthService available:', !!window.AuthService);
+    console.log('resetPassword function available:', !!(window.AuthService && window.AuthService.resetPassword));
+    
+    if (!window.AuthService) {
+      this.showResetError('Authentication service not available');
+      return;
+    }
+    
+    if (!window.AuthService.resetPassword) {
+      this.showResetError('Password reset function not available');
+      return;
+    }
+    
     if (!email) {
       this.showResetError('Please enter your email address');
       return;
@@ -352,7 +366,7 @@ class LoginController {
       // Show loading state
       this.showResetLoading();
       
-      const result = await window.AuthService.requestPasswordReset(email);
+      const result = await window.AuthService.resetPassword(email);
       
       if (result.success) {
         // Show success state
