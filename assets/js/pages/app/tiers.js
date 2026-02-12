@@ -187,7 +187,7 @@ class TiersPage {
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'active')
-        .order('opened_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Database error loading user positions:', error);
@@ -414,7 +414,7 @@ class TiersPage {
     } else {
       // Upgrade - user needs to deposit more
       console.log('Initiating upgrade flow for tier:', tier.name);
-      this.initiateUpgrade(tierId);
+      this.openTierModal(tierId);
     }
   }
 
