@@ -76,7 +76,7 @@ class AuthService {
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/src/pages/auth/callback.html`,
+          redirectTo: `${window.location.origin}/app/auth/callback.html`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -220,9 +220,9 @@ class AuthService {
         window.Notify.success('Signed out successfully');
       }
 
-      // Redirect to home page
+      // Redirect to login page
       setTimeout(() => {
-        window.location.href = '/src/pages/index.html';
+        window.location.href = '/login.html';
       }, 1000);
 
       return { success: true };
@@ -600,7 +600,7 @@ class AuthService {
         await this.updateLastLogin(data.session.user.id);
         
         // Redirect to intended destination or dashboard
-        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/src/pages/dashboard.html';
+        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/app/home.html';
         sessionStorage.removeItem('intendedDestination');
         
         window.location.href = intendedDestination;
