@@ -263,17 +263,10 @@ if (window.__APP_SHELL_INIT__) {
     
     if (isOpen) {
       html.classList.remove('sidebar-open');
-      // Properly hide overlay to prevent it from being stuck
       overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
     } else {
       html.classList.add('sidebar-open');
       overlay.style.display = 'block';
-      overlay.style.visibility = 'visible';
-      overlay.style.opacity = '1';
-      overlay.style.pointerEvents = 'auto';
     }
   }
 

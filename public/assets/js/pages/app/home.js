@@ -60,8 +60,9 @@ class HomePage {
     
     if (window.AppShell?.currentUser) {
       const user = window.AppShell.currentUser;
-      const firstName = user.profile?.first_name || '';
-      const displayName = firstName || user.email?.split('@')[0] || 'User';
+      const displayName = user.profile?.display_name || 
+                        user.email?.split('@')[0] || 
+                        'User';
       
       if (userDisplay) {
         userDisplay.textContent = displayName;

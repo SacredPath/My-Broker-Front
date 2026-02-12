@@ -38,7 +38,6 @@ class ModalManager {
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-xl);
         max-width: 500px;
         width: 100%;
         max-height: 90vh;

@@ -581,7 +581,7 @@ class SettingsPage {
       const { data, error } = await this.api.supabase
         .from('profiles')
         .update(profileData)
-        .eq('id', userId)
+        .eq('user_id', userId)
         .select()
         .single();
 

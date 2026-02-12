@@ -261,138 +261,38 @@ class LoginController {
     document.addEventListener('click', async (e) => {
       if (e.target.closest('[data-action="password-reset"]')) {
         e.preventDefault();
-        this.showPasswordResetModal();
+        
+        // Get email from the login form if available
+        const emailInput = document.getElementById('email');
+        const defaultEmail = emailInput?.value.trim() || '';
+        
+        const email = prompt('Enter your email address for password reset:', defaultEmail);
+        
+        if (email && email.trim()) {
+          await this.handlePasswordReset(email.trim());
+        }
       }
     });
-
-    // Setup modal event listeners
-    this.setupModalListeners();
-  }
-
-  setupModalListeners() {
-    const modal = document.getElementById('password-reset-modal');
-    const closeBtn = document.getElementById('close-modal-btn');
-    const cancelBtn = document.getElementById('cancel-reset-btn');
-    const form = document.getElementById('password-reset-form');
-    const closeSuccessBtn = document.getElementById('close-success-btn');
-
-    // Close modal handlers
-    const closeModal = () => this.hidePasswordResetModal();
-    closeBtn?.addEventListener('click', closeModal);
-    cancelBtn?.addEventListener('click', closeModal);
-    closeSuccessBtn?.addEventListener('click', closeModal);
-
-    // Close on backdrop click
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
-    // Form submission
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const emailInput = document.getElementById('reset-email');
-      const email = emailInput?.value.trim();
-      
-      if (email) {
-        await this.handlePasswordReset(email);
-      }
-    });
-
-    // Escape key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal?.style.display !== 'none') {
-        closeModal();
-      }
-    });
-  }
-
-  showPasswordResetModal() {
-    const modal = document.getElementById('password-reset-modal');
-    const emailInput = document.getElementById('reset-email');
-    const form = document.getElementById('password-reset-form');
-    const loading = document.getElementById('reset-loading');
-    const success = document.getElementById('reset-success');
-
-    // Reset modal state
-    form.style.display = 'block';
-    loading.style.display = 'none';
-    success.style.display = 'none';
-
-    // Pre-fill email from login form if available
-    const loginEmailInput = document.getElementById('email');
-    if (loginEmailInput?.value.trim()) {
-      emailInput.value = loginEmailInput.value.trim();
-    }
-
-    // Show modal
-    modal.style.display = 'block';
-    emailInput?.focus();
-  }
-
-  hidePasswordResetModal() {
-    const modal = document.getElementById('password-reset-modal');
-    modal.style.display = 'none';
-    
-    // Reset form
-    const form = document.getElementById('password-reset-form');
-    const emailInput = document.getElementById('reset-email');
-    if (form && emailInput) {
-      form.reset();
-    }
   }
 
   async handlePasswordReset(email) {
-    const form = document.getElementById('password-reset-form');
-    const loading = document.getElementById('reset-loading');
-    const success = document.getElementById('reset-success');
-
-    // Show loading state
-    form.style.display = 'none';
-    loading.style.display = 'block';
+    if (!email) {
+      alert('Please enter your email address');
+      return;
+    }
 
     try {
       const result = await window.AuthService.requestPasswordReset(email);
       
-      // Hide loading
-      loading.style.display = 'none';
-      
       if (result.success) {
-        // Show success state
-        success.style.display = 'block';
-        
-        // Auto-close after 5 seconds
-        setTimeout(() => {
-          this.hidePasswordResetModal();
-        }, 5000);
+        alert('Password reset link sent! Check your email.');
       } else {
-        // Show error and return to form
-        form.style.display = 'block';
-        const emailInput = document.getElementById('reset-email');
-        emailInput?.focus();
-        
-        // Show error notification if available
-        if (window.showNotification) {
-          window.showNotification(result.error || 'Failed to send password reset email', 'error');
-        }
+        alert(result.error || 'Failed to send password reset email');
       }
     } catch (error) {
       console.error('Password reset error:', error);
-      
-      // Hide loading and show form
-      loading.style.display = 'none';
-      form.style.display = 'block';
-      
-      const emailInput = document.getElementById('reset-email');
-      emailInput?.focus();
-      
       const errorMessage = error.message || 'Failed to send password reset email';
-      
-      // Show error notification if available
-      if (window.showNotification) {
-        window.showNotification(errorMessage, 'error');
-      }
+      alert(errorMessage);
     }
   }
 

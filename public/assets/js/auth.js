@@ -362,7 +362,7 @@ class AuthService {
           const { data: updateResult, error: updateError } = await client
             .from('profiles')
             .update(updateData)
-            .eq('id', userId)
+            .eq('user_id', userId)
             .select()
             .single();
 
@@ -397,7 +397,7 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .update(safeProfileData)
-        .eq('id', userId)
+        .eq('user_id', userId)
         .select()
         .single();
 
@@ -430,7 +430,7 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       if (error) {
@@ -453,7 +453,7 @@ class AuthService {
       const { error } = await client
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Failed to update last login:', error);

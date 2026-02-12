@@ -49,6 +49,10 @@ class TiersPage {
       
       // Setup UI
       this.renderTiers();
+      this.setupModal();
+      
+      // Setup button event listeners
+      this.setupButtonEventListeners();
       
       console.log('Tiers page setup complete');
     } catch (error) {
@@ -176,14 +180,17 @@ class TiersPage {
 
   async getUserPositions() {
     try {
-      // Load user positions from database
+      // Load user positions from database with tier information
       const userId = await window.API.getCurrentUserId();
       const { data, error } = await window.API.serviceClient
         .from('user_positions')
-        .select('*')
+        .select(`
+          *,
+          investment_tiers(name, daily_roi, investment_period_days, min_amount, max_amount)
+        `)
         .eq('user_id', userId)
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .order('opened_at', { ascending: false });
 
       if (error) {
         console.error('Database error loading user positions:', error);
@@ -200,20 +207,22 @@ class TiersPage {
       // Transform position data to tier-compatible format
       const tierPositions = (data || []).map(position => ({
         id: position.id,
-        tier_id: this.getTierIdFromAmount(position.quantity * position.entry_price),
-        tier_name: this.getTierNameFromAmount(position.quantity * position.entry_price),
-        amount: position.quantity * position.entry_price,
-        currency: 'USD',
+        tier_id: position.tier_id,
+        tier_name: position.investment_tiers?.name || 'Unknown Tier',
+        amount: position.amount || (position.quantity * position.entry_price),
+        currency: position.currency || 'USD',
         started_at: position.opened_at,
-        matures_at: position.opened_at ? new Date(new Date(position.opened_at).getTime() + 90 * 24 * 60 * 60 * 1000).toISOString() : null,
+        matures_at: position.matures_at,
         status: position.status,
-        accrued_roi: position.unrealized_pnl || 0,
+        accrued_roi: 0, // Will be calculated from wallet_ledger
+        daily_roi: position.investment_tiers?.daily_roi || 0,
+        investment_period_days: position.investment_tiers?.investment_period_days || 30,
         symbol: position.symbol,
         position_type: position.position_type,
         entry_price: position.entry_price,
         current_price: position.current_price,
         quantity: position.quantity,
-        unrealized_pnl: position.unrealized_pnl
+        unrealized_pnl: position.unrealized_pnl || 0
       }));
 
       return tierPositions;
@@ -334,8 +343,8 @@ class TiersPage {
             ` : ''}
           </div>
           
-          <button class="tier-action" onclick="window.location.href='/app/tier-details.html?id=${tier.id}'">
-            View Details
+          <button class="tier-action" data-tier-id="${tier.id}">
+            ${isCurrentTier ? 'View Details' : (isEligible ? 'Invest Now' : 'Upgrade')}
           </button>
         </div>
       `;
@@ -347,42 +356,10 @@ class TiersPage {
     }, 100);
   }
 
-  setupButtonEventListeners() {
-    // Attach direct click listeners to tier action buttons
-    this.attachDirectButtonListeners();
-  }
-
-  attachDirectButtonListeners() {
-    // Add direct click listeners to all tier action buttons
-    const buttons = document.querySelectorAll('.tier-action');
-    console.log('Found tier buttons:', buttons.length);
-    
-    buttons.forEach((button, index) => {
-      const tierId = button.dataset.tierId;
-      console.log(`Adding listener to button ${index + 1} for tier ${tierId}`);
-      
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log(`Direct button click: Tier ${tierId}`);
-        this.handleTierAction(tierId);
-      });
-      
-      // Visual feedback
-      button.addEventListener('mouseenter', () => {
-        button.style.transform = 'translateY(-2px) scale(1.02)';
-      });
-      
-      button.addEventListener('mouseleave', () => {
-        button.style.transform = 'translateY(0) scale(1)';
-      });
-    });
-  }
-
   calculateTotalEquity() {
-    // Calculate total equity from user positions (USD only to match backend expectations)
+    // Calculate total equity from user positions (USDT only)
     return this.userPositions
-      .filter(pos => pos.currency === 'USD')
+      .filter(pos => pos.currency === 'USDT')
       .reduce((total, pos) => total + pos.amount, 0);
   }
 
@@ -404,23 +381,513 @@ class TiersPage {
   }
 
   handleTierAction(tierId) {
+    console.log('handleTierAction called with tierId:', tierId);
+    
     const tier = this.tiers.find(t => t.id === tierId);
-    if (!tier) return;
+    if (!tier) {
+      console.error('Tier not found for ID:', tierId);
+      return;
+    }
 
     const currentTierId = this.getCurrentTierId();
     const userTotalEquity = this.calculateTotalEquity();
     const isCurrentTier = tier.id === currentTierId;
+    const isEligible = userTotalEquity >= tier.min_amount;
+
+    console.log('Tier action details:', {
+      tierId,
+      tierName: tier.name,
+      currentTierId,
+      userTotalEquity,
+      isCurrentTier,
+      isEligible
+    });
 
     if (isCurrentTier) {
       // View Details - show current tier details
-      window.location.href = `/app/tier-details.html?id=${tierId}`;
+      console.log('Opening tier modal for current tier:', tier.name);
+      this.openTierModal(tierId);
     } else if (userTotalEquity >= tier.min_amount) {
       // Invest Now - user qualifies for this tier
-      window.location.href = `/app/tier-details.html?id=${tierId}`;
+      console.log('Opening tier modal for investment:', tier.name);
+      this.openTierModal(tierId);
     } else {
       // Upgrade - user needs to deposit more
-      window.location.href = `/app/deposits.html?amount=${tier.min_amount - userTotalEquity}&currency=USDT&target=tier_upgrade&tier_id=${tierId}`;
+      console.log('Initiating upgrade flow for tier:', tier.name);
+      this.initiateUpgrade(tierId);
     }
+  }
+
+  attachDirectButtonListeners() {
+    // Add direct click listeners to all tier action buttons
+    const buttons = document.querySelectorAll('.tier-action');
+    console.log('Found tier buttons:', buttons.length);
+    
+    buttons.forEach((button, index) => {
+      const tierId = button.dataset.tierId;
+      console.log(`Adding listener to button ${index + 1} for tier ${tierId}`);
+      
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`Direct button click: Tier ${tierId}`);
+        this.handleTierAction(tierId);
+      });
+      
+      // Visual feedback
+      button.addEventListener('mouseenter', () => {
+        button.style.transform = 'scale(1.05)';
+      });
+      
+      button.addEventListener('mouseleave', () => {
+        button.style.transform = 'scale(1)';
+      });
+    });
+  }
+
+  setupButtonEventListeners() {
+    // Attach direct click listeners to tier action buttons
+    this.attachDirectButtonListeners();
+  }
+
+  setupModal() {
+    // Setup modal close handlers
+    const modal = document.getElementById('tier-modal');
+    if (!modal) return;
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        this.closeModal();
+      }
+    });
+  }
+
+  async openTierModal(tierId) {
+    this.selectedTier = this.tiers.find(t => t.id === tierId);
+    if (!this.selectedTier) return;
+
+    const modal = document.getElementById('tier-modal');
+    const modalTitle = document.getElementById('modal-tier-name');
+    const modalSubtitle = document.getElementById('modal-tier-subtitle');
+    const tierSummary = document.getElementById('tier-summary');
+    const positionDetailsSection = document.getElementById('position-details-section');
+    const positionsGrid = document.getElementById('positions-grid');
+    const investmentBreakdown = document.getElementById('investment-breakdown');
+    const breakdownGrid = document.getElementById('breakdown-grid');
+    const performanceMetrics = document.getElementById('performance-metrics');
+    const metricsGrid = document.getElementById('metrics-grid');
+    const assetAllocation = document.getElementById('asset-allocation');
+    const allocationChart = document.getElementById('allocation-chart');
+    const shortfallSection = document.getElementById('shortfall-section');
+    const modalActions = document.getElementById('modal-actions');
+
+    // Set modal title
+    modalTitle.textContent = this.selectedTier.name;
+    modalSubtitle.textContent = `${this.selectedTier.days} days at ${(this.selectedTier.daily_roi * 100).toFixed(2)}% daily ROI`;
+
+    // Calculate metrics
+    const userTotalEquity = this.calculateTotalEquity();
+    const currentTierId = this.getCurrentTierId();
+    const isCurrentTier = this.selectedTier.id === currentTierId;
+    const isEligible = userTotalEquity >= this.selectedTier.min_amount;
+    const currentPositions = this.userPositions.filter(pos => pos.tier_id === currentTierId);
+
+    // Generate summary
+    let summaryHTML = `
+      <div class="summary-row">
+        <span class="summary-label">Your Total Equity</span>
+        <span class="summary-value highlight">₮${this.formatMoney(userTotalEquity, 2)}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Tier Minimum</span>
+        <span class="summary-value">₮${this.formatMoney(this.selectedTier.min_amount, 2)}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Investment Period</span>
+        <span class="summary-value">${this.selectedTier.days} days</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Daily ROI</span>
+        <span class="summary-value">${(this.selectedTier.daily_roi * 100).toFixed(2)}%</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Expected Return</span>
+        <span class="summary-value highlight">₮${this.formatMoney(this.selectedTier.min_amount * ((this.selectedTier.daily_roi * 100) * this.selectedTier.days / 100), 2)}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Current Tier</span>
+        <span class="summary-value">${this.tiers.find(t => t.id === currentTierId)?.name || 'None'}</span>
+      </div>
+    `;
+
+    tierSummary.innerHTML = summaryHTML;
+
+    // Show position details if current tier
+    if (isCurrentTier && currentPositions.length > 0) {
+      positionDetailsSection.style.display = 'block';
+      positionsGrid.innerHTML = currentPositions.map(position => `
+        <div class="position-card" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h5 style="color: white; margin: 0; font-size: 16px;">${position.symbol}</h5>
+              <span style="color: rgba(255,255,255,0.7); font-size: 12px;">${position.position_type.toUpperCase()}</span>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: ${position.unrealized_pnl >= 0 ? '#10B981' : '#EF4444'}; font-weight: 600;">
+                ${position.unrealized_pnl >= 0 ? '+' : ''}$${this.formatMoney(position.unrealized_pnl)}
+              </div>
+              <div style="color: rgba(255,255,255,0.7); font-size: 12px;">
+                ${position.unrealized_pnl >= 0 ? '+' : ''}${((position.unrealized_pnl / position.amount) * 100).toFixed(2)}%
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Entry Price</span>
+              <div style="color: white; font-weight: 500;">$${position.entry_price}</div>
+            </div>
+            <div>
+              <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Current Price</span>
+              <div style="color: white; font-weight: 500;">$${position.current_price || 'N/A'}</div>
+            </div>
+            <div>
+              <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Quantity</span>
+              <div style="color: white; font-weight: 500;">${position.quantity}</div>
+            </div>
+            <div>
+              <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Position Value</span>
+              <div style="color: white; font-weight: 500;">$${this.formatMoney(position.amount)}</div>
+            </div>
+          </div>
+          
+          <div style="padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.6);">
+            <div>Started: ${new Date(position.started_at).toLocaleDateString()}</div>
+            ${position.matures_at ? `<div>Matures: ${new Date(position.matures_at).toLocaleDateString()}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // Show investment breakdown
+      investmentBreakdown.style.display = 'block';
+      const totalValue = currentPositions.reduce((sum, pos) => sum + pos.amount, 0);
+      const totalPnL = currentPositions.reduce((sum, pos) => sum + pos.unrealized_pnl, 0);
+      
+      breakdownGrid.innerHTML = `
+        <div class="breakdown-item" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span style="color: rgba(255,255,255,0.7);">Total Invested</span>
+          <span style="color: white; font-weight: 500;">$${this.formatMoney(totalValue)}</span>
+        </div>
+        <div class="breakdown-item" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span style="color: rgba(255,255,255,0.7);">Total P&L</span>
+          <span style="color: ${totalPnL >= 0 ? '#10B981' : '#EF4444'}; font-weight: 500;">
+            ${totalPnL >= 0 ? '+' : ''}$${this.formatMoney(totalPnL)}
+          </span>
+        </div>
+        <div class="breakdown-item" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span style="color: rgba(255,255,255,0.7);">Current Value</span>
+          <span style="color: white; font-weight: 500;">$${this.formatMoney(totalValue + totalPnL)}</span>
+        </div>
+        <div class="breakdown-item" style="display: flex; justify-content: space-between; padding: 8px 0;">
+          <span style="color: rgba(255,255,255,0.7);">ROI</span>
+          <span style="color: ${totalPnL >= 0 ? '#10B981' : '#EF4444'}; font-weight: 500;">
+            ${totalPnL >= 0 ? '+' : ''}${((totalPnL / totalValue) * 100).toFixed(2)}%
+          </span>
+        </div>
+      `;
+
+      // Show performance metrics
+      performanceMetrics.style.display = 'block';
+      const avgROI = currentPositions.reduce((sum, pos) => sum + (pos.unrealized_pnl / pos.amount), 0) / currentPositions.length;
+      const bestPerformer = currentPositions.reduce((best, pos) => 
+        (pos.unrealized_pnl / pos.amount) > (best.unrealized_pnl / best.amount) ? pos : best
+      );
+      const worstPerformer = currentPositions.reduce((worst, pos) => 
+        (pos.unrealized_pnl / pos.amount) < (worst.unrealized_pnl / worst.amount) ? pos : worst
+      );
+
+      metricsGrid.innerHTML = `
+        <div class="metric-card" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">Average ROI</div>
+          <div style="color: ${avgROI >= 0 ? '#10B981' : '#EF4444'}; font-size: 18px; font-weight: 600;">
+            ${avgROI >= 0 ? '+' : ''}${(avgROI * 100).toFixed(2)}%
+          </div>
+        </div>
+        <div class="metric-card" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">Best Performer</div>
+          <div style="color: #10B981; font-size: 16px; font-weight: 600;">${bestPerformer.symbol}</div>
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">
+            +${((bestPerformer.unrealized_pnl / bestPerformer.amount) * 100).toFixed(2)}%
+          </div>
+        </div>
+        <div class="metric-card" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">Worst Performer</div>
+          <div style="color: #EF4444; font-size: 16px; font-weight: 600;">${worstPerformer.symbol}</div>
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">
+            ${((worstPerformer.unrealized_pnl / worstPerformer.amount) * 100).toFixed(2)}%
+          </div>
+        </div>
+        <div class="metric-card" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px;">
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px;">Win Rate</div>
+          <div style="color: white; font-size: 18px; font-weight: 600;">
+            ${((currentPositions.filter(pos => pos.unrealized_pnl >= 0).length / currentPositions.length) * 100).toFixed(0)}%
+          </div>
+        </div>
+      `;
+
+      // Show asset allocation
+      if (this.selectedTier.allocation_mix) {
+        assetAllocation.style.display = 'block';
+        const allocations = Object.entries(this.selectedTier.allocation_mix);
+        allocationChart.innerHTML = `
+          <div style="display: grid; gap: 12px;">
+            ${allocations.map(([asset, percentage]) => `
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                  <div style="width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; background: ${this.getAssetColor(asset)};"></div>
+                  <span style="color: white;">${asset}</span>
+                </div>
+                <span style="color: rgba(255,255,255,0.8);">${percentage}%</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 8px; overflow: hidden;">
+                <div style="background: ${this.getAssetColor(asset)}; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    } else {
+      // Hide detailed sections if no positions
+      positionDetailsSection.style.display = 'none';
+      investmentBreakdown.style.display = 'none';
+      performanceMetrics.style.display = 'none';
+      assetAllocation.style.display = 'none';
+    }
+
+    // Handle shortfall or upgrade options
+    if (!isEligible) {
+      this.showShortfallOptions();
+    } else if (!isCurrentTier) {
+      this.showUpgradeOptions();
+    } else {
+      this.showCurrentTierOptions();
+    }
+
+    // Show modal
+    modal.style.display = 'flex';
+  }
+
+  getAssetColor(asset) {
+    const colors = {
+      'BTC': '#F7931A',
+      'ETH': '#627EEA',
+      'USDT': '#26A17B',
+      'USDC': '#2775CA',
+      'BNB': '#F3BA2F',
+      'ADA': '#0033AD',
+      'DOT': '#E6007A',
+      'LINK': '#2A5ADA',
+      'UNI': '#FF007A',
+      'AAVE': '#B6509E'
+    };
+    return colors[asset] || '#6B7280';
+  }
+
+  showShortfallOptions() {
+    const shortfallSection = document.getElementById('shortfall-section');
+    const modalActions = document.getElementById('modal-actions');
+    const userTotalEquity = this.calculateTotalEquity();
+    const shortfall = this.selectedTier.min_amount - userTotalEquity;
+
+    // Update shortfall display
+    document.getElementById('shortfall-amount').textContent = `$${this.formatMoney(shortfall)}`;
+    document.getElementById('shortfall-description').textContent = 
+      `You need $${this.formatMoney(shortfall)} more to qualify for ${this.selectedTier.name}.`;
+
+    // Show conversion preview
+    this.showConversionPreview(shortfall);
+
+    // Show top up button
+    modalActions.innerHTML = `
+      <button class="btn btn-secondary" onclick="window.tiersPage.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="window.tiersPage.handleTopUp()">
+        Top Up Now
+      </button>
+    `;
+
+    shortfallSection.style.display = 'block';
+  }
+
+  showConversionPreview(shortfall) {
+    const conversionPreview = document.getElementById('conversion-preview');
+    
+    // Mock conversion rates (admin markup + fee)
+    const usdtToUsdRate = 0.99; // 1% markup + fee
+    const usdtAmount = Math.ceil(shortfall / usdtToUsdRate);
+    const fee = usdtAmount - shortfall;
+    
+    conversionPreview.innerHTML = `
+      <div class="conversion-row">
+        <span class="conversion-label">USDT Required:</span>
+        <span class="conversion-value">₮${this.formatMoney(usdtAmount, 6)}</span>
+      </div>
+      <div class="conversion-row">
+        <span class="conversion-label">USD Received:</span>
+        <span class="conversion-value">$${this.formatMoney(shortfall)}</span>
+      </div>
+      <div class="conversion-row">
+        <span class="conversion-label">Fee & Markup:</span>
+        <span class="conversion-value">₮${this.formatMoney(fee, 6)}</span>
+      </div>
+    `;
+  }
+
+  showUpgradeOptions() {
+    const modalActions = document.getElementById('modal-actions');
+    const shortfallSection = document.getElementById('shortfall-section');
+    
+    // Hide shortfall section
+    shortfallSection.style.display = 'none';
+
+    // Show upgrade button
+    modalActions.innerHTML = `
+      <button class="btn btn-secondary" onclick="window.tiersPage.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="window.tiersPage.handleUpgrade()">
+        Upgrade to ${this.selectedTier.name}
+      </button>
+    `;
+  }
+
+  showCurrentTierOptions() {
+    const modalActions = document.getElementById('modal-actions');
+    const shortfallSection = document.getElementById('shortfall-section');
+    const currentPositions = this.userPositions.filter(pos => pos.tier_id === this.getCurrentTierId());
+    
+    // Hide shortfall section
+    shortfallSection.style.display = 'none';
+
+    // Calculate total available ROI to claim
+    const totalAvailableROI = currentPositions.reduce((sum, pos) => sum + (pos.unrealized_pnl || 0), 0);
+
+    // Show claim ROI button if there's available ROI
+    if (totalAvailableROI > 0) {
+      modalActions.innerHTML = `
+        <button class="btn btn-secondary" onclick="window.tiersPage.closeModal()">Close</button>
+        <button class="btn btn-success" onclick="window.tiersPage.claimROI()">
+          Claim $${this.formatMoney(totalAvailableROI)} ROI
+        </button>
+      `;
+    } else {
+      modalActions.innerHTML = `
+        <button class="btn btn-primary" onclick="window.tiersPage.closeModal()">Close</button>
+      `;
+    }
+  }
+
+  async handleTopUp() {
+    const userTotalEquity = this.calculateTotalEquity();
+    const shortfall = this.selectedTier.min_amount - userTotalEquity;
+    const usdtToUsdRate = 0.99;
+    const usdtAmount = Math.ceil(shortfall / usdtToUsdRate);
+
+    // Redirect to deposit with prefilled amount
+    const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+    window.location.href = depositUrl;
+  }
+
+  async handleUpgrade() {
+    try {
+      const userTotalEquity = this.calculateTotalEquity();
+      const currentTierId = this.getCurrentTierId();
+      
+      // If user is already at or above the selected tier, just show details
+      if (currentTierId >= this.selectedTier.id) {
+        window.Notify.info('You are already at this tier or higher.');
+        return;
+      }
+
+      // Calculate the amount needed to upgrade
+      const shortfall = this.selectedTier.min_amount - userTotalEquity;
+      
+      if (shortfall <= 0) {
+        // User has enough equity, proceed with upgrade
+        await this.processTierUpgrade();
+      } else {
+        // User needs to deposit more, redirect to deposit page
+        this.setModalLoading(false);
+        this.closeModal();
+        
+        const usdtToUsdRate = 0.99;
+        const usdtAmount = Math.ceil(shortfall / usdtToUsdRate);
+        
+        // Redirect to deposit with prefilled amount
+        const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+        window.location.href = depositUrl;
+      }
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      window.Notify.error(error.message || 'Upgrade failed. Please try again.');
+      this.setModalLoading(false);
+    }
+  }
+
+  async processTierUpgrade() {
+    try {
+      this.setModalLoading(true);
+
+      // Call REST API function to process tier upgrade
+      const { data, error } = await window.API.serviceClient
+        .rpc('tier_upgrade_rpc', {
+          p_target_tier_id: this.selectedTier.id,
+          p_auto_claim_roi: true
+        });
+
+      if (error) {
+        throw new Error(error.message || 'Tier upgrade failed');
+      }
+
+      // Show success message
+      window.Notify.success(`Successfully upgraded to ${this.selectedTier.name}!`);
+
+      // Reload data
+      await this.loadUserData();
+      this.renderTiers();
+      this.closeModal();
+
+    } catch (error) {
+      console.error('Tier upgrade failed:', error);
+      window.Notify.error(error.message || 'Tier upgrade failed. Please try again.');
+    } finally {
+      this.setModalLoading(false);
+    }
+  }
+
+  setModalLoading(loading) {
+    const modalActions = document.getElementById('modal-actions');
+    if (!modalActions) return;
+
+    if (loading) {
+      modalActions.innerHTML = `
+        <button class="btn btn-secondary" onclick="window.tiersPage.closeModal()" disabled>Cancel</button>
+        <button class="btn btn-primary" disabled>
+          <div class="loading-spinner" style="display: inline-block; margin-right: 8px;"></div>
+          Processing...
+        </button>
+      `;
+    }
+  }
+
+  closeModal() {
+    const modal = document.getElementById('tier-modal');
+    modal.style.display = 'none';
   }
 
   formatMoney(amount, precision = 2) {
@@ -431,6 +898,79 @@ class TiersPage {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision
     });
+  }
+
+  // Autogrowth System Integration
+  async getAutogrowthStatus() {
+    try {
+      const { data, error } = await window.API.serviceClient
+        .rpc('rest_autogrowth_status');
+
+      if (error) {
+        console.error('Error getting autogrowth status:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Failed to get autogrowth status:', error);
+      return null;
+    }
+  }
+
+  async claimROI(positionId = null) {
+    try {
+      const { data, error } = await window.API.serviceClient
+        .rpc('rest_claim_roi', {
+          p_position_id: positionId
+        });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to claim ROI');
+      }
+
+      if (data.success) {
+        window.Notify.success(`Successfully claimed $${this.formatMoney(data.claimed_amount || data.total_claimed)} in ROI!`);
+        
+        // Reload data to update UI
+        await this.loadUserData();
+        this.renderTiers();
+        
+        // If modal is open, refresh it
+        const modal = document.getElementById('tier-modal');
+        if (modal && modal.style.display === 'flex' && this.selectedTier) {
+          this.openTierModal(this.selectedTier.id);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('ROI claim failed:', error);
+      window.Notify.error(error.message || 'Failed to claim ROI. Please try again.');
+      throw error;
+    }
+  }
+
+  async triggerAutogrowth() {
+    try {
+      const { data, error } = await window.API.serviceClient
+        .rpc('rest_autogrowth_trigger');
+
+      if (error) {
+        throw new Error(error.message || 'Failed to trigger autogrowth system');
+      }
+
+      if (data.success) {
+        window.Notify.success('Autogrowth system executed successfully!');
+        console.log('Autogrowth results:', data.data);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Autogrowth trigger failed:', error);
+      window.Notify.error(error.message || 'Failed to trigger autogrowth system');
+      throw error;
+    }
   }
 
   // Cleanup method
