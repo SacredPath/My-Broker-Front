@@ -605,6 +605,165 @@ class APIClient {
     }
   }
 
+  async getConversionSettings() {
+    try {
+      console.log('[APIClient] Getting conversion settings via REST API...');
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('conversion_settings')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Not found error
+        throw error;
+      }
+
+      // Return default settings if no record found
+      if (!data) {
+        return {
+          fees: {
+            markup_percentage: 0.5,
+            fixed_fee: 1.0,
+            variable_fee_percentage: 0.1
+          },
+          refresh_interval: 30,
+          min_amount: 1.0,
+          max_amount: 10000.0
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('[APIClient] Failed to get conversion settings:', error);
+      // Return default settings on error
+      return {
+        fees: {
+          markup_percentage: 0.5,
+          fixed_fee: 1.0,
+          variable_fee_percentage: 0.1
+        },
+        refresh_interval: 30,
+        min_amount: 1.0,
+        max_amount: 10000.0
+      };
+    }
+  }
+
+  async getWalletBalances(userId) {
+    try {
+      console.log('[APIClient] Getting wallet balances via REST API...');
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('wallet_balances')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform to expected format
+      const balances = {};
+      if (data) {
+        data.forEach(balance => {
+          balances[balance.currency] = {
+            available: balance.available || 0,
+            frozen: balance.frozen || 0,
+            total: balance.total || 0
+          };
+        });
+      }
+
+      // Ensure USDT and USD exist with defaults
+      if (!balances.USDT) {
+        balances.USDT = { available: 0, frozen: 0, total: 0 };
+      }
+      if (!balances.USD) {
+        balances.USD = { available: 0, frozen: 0, total: 0 };
+      }
+
+      return balances;
+    } catch (error) {
+      console.error('[APIClient] Failed to get wallet balances:', error);
+      // Return default balances on error
+      return {
+        USDT: { available: 0, frozen: 0, total: 0 },
+        USD: { available: 0, frozen: 0, total: 0 }
+      };
+    }
+  }
+
+  async getConversionHistory(userId) {
+    try {
+      console.log('[APIClient] Getting conversion history via REST API...');
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('conversions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[APIClient] Failed to get conversion history:', error);
+      return [];
+    }
+  }
+
+  async getFXQuote(fromCurrency, toCurrency, amount) {
+    try {
+      console.log('[APIClient] Getting FX quote via REST API...');
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      // For now, generate mock quote since we don't have a real FX API
+      // This can be replaced with a real API call later
+      const mockRate = fromCurrency === 'USDT' && toCurrency === 'USD' ? 1.0 : 0.95;
+      const markup = 0.005; // 0.5% markup
+      const finalRate = mockRate * (1 + markup);
+      
+      const fees = {
+        fixed: 1.0,
+        variable: amount * 0.001, // 0.1% variable fee
+        total: 1.0 + (amount * 0.001)
+      };
+
+      const toAmount = (amount * finalRate) - fees.total;
+
+      return {
+        from_currency: fromCurrency,
+        to_currency: toCurrency,
+        from_amount: amount,
+        to_amount: toAmount,
+        rate: mockRate,
+        final_rate: finalRate,
+        fees: fees.total,
+        created_at: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[APIClient] Failed to get FX quote:', error);
+      throw error;
+    }
+  }
+
   destroy() {
     // Clear keep-alive interval
     this.supabase = null;
