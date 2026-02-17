@@ -276,7 +276,9 @@ class ConvertPage {
     try {
       // For now, use mock data since we don't have a quote API endpoint yet
       // Get FX quote from database
+      console.log('Calling getFXQuote with:', 'USDT', 'USD', amount);
       const data = await this.api.getFXQuote('USDT', 'USD', amount);
+      console.log('getFXQuote returned:', data);
       
       this.currentQuote = data;
       console.log('Generated quote:', this.currentQuote);
