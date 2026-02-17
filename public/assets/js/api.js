@@ -603,6 +603,292 @@ class APIClient {
     }
   }
 
+  // Notification System Methods
+  async getNotifications(userId, options = {}) {
+    try {
+      console.log('[APIClient] Getting notifications for user:', userId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const {
+        limit = 50,
+        offset = 0,
+        unreadOnly = false,
+        type = null
+      } = options;
+
+      let query = this.serviceClient
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      // Apply filters
+      if (unreadOnly) {
+        query = query.eq('is_read', false);
+      }
+
+      if (type) {
+        query = query.eq('type', type);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] Notifications loaded:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('[APIClient] Failed to get notifications:', error);
+      return [];
+    }
+  }
+
+  async getUnreadCount(userId) {
+    try {
+      console.log('[APIClient] Getting unread notification count for user:', userId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+      if (error) {
+        throw error;
+      }
+
+      const count = data?.length || 0;
+      console.log('[APIClient] Unread count:', count);
+      return count;
+    } catch (error) {
+      console.error('[APIClient] Failed to get unread count:', error);
+      return 0;
+    }
+  }
+
+  async markNotificationAsRead(notificationId) {
+    try {
+      console.log('[APIClient] Marking notification as read:', notificationId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .update({
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
+        .eq('id', notificationId)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] Notification marked as read:', data);
+      return data;
+    } catch (error) {
+      console.error('[APIClient] Failed to mark notification as read:', error);
+      throw error;
+    }
+  }
+
+  async markAllAsRead(userId) {
+    try {
+      console.log('[APIClient] Marking all notifications as read for user:', userId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .update({
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .eq('is_read', false)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] All notifications marked as read:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('[APIClient] Failed to mark all as read:', error);
+      throw error;
+    }
+  }
+
+  async archiveNotification(notificationId) {
+    try {
+      console.log('[APIClient] Archiving notification:', notificationId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .update({
+          is_archived: true,
+          archived_at: new Date().toISOString()
+        })
+        .eq('id', notificationId)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] Notification archived:', data);
+      return data;
+    } catch (error) {
+      console.error('[APIClient] Failed to archive notification:', error);
+      throw error;
+    }
+  }
+
+  // Admin notification sending
+  async sendNotificationToUser(adminId, userId, notificationData) {
+    try {
+      console.log('[APIClient] Admin sending notification to user:', { adminId, userId });
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title: notificationData.title,
+          message: notificationData.message,
+          type: notificationData.type || 'info',
+          created_by: adminId,
+          metadata: notificationData.metadata || {}
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] Notification sent successfully:', data);
+      return {
+        ok: true,
+        data,
+        message: 'Notification sent successfully'
+      };
+    } catch (error) {
+      console.error('[APIClient] Failed to send notification:', error);
+      return {
+        ok: false,
+        error: 'Failed to send notification',
+        detail: error.message
+      };
+    }
+  }
+
+  async sendNotificationToMultipleUsers(adminId, userIds, notificationData) {
+    try {
+      console.log('[APIClient] Admin sending notification to multiple users:', { adminId, userCount: userIds.length });
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const notifications = userIds.map(userId => ({
+        user_id: userId,
+        title: notificationData.title,
+        message: notificationData.message,
+        type: notificationData.type || 'info',
+        created_by: adminId,
+        metadata: notificationData.metadata || {}
+      }));
+
+      const { data, error } = await this.serviceClient
+        .from('notifications')
+        .insert(notifications)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] Notifications sent successfully:', data?.length || 0);
+      return {
+        ok: true,
+        data,
+        message: `${data?.length || 0} notifications sent successfully`
+      };
+    } catch (error) {
+      console.error('[APIClient] Failed to send notifications:', error);
+      return {
+        ok: false,
+        error: 'Failed to send notifications',
+        detail: error.message
+      };
+    }
+  }
+
+  async sendNotificationToAllUsers(adminId, notificationData) {
+    try {
+      console.log('[APIClient] Admin sending notification to all users');
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      // Get all active users
+      const { data: users, error: usersError } = await this.serviceClient
+        .from('profiles')
+        .select('user_id')
+        .eq('is_frozen', false);
+
+      if (usersError) {
+        throw usersError;
+      }
+
+      const userIds = users?.map(u => u.user_id) || [];
+      
+      if (userIds.length === 0) {
+        return {
+          ok: true,
+          data: [],
+          message: 'No active users found'
+        };
+      }
+
+      return await this.sendNotificationToMultipleUsers(adminId, userIds, notificationData);
+    } catch (error) {
+      console.error('[APIClient] Failed to send notification to all users:', error);
+      return {
+        ok: false,
+        error: 'Failed to send notification to all users',
+        detail: error.message
+      };
+    }
+  }
+
   async getPayoutMethods(userId) {
     try {
       if (!this.serviceClient) {

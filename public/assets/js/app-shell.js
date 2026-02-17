@@ -494,75 +494,69 @@ class AppShell {
 
   async loadNotifications() {
     try {
-      console.log('[AppShell] Loading notifications from database...');
+      console.log('[AppShell] Loading notifications from NotificationService...');
       
-      // Wait for API client to be available
+      // Wait for NotificationService to be available
       let attempts = 0;
       const maxAttempts = 30; // 3 seconds max wait
       
-      while (!window.API?.getCurrentUserId && attempts < maxAttempts) {
+      while (!window.NotificationService && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
-      
-      // Get current user ID
-      const userId = await window.API?.getCurrentUserId();
-      if (!userId) {
-        console.warn('[AppShell] User not authenticated, skipping notifications');
+
+      if (!window.NotificationService) {
+        console.warn('[AppShell] NotificationService not available, skipping notifications');
         this.notifications = [];
         this.updateNotificationBadge();
         this.renderNotifications();
         return;
       }
 
-      // Fetch notifications from database using service client
-      const { data, error } = await window.API.serviceClient
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // Get notifications from NotificationService
+      this.notifications = window.NotificationService.getNotifications();
+      this.unreadCount = window.NotificationService.getUnreadCount();
+      
+      // Set up callbacks for real-time updates
+      window.NotificationService.onNotificationsUpdate((notifications) => {
+        this.notifications = notifications;
+        this.renderNotifications();
+      });
 
-      if (error) {
-        console.error('[AppShell] Database error loading notifications:', error);
-        throw error;
-      }
+      window.NotificationService.onReadCountChange((unreadCount) => {
+        this.unreadCount = unreadCount;
+        this.updateNotificationBadge();
+      });
 
-      // Transform data to match expected format
-      this.notifications = (data || []).map(notification => ({
-        id: notification.id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type,
-        unread: notification.unread,
-        timestamp: notification.created_at,
-        readAt: notification.read_at
-      }));
+      window.NotificationService.onNewNotification((notification) => {
+        // Show toast for new notifications
+        if (window.Notify) {
+          window.Notify.info(notification.title, notification.message);
+        }
+      });
 
-      console.log(`[AppShell] Loaded ${this.notifications.length} notifications`);
       this.updateNotificationBadge();
       this.renderNotifications();
       
+      console.log('[AppShell] Notifications loaded:', {
+        total: this.notifications.length,
+        unread: this.unreadCount
+      });
     } catch (error) {
       console.error('[AppShell] Failed to load notifications:', error);
       this.notifications = [];
+      this.unreadCount = 0;
       this.updateNotificationBadge();
       this.renderNotifications();
     }
   }
 
-  
   updateNotificationBadge() {
-    const unreadCount = this.notifications.filter(n => n.unread).length;
-    const badge = document.getElementById('notification-count');
-    
-    if (badge) {
-      if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.style.display = 'block';
-      } else {
-        badge.style.display = 'none';
-      }
+    const notificationCount = document.getElementById('notification-count');
+    if (notificationCount) {
+      const count = this.unreadCount || 0;
+      notificationCount.textContent = count;
+      notificationCount.style.display = count > 0 ? 'block' : 'none';
     }
   }
 
