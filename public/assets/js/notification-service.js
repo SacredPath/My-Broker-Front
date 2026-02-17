@@ -62,14 +62,27 @@ class NotificationService {
   }
 
   handleAuthStateChange(user) {
-    if (user && user !== this.currentUser) {
-      this.currentUser = user;
+    // Get actual user ID from auth session
+    const session = window.AuthStateManager?.getCurrentSession();
+    const actualUser = session?.user;
+    
+    console.log('[NotificationService] Auth state change:', {
+      authState: arguments[0],
+      receivedUser: user,
+      actualUser: actualUser,
+      userId: actualUser?.id
+    });
+    
+    if (actualUser && actualUser !== this.currentUser) {
+      this.currentUser = actualUser;
+      console.log('[NotificationService] User authenticated:', actualUser.id);
       this.startPolling();
       this.loadInitialData();
-    } else if (!user) {
+    } else if (!actualUser) {
       this.currentUser = null;
       this.stopPolling();
       this.resetData();
+      console.log('[NotificationService] User logged out');
     }
   }
 
