@@ -21,7 +21,7 @@ export async function loadProfile(req: Request, supabase: any, userId: string) {
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .maybeSingle();
+      .single();
     
     if (error) {
       console.error('Profile query error:', error);
@@ -54,6 +54,32 @@ export async function loadProfile(req: Request, supabase: any, userId: string) {
       missing: true,
       db_error: error.message 
     };
+  }
+}
+
+// Simplified profile loader for admin functions (returns basic profile data)
+export async function loadProfileSimple(userId: string) {
+  try {
+    const supabase = adminClient();
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("user_id,email,full_name,role,kyc_status,is_frozen,created_at")
+      .eq("user_id", userId)
+      .single();
+    
+    if (error) {
+      console.error('Simple profile query error:', error);
+      throw new Error(`Failed to load profile: ${error.message}`);
+    }
+    
+    if (!profile) {
+      throw new Error('Profile not found');
+    }
+    
+    return profile;
+  } catch (error: any) {
+    console.error('Simple profile loading error:', error);
+    throw new Error(`Profile loading error: ${error.message}`);
   }
 }
 
