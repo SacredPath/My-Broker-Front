@@ -414,6 +414,8 @@ class KYCPage {
   }
 
   async submitKYC() {
+    let originalText = '';
+    
     try {
       // Validate required fields
       if (!this.validateForm()) {
@@ -431,7 +433,7 @@ class KYCPage {
 
       // Disable submit button
       const submitBtn = document.getElementById('submit-btn');
-      const originalText = submitBtn.textContent;
+      originalText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
