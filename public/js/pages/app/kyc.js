@@ -95,19 +95,16 @@ class KYCPage {
 
   async loadKYCStatus() {
     try {
-      console.log('KYC: Loading KYC status...');
-      const { data, error } = await window.API.fetchEdge('kyc_status', {
-        method: 'GET'
-      });
-
-      console.log('KYC: Status response:', { data, error });
-
-      if (error) {
-        console.error('KYC: Status error:', error);
-        throw error;
+      console.log('KYC: Loading KYC status via REST API...');
+      
+      if (!this.currentUser || !this.currentUser.id) {
+        throw new Error('User not available');
       }
 
-      this.kycStatus = data;
+      const kycData = await window.API.getKYCStatus(this.currentUser.id);
+      console.log('KYC: Status response:', kycData);
+
+      this.kycStatus = kycData;
       console.log('KYC: Status loaded:', this.kycStatus);
     } catch (error) {
       console.error('KYC: Failed to load KYC status:', error);
@@ -463,21 +460,20 @@ class KYCPage {
       };
 
       // Submit KYC
-      const { data, error } = await window.API.fetchEdge('kyc_submit', {
-        method: 'POST',
-        body: JSON.stringify(kycData)
-      });
+      console.log('KYC: Submitting via REST API...');
+      const result = await window.API.submitKYC(this.currentUser.id, kycData);
+      console.log('KYC: Submission result:', result);
 
-      if (error) {
-        throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to submit KYC');
       }
 
       // Update status
       this.kycStatus = {
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
-        reviewed_at: null,
-        rejection_reason: null
+        status: result.status,
+        submitted_at: result.profile?.kyc_submitted_at || new Date().toISOString(),
+        reviewed_at: result.profile?.kyc_reviewed_at || null,
+        rejection_reason: result.profile?.kyc_rejection_reason || null
       };
 
       // Re-render status
