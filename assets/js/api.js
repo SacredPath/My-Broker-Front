@@ -518,17 +518,17 @@ class APIClient {
 
       const { data: profile, error } = await this.serviceClient
         .from('profiles')
-        .select('kyc_status')
+        .select('kyc_status, kyc_submitted_at, kyc_reviewed_at, kyc_rejection_reason')
         .eq('user_id', userId)
         .single();
 
       let kycData;
-      if (profile && profile.kyc_status) {
+      if (profile) {
         kycData = {
-          status: profile.kyc_status,
-          submitted_at: null,
-          reviewed_at: null,
-          rejection_reason: null
+          status: profile.kyc_status || 'not_submitted',
+          submitted_at: profile.kyc_submitted_at,
+          reviewed_at: profile.kyc_reviewed_at,
+          rejection_reason: profile.kyc_rejection_reason
         };
       }
 
@@ -555,6 +555,50 @@ class APIClient {
         submitted_at: null,
         reviewed_at: null,
         rejection_reason: null
+      };
+    }
+  }
+
+  async submitKYC(userId, kycData) {
+    try {
+      console.log('[APIClient] Submitting KYC for user:', userId);
+      
+      if (!this.serviceClient) {
+        throw new Error('Service client not initialized');
+      }
+
+      const { data, error } = await this.serviceClient
+        .from('profiles')
+        .update({
+          first_name: kycData.firstName,
+          last_name: kycData.lastName,
+          date_of_birth: kycData.dateOfBirth,
+          nationality: kycData.nationality,
+          kyc_status: 'pending',
+          kyc_submitted_at: new Date().toISOString(),
+          kyc_documents: kycData.documents
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[APIClient] KYC submitted successfully:', data);
+      return {
+        ok: true,
+        status: 'pending',
+        message: 'KYC submitted successfully',
+        profile: data
+      };
+    } catch (error) {
+      console.error('[APIClient] Failed to submit KYC:', error);
+      return {
+        ok: false,
+        error: 'Failed to submit KYC',
+        detail: error.message
       };
     }
   }
