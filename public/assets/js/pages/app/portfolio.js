@@ -255,8 +255,12 @@ class PortfolioPage {
   renderPortfolio() {
     if (!this.portfolioData) return;
 
-    // Update overview cards
-    document.getElementById('total-value').textContent = this.formatMoney(this.portfolioData.total_value);
+    // Update overview cards - Use wallet balance for total value (same as home page)
+    if (this.walletData && this.walletData.total_usd !== undefined) {
+      document.getElementById('total-value').textContent = this.formatMoney(this.walletData.total_usd);
+    } else {
+      document.getElementById('total-value').textContent = this.formatMoney(this.portfolioData.total_value);
+    }
     
     const totalPl = this.portfolioData.total_pl || 0;
     const totalPlElement = document.getElementById('total-pl');
