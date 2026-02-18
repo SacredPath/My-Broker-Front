@@ -579,7 +579,7 @@ class AppShell {
     }
 
     notificationList.innerHTML = this.notifications.map(notification => `
-      <div class="notification-item ${notification.unread ? 'unread' : ''}" data-id="${notification.id}" onclick="window.AppShell.markNotificationAsRead('${notification.id}')">
+      <div class="notification-item ${!notification.is_read ? 'unread' : ''}" data-id="${notification.id}" onclick="window.AppShell.markNotificationAsRead('${notification.id}')">
         <div class="notification-header-info">
           <div>
             <div class="notification-title">${notification.title}</div>
@@ -599,7 +599,7 @@ class AppShell {
       const { error } = await window.API.serviceClient
         .from('notifications')
         .update({ 
-          unread: false, 
+          is_read: true, 
           read_at: new Date().toISOString() 
         })
         .eq('id', notificationId);
@@ -612,8 +612,8 @@ class AppShell {
       // Update local state
       const notification = this.notifications.find(n => n.id === notificationId);
       if (notification) {
-        notification.unread = false;
-        notification.readAt = new Date().toISOString();
+        notification.is_read = true;
+        notification.read_at = new Date().toISOString();
       }
 
       // Update UI
@@ -648,7 +648,7 @@ class AppShell {
 
   markNotificationsAsRead() {
     this.notifications.forEach(notification => {
-      notification.unread = false;
+      notification.is_read = true;
     });
     this.updateNotificationBadge();
     this.renderNotifications();
@@ -754,7 +754,7 @@ class AppShell {
       ...notification,
       id: Date.now(),
       time: 'Just now',
-      unread: true
+      is_read: false
     });
   }
 
