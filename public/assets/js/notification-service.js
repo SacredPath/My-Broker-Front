@@ -55,20 +55,19 @@ class NotificationService {
 
     if (window.AuthStateManager) {
       // Listen for auth state changes using AuthStateManager
-      window.AuthStateManager.addListener((authState, user) => {
-        this.handleAuthStateChange(user);
+      window.AuthStateManager.addListener((event, session) => {
+        this.handleAuthStateChange(event, session);
       });
     }
   }
 
-  handleAuthStateChange(user) {
-    // Get actual user ID from auth session
-    const session = window.AuthStateManager?.getCurrentSession();
+  handleAuthStateChange(event, session) {
+    // Get actual user from session parameter
     const actualUser = session?.user;
     
     console.log('[NotificationService] Auth state change:', {
-      authState: arguments[0],
-      receivedUser: user,
+      event: event,
+      session: session,
       actualUser: actualUser,
       userId: actualUser?.id
     });
