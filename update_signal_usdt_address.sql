@@ -48,10 +48,10 @@ BEGIN
         EXECUTE 'SELECT * FROM signals LIMIT 3';
     END IF;
     
-    -- Check signal_purchases table
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_purchases') THEN
-        RAISE NOTICE '=== SIGNAL_PURCHASES TABLE ===';
-        EXECUTE 'SELECT * FROM signal_purchases LIMIT 3';
+    -- Check signal_usdt_purchases table
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
+        RAISE NOTICE '=== SIGNAL_USDT_PURCHASES TABLE ===';
+        EXECUTE 'SELECT * FROM signal_usdt_purchases LIMIT 3';
     END IF;
     
     -- Check purchases table
@@ -70,10 +70,10 @@ END $$;
 -- 4. Look for existing USDT addresses in signal/purchase tables
 DO $$
 BEGIN
-    -- Update USDT address in signal_purchases if table exists
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_purchases') THEN
-        RAISE NOTICE '=== UPDATING USDT IN SIGNAL_PURCHASES ===';
-        EXECUTE 'UPDATE signal_purchases SET usdt_address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE usdt_address IS NOT NULL';
+    -- Update USDT address in signal_usdt_purchases if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
+        RAISE NOTICE '=== UPDATING USDT IN SIGNAL_USDT_PURCHASES ===';
+        EXECUTE 'UPDATE signal_usdt_purchases SET usdt_address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE usdt_address IS NOT NULL';
     END IF;
     
     -- Update USDT address in purchases if table exists
@@ -93,8 +93,8 @@ END $$;
 DO $$
 BEGIN
     -- Update USDT addresses that match TRC20 pattern
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_purchases') THEN
-        RAISE NOTICE '=== UPDATING TRC20 ADDRESSES IN SIGNAL_PURCHASES ===';
-        EXECUTE 'UPDATE signal_purchases SET address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE address LIKE ''T%'' AND LENGTH(address) = 34';
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
+        RAISE NOTICE '=== UPDATING TRC20 ADDRESSES IN SIGNAL_USDT_PURCHASES ===';
+        EXECUTE 'UPDATE signal_usdt_purchases SET address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE address LIKE ''T%'' AND LENGTH(address) = 34';
     END IF;
 END $$;
