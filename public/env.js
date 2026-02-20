@@ -5,7 +5,7 @@ window.__ENV = {
   // Supabase configuration
   SUPABASE_URL: 'https://rfszagckgghcygkomybc.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmc3phZ2NrZ2doY3lna29teWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAxNTQsImV4cCI6MjA4NzAzNjE1NH0.nrjT5YD3Bi-TSmONzRhPir3H4YNIFddDhR8xYOQnwPI',
-  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTQwNjI5MiwiZXhwIjoyMDg0OTgyMjkyfQ.16X2ssw9RgDw4QhF4x1KvilcbMUpqn00gBP0Ed7MCHc',
+  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmc3phZ2NrZ2doY3lna29teWJjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTQ2MDE1NCwiZXhwIjoyMDg3MDM2MTU0fQ.5SltnkVX-Nl4744lTo_Z0Y58SSwQjXQCqnrCNi_uZuY',
   
   // API Configuration
   API_BASE_URL: 'https://rfszagckgghcygkomybc.supabase.co',
