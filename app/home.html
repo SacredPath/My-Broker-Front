@@ -85,6 +85,27 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
         }
+        
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .recent-activity.collapsed .activity-list {
+            display: none;
+        }
+        
+        .toggle-activity {
+            min-width: 60px;
+        }
+        
+        .recent-activity:not(.collapsed) .toggle-text::after {
+            content: " Hide";
+        }
+        
+        .recent-activity.collapsed .toggle-text::after {
+            content: " Show";
+        }
     </style>
 </head>
 <body>
@@ -541,15 +562,20 @@
             </section>
 
             <!-- Recent Activity -->
-            <section class="recent-activity">
+            <section class="recent-activity collapsed">
                 <div class="section-header">
                     <h2 class="section-title">Recent Activity</h2>
-                    <button class="btn btn-ghost btn-sm" onclick="window.location.href='/app/history.html'">
-                        View All
-                    </button>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost btn-sm toggle-activity" onclick="toggleRecentActivity()">
+                            <span class="toggle-text">Show</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/app/history.html'">
+                            View All
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="activity-list" id="recent-activity-list">
+                <div class="activity-list" id="recent-activity-list" style="display: none;">
                     <!-- Activity items will be populated here -->
                 </div>
             </section>
@@ -568,6 +594,33 @@
     <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/home-new.js"></script>
     <script>
+        // Toggle Recent Activity Section
+        function toggleRecentActivity() {
+            const section = document.querySelector('.recent-activity');
+            const activityList = document.getElementById('recent-activity-list');
+            const toggleText = document.querySelector('.toggle-text');
+            
+            if (section.classList.contains('collapsed')) {
+                section.classList.remove('collapsed');
+                activityList.style.display = 'block';
+                if (toggleText) toggleText.textContent = 'Hide';
+            } else {
+                section.classList.add('collapsed');
+                activityList.style.display = 'none';
+                if (toggleText) toggleText.textContent = 'Show';
+            }
+        }
+        
+        // Initialize recent activity as collapsed
+        document.addEventListener('DOMContentLoaded', () => {
+            const section = document.querySelector('.recent-activity');
+            const toggleText = document.querySelector('.toggle-text');
+            if (section && !section.classList.contains('collapsed')) {
+                section.classList.add('collapsed');
+                if (toggleText) toggleText.textContent = 'Show';
+            }
+        });
+        
         // Debug script to check sidebar functionality
         setTimeout(() => {
             console.log('=== HOME SIDEBAR DEBUG ===');
