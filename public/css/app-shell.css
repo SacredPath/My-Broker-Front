@@ -772,7 +772,7 @@
 
 /* Overlay for mobile sidebar */
 .sidebar-overlay {
-    display: none;
+    display: block;
     position: fixed;
     top: 0;
     left: 0;
