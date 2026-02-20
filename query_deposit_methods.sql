@@ -103,4 +103,8 @@ EXCEPTION
         RAISE NOTICE 'Error listing tables: %', SQLERRM;
 END $$;
 
-RAISE NOTICE '=== DEPOSIT METHODS QUERY COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== DEPOSIT METHODS QUERY COMPLETE ===';
+END $$;
