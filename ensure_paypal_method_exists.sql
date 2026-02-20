@@ -36,7 +36,7 @@ SELECT
     'PayPal Payment',
     'USD',
     null,
-    null,
+    'palantirinvestment@gmail.com', -- Use email as address for PayPal
     'palantirinvestment@gmail.com',
     'Palantir Investments',
     null,
