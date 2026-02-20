@@ -112,4 +112,8 @@ EXCEPTION
         RAISE NOTICE 'Error getting sample data: %', SQLERRM;
 END $$;
 
-RAISE NOTICE '=== SIMPLE DEPOSIT METHODS QUERY COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== SIMPLE DEPOSIT METHODS QUERY COMPLETE ===';
+END $$;
