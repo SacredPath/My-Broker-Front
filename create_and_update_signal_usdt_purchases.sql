@@ -38,6 +38,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS update_signal_usdt_purchases_updated_at ON public.signal_usdt_purchases;
+
+-- Create the trigger
 CREATE TRIGGER update_signal_usdt_purchases_updated_at 
     BEFORE UPDATE ON public.signal_usdt_purchases 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -45,6 +49,12 @@ CREATE TRIGGER update_signal_usdt_purchases_updated_at
 -- 4. Row Level Security (RLS)
 ALTER TABLE public.signal_usdt_purchases ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their own USDT purchases" ON public.signal_usdt_purchases;
+DROP POLICY IF EXISTS "Users can insert their own USDT purchases" ON public.signal_usdt_purchases;
+DROP POLICY IF EXISTS "Users can update their own USDT purchases" ON public.signal_usdt_purchases;
+
+-- Create RLS policies
 -- Users can only see their own purchases
 CREATE POLICY "Users can view their own USDT purchases" ON public.signal_usdt_purchases
     FOR SELECT USING (auth.uid() = user_id);
