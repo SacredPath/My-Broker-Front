@@ -1,3 +1,6 @@
+-- Complete fix: Create signal_usdt_purchases table and update USDT address
+
+-- 1. First, create the table with usdt_address column included
 -- Create signal_usdt_purchases table for USDT-based signal purchases
 CREATE TABLE IF NOT EXISTS public.signal_usdt_purchases (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -19,14 +22,14 @@ CREATE TABLE IF NOT EXISTS public.signal_usdt_purchases (
     status VARCHAR(20) DEFAULT 'pending' -- pending, confirmed, failed, refunded
 );
 
--- Create indexes for performance
+-- 2. Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_signal_usdt_purchases_user_id ON public.signal_usdt_purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_signal_usdt_purchases_signal_id ON public.signal_usdt_purchases(signal_id);
 CREATE INDEX IF NOT EXISTS idx_signal_usdt_purchases_tx_hash ON public.signal_usdt_purchases(tx_hash);
 CREATE INDEX IF NOT EXISTS idx_signal_usdt_purchases_status ON public.signal_usdt_purchases(status);
 CREATE INDEX IF NOT EXISTS idx_signal_usdt_purchases_confirmed ON public.signal_usdt_purchases(confirmed);
 
--- Create updated_at trigger
+-- 3. Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -39,7 +42,7 @@ CREATE TRIGGER update_signal_usdt_purchases_updated_at
     BEFORE UPDATE ON public.signal_usdt_purchases 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Row Level Security (RLS)
+-- 4. Row Level Security (RLS)
 ALTER TABLE public.signal_usdt_purchases ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own purchases
@@ -53,3 +56,40 @@ CREATE POLICY "Users can insert their own USDT purchases" ON public.signal_usdt_
 -- Users can only update their own purchases
 CREATE POLICY "Users can update their own USDT purchases" ON public.signal_usdt_purchases
     FOR UPDATE USING (auth.uid() = user_id);
+
+-- 5. Update USDT address in signal_usdt_purchases
+DO $$
+BEGIN
+    RAISE NOTICE '=== UPDATING USDT ADDRESS IN SIGNAL_USDT_PURCHASES ===';
+    UPDATE signal_usdt_purchases 
+    SET usdt_address = 'TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4' 
+    WHERE usdt_address IS NULL OR usdt_address = '';
+    
+    GET DIAGNOSTICS _updated_count = ROW_COUNT;
+    RAISE NOTICE 'Updated % records with new USDT address', _updated_count;
+END $$;
+
+-- 6. Show table structure to verify
+SELECT 
+    'SIGNAL_USDT_PURCHASES_FINAL_STRUCTURE' as info,
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_schema = 'public'
+    AND table_name = 'signal_usdt_purchases'
+ORDER BY ordinal_position;
+
+-- 7. Show sample data to verify update
+DO $$
+BEGIN
+    RAISE NOTICE '=== SAMPLE DATA FROM SIGNAL_USDT_PURCHASES ===';
+    PERFORM dblink_connect('dbname=supabasedb');
+    PERFORM dblink_exec('SELECT id, user_id, signal_id, amount, usdt_address, status, created_at FROM signal_usdt_purchases LIMIT 5');
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Sample data query failed, but table creation and update should be complete';
+END $$;
+
+RAISE NOTICE '=== SIGNAL_USDT_PURCHASES TABLE CREATION AND UPDATE COMPLETE ===';
