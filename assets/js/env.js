@@ -10,7 +10,7 @@ if (typeof window.__ENV === 'undefined') {
 }
 
 // Default to cloud Supabase configuration
-var DEFAULT_SUPABASE_URL = 'https://ubycoeyutauzjgxbozcm.supabase.co';
+var DEFAULT_SUPABASE_URL = 'https://rfszagckgghcygkomybc.supabase.co';
 var DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MDYyOTIsImV4cCI6MjA4NDk4MjI5Mn0.NUqdlArOGnCUEXuQYummEgsJKHoTk3fUvBarKIagHMM';
 
 // Set default values if not already defined

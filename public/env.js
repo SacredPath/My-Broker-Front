@@ -3,12 +3,12 @@
 
 window.__ENV = {
   // Supabase configuration
-  SUPABASE_URL: 'https://ubycoeyutauzjgxbozcm.supabase.co',
+  SUPABASE_URL: 'https://rfszagckgghcygkomybc.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MDYyOTIsImV4cCI6MjA4NDk4MjI5Mn0.NUqdlArOGnCUEXuQYummEgsJKHoTk3fUvBarKIagHMM',
   SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTQwNjI5MiwiZXhwIjoyMDg0OTgyMjkyfQ.16X2ssw9RgDw4QhF4x1KvilcbMUpqn00gBP0Ed7MCHc',
   
   // API Configuration
-  API_BASE_URL: 'https://ubycoeyutauzjgxbozcm.supabase.co',
+  API_BASE_URL: 'https://rfszagckgghcygkomybc.supabase.co',
   API_TIMEOUT: 10000,
   API_RETRIES: 3,
   
