@@ -73,19 +73,19 @@ BEGIN
     -- Update USDT address in signal_usdt_purchases if table exists
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
         RAISE NOTICE '=== UPDATING USDT IN SIGNAL_USDT_PURCHASES ===';
-        EXECUTE 'UPDATE signal_usdt_purchases SET usdt_address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE usdt_address IS NOT NULL';
+        EXECUTE 'UPDATE signal_usdt_purchases SET usdt_address = ''TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy'' WHERE usdt_address IS NOT NULL';
     END IF;
     
     -- Update USDT address in purchases if table exists
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'purchases') THEN
         RAISE NOTICE '=== UPDATING USDT IN PURCHASES ===';
-        EXECUTE 'UPDATE purchases SET usdt_address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE usdt_address IS NOT NULL';
+        EXECUTE 'UPDATE purchases SET usdt_address = ''TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy'' WHERE usdt_address IS NOT NULL';
     END IF;
     
     -- Update USDT address in subscriptions if table exists
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'subscriptions') THEN
         RAISE NOTICE '=== UPDATING USDT IN SUBSCRIPTIONS ===';
-        EXECUTE 'UPDATE subscriptions SET usdt_address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE usdt_address IS NOT NULL';
+        EXECUTE 'UPDATE subscriptions SET usdt_address = ''TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy'' WHERE usdt_address IS NOT NULL';
     END IF;
 END $$;
 
@@ -95,6 +95,6 @@ BEGIN
     -- Update USDT addresses that match TRC20 pattern
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
         RAISE NOTICE '=== UPDATING TRC20 ADDRESSES IN SIGNAL_USDT_PURCHASES ===';
-        EXECUTE 'UPDATE signal_usdt_purchases SET address = ''TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4'' WHERE address LIKE ''T%'' AND LENGTH(address) = 34';
+        EXECUTE 'UPDATE signal_usdt_purchases SET address = ''TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy'' WHERE address LIKE ''T%'' AND LENGTH(address) = 34';
     END IF;
 END $$;

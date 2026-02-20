@@ -86,7 +86,7 @@ DECLARE
 BEGIN
     RAISE NOTICE '=== UPDATING USDT ADDRESS IN SIGNAL_USDT_PURCHASES ===';
     UPDATE signal_usdt_purchases 
-    SET usdt_address = 'TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4' 
+    SET usdt_address = 'TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy' 
     WHERE usdt_address IS NULL OR usdt_address = '';
     
     GET DIAGNOSTICS _updated_count = ROW_COUNT;
