@@ -49,10 +49,22 @@ CREATE TRIGGER update_signal_usdt_purchases_updated_at
 -- 4. Row Level Security (RLS)
 ALTER TABLE public.signal_usdt_purchases ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Users can view their own USDT purchases" ON public.signal_usdt_purchases;
-DROP POLICY IF EXISTS "Users can insert their own USDT purchases" ON public.signal_usdt_purchases;
-DROP POLICY IF EXISTS "Users can update their own USDT purchases" ON public.signal_usdt_purchases;
+-- Safely drop existing policies using DO block
+DO $$
+BEGIN
+    -- Drop existing policies if they exist
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'signal_usdt_purchases' AND policyname = 'Users can view their own USDT purchases') THEN
+        EXECUTE 'DROP POLICY "Users can view their own USDT purchases" ON public.signal_usdt_purchases';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'signal_usdt_purchases' AND policyname = 'Users can insert their own USDT purchases') THEN
+        EXECUTE 'DROP POLICY "Users can insert their own USDT purchases" ON public.signal_usdt_purchases';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'signal_usdt_purchases' AND policyname = 'Users can update their own USDT purchases') THEN
+        EXECUTE 'DROP POLICY "Users can update their own USDT purchases" ON public.signal_usdt_purchases';
+    END IF;
+END $$;
 
 -- Create RLS policies
 -- Users can only see their own purchases
