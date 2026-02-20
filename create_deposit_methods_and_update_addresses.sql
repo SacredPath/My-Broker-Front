@@ -39,6 +39,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.deposit_methods TO service_role;
 
 -- 2. Now update addresses (same as previous script)
 DO $$
+DECLARE
+    _count INTEGER;
 BEGIN
     RAISE NOTICE '=== UPDATING BTC ADDRESS TO bc1q86kns3mf9wrqsv05lpwkvnyg3gq0e5pa90yrth ===';
     
