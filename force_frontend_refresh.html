@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Frontend Refresh</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover { background: #0056b3; }
+        .warning { background: #fff3cd; border-left-color: #ffc107; }
+        .success { background: #d4edda; border-left-color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Force Frontend Cache Clear</h1>
+    
+    <div class="step warning">
+        <h3>⚠️ Issue Identified</h3>
+        <p><strong>Database:</strong> PayPal email = palantirinvestment@gmail.com ✅</p>
+        <p><strong>Frontend:</strong> PayPal email = OPTIONSHAREINVEST@GMAIL.COM ❌</p>
+        <p>This is a caching issue - database is correct but frontend shows old data.</p>
+    </div>
+
+    <div class="step">
+        <h3>🔧 Step 1: Clear Browser Cache</h3>
+        <p>Click these buttons to clear all browser storage:</p>
+        <button class="button" onclick="clearAllStorage()">Clear All Storage</button>
+        <button class="button" onclick="clearCache()">Clear Cache</button>
+        <button class="button" onclick="reloadHard()">Hard Reload</button>
+    </div>
+
+    <div class="step">
+        <h3>🌐 Step 2: Manual Browser Actions</h3>
+        <p><strong>Chrome/Edge:</strong> Ctrl+Shift+R (or F12 → Network tab → Disable cache)</p>
+        <p><strong>Firefox:</strong> Ctrl+Shift+R (or Ctrl+F5)</p>
+        <p><strong>Safari:</strong> Cmd+Shift+R</p>
+    </div>
+
+    <div class="step">
+        <h3>📱 Step 3: Go to Deposits Page</h3>
+        <p>After clearing cache, go to the deposits page:</p>
+        <button class="button" onclick="goToDeposits()">Go to Deposits</button>
+    </div>
+
+    <div class="step success">
+        <h3>✅ Expected Result</h3>
+        <p>After cache clear, you should see:</p>
+        <ul>
+            <li>📧 Email: <strong>palantirinvestment@gmail.com</strong></li>
+            <li>🏢 Business: <strong>Palantir Investments</strong></li>
+            <li>🔄 Cache Version: <strong>2</strong></li>
+        </ul>
+    </div>
+
+    <script>
+        function clearAllStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('✅ LocalStorage and SessionStorage cleared!');
+        }
+
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+            alert('✅ Cache cleared!');
+        }
+
+        function reloadHard() {
+            window.location.reload(true);
+        }
+
+        function goToDeposits() {
+            window.location.href = '/app/deposits.html';
+        }
+
+        // Auto-check current PayPal data
+        fetch('/app/deposits.html')
+            .then(() => {
+                document.body.innerHTML += '<div class="step success"><h3>✅ Deposits page accessible</h3><p>Ready to test with fresh cache!</p></div>';
+            })
+            .catch(err => {
+                document.body.innerHTML += '<div class="step warning"><h3>❌ Error</h3><p>Could not access deposits page: ' + err.message + '</p></div>';
+            });
+    </script>
+</body>
+</html>
