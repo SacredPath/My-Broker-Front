@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +27,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 32px;
-            margin-bottom: 32px;
+            margin-bottom: 30px !important;
             text-align: center;
         }
         
@@ -722,7 +722,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="app-main">
+    <main class="app-main with-mobile-nav">
         <div class="container">
             <!-- Header -->
             <section class="portfolio-header">
@@ -747,10 +747,6 @@
                 <div class="overview-card">
                     <div class="overview-value" id="positions-count">0</div>
                     <div class="overview-label">Active Positions</div>
-                </div>
-                <div class="overview-card">
-                    <div class="overview-value" id="available-balance">$0.00</div>
-                    <div class="overview-label">Available Balance</div>
                 </div>
             </section>
 
@@ -847,10 +843,8 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
-    <script type="module" src="/assets/js/balance-service.js?v=20250211"></script>
-    <script type="module" src="/assets/js/notification-service.js?v=20250217-5"></script>
-    <script type="module" src="/assets/js/app-shell.js?v=20250217-2"></script>
-    <script type="module" src="/assets/js/pages/app/portfolio.js?v=20250217-4"></script>
+    <script type="module" src="/assets/js/app-shell.js"></script>
+    <script type="module" src="/assets/js/pages/app/portfolio.js"></script>
     <script>
         // Debug script to check sidebar functionality
         setTimeout(() => {

@@ -140,7 +140,7 @@ class PortfolioPage {
     }
 
     try {
-      console.log('Loading portfolio data via REST API...');
+      console.log('Loading portfolio snapshot via REST API...');
       
       // Get current user ID
       const userId = await this.api.getCurrentUserId();
@@ -148,24 +148,20 @@ class PortfolioPage {
         throw new Error('User not authenticated');
       }
 
-      // Load both portfolio data and wallet balances in parallel
-      const [portfolioData, walletData] = await Promise.all([
-        this.api.getPortfolioSnapshot(userId),
-        window.BalanceService.getUserBalances(userId)
-      ]);
+      // Use REST API method instead of Edge Function
+      const data = await this.api.getPortfolioSnapshot(userId);
       
-      this.portfolioData = portfolioData;
-      this.walletData = walletData;
+      this.portfolioData = data;
       
       if (!this.portfolioData || !this.portfolioData.positions) {
         this.renderEmptyState('No portfolio data available');
         return;
       }
 
-      console.log('Portfolio and wallet data loaded successfully:', {
-        positions: portfolioData.positions?.length || 0,
-        balances: walletData ? Object.keys(walletData).length : 0,
-        total_value: portfolioData.summary?.total_value
+      console.log('Portfolio snapshot loaded successfully:', {
+        positions: data.positions?.length || 0,
+        balances: data.balances?.length || 0,
+        total_value: data.summary?.total_value
       });
     } catch (error) {
       console.error('Failed to load portfolio snapshot:', error);
@@ -255,12 +251,8 @@ class PortfolioPage {
   renderPortfolio() {
     if (!this.portfolioData) return;
 
-    // Update overview cards - Use wallet balance for total value (same as home page)
-    if (this.walletData && this.walletData.total_usd !== undefined) {
-      document.getElementById('total-value').textContent = this.formatMoney(this.walletData.total_usd);
-    } else {
-      document.getElementById('total-value').textContent = this.formatMoney(this.portfolioData.total_value);
-    }
+    // Update overview cards
+    document.getElementById('total-value').textContent = this.formatMoney(this.portfolioData.total_value);
     
     const totalPl = this.portfolioData.total_pl || 0;
     const totalPlElement = document.getElementById('total-pl');
@@ -273,14 +265,6 @@ class PortfolioPage {
     totalRoiElement.className = 'overview-value ' + (totalRoi >= 0 ? 'profit' : 'loss');
     
     document.getElementById('positions-count').textContent = this.portfolioData.positions.length;
-
-    // Update available balance from wallet data (same as home page)
-    if (this.walletData && this.walletData.total_usd !== undefined) {
-      const availableBalanceElement = document.getElementById('available-balance');
-      if (availableBalanceElement) {
-        availableBalanceElement.textContent = this.formatMoney(this.walletData.total_usd);
-      }
-    }
   }
 
   renderAllocationChart() {
