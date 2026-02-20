@@ -10,8 +10,7 @@ SELECT
     roles,
     cmd,
     qual,
-    with_check,
-    check_expr
+    with_check
 FROM pg_policies 
 WHERE tablename = 'deposit_methods'
 ORDER BY policyname;
