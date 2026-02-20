@@ -128,4 +128,8 @@ EXCEPTION
         RAISE NOTICE 'Error searching hardcoded addresses: %', SQLERRM;
 END $$;
 
-RAISE NOTICE '=== DEPOSIT DATA SEARCH COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== DEPOSIT DATA SEARCH COMPLETE ===';
+END $$;
