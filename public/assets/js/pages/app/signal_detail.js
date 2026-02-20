@@ -39,8 +39,8 @@ class SignalDetailPage {
         throw new Error('Signal ID not provided');
       }
 
-      // Load app shell components
-      this.loadAppShell();
+      // Use main app shell - don't load separate component
+      // this.loadAppShell();
       
       // Load data
       await this.loadUserData();
