@@ -173,4 +173,8 @@ EXCEPTION
         RAISE NOTICE 'Error verifying deposit methods: %', SQLERRM;
 END $$;
 
-RAISE NOTICE '=== DEPOSIT METHODS SETUP COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== DEPOSIT METHODS SETUP COMPLETE ===';
+END $$;
