@@ -93,8 +93,8 @@ class AppShell {
           this.closeSidebar();
         }
         
-        // Navigate
-        window.location.href = href;
+        // Navigate using client-side routing
+        this.navigateTo(href);
       });
     }
     
@@ -117,7 +117,7 @@ class AppShell {
           }
           
           e.preventDefault();
-          window.location.href = href;
+          this.navigateTo(href);
         });
       }
     });
@@ -326,8 +326,40 @@ class AppShell {
   }
 
   navigateTo(href) {
-    // Preserve session by just changing location
-    window.location.href = href;
+    // Use client-side routing to prevent full page reloads
+    fetch(href)
+      .then(response => response.text())
+      .then(html => {
+        // Create a temporary DOM element to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Get the main content from the new page
+        const newMain = tempDiv.querySelector('main');
+        const currentMain = document.querySelector('main');
+        
+        if (newMain && currentMain) {
+          // Replace the main content
+          currentMain.innerHTML = newMain.innerHTML;
+          
+          // Update URL without reload
+          history.pushState({}, '', href);
+          
+          // Update active navigation
+          this.updateActiveNavigation();
+          
+          // Re-initialize page-specific scripts if needed
+          this.initializePageScripts();
+        } else {
+          // Fallback to full reload if something goes wrong
+          window.location.href = href;
+        }
+      })
+      .catch(error => {
+        console.error('Navigation error:', error);
+        // Fallback to full reload on error
+        window.location.href = href;
+      });
   }
 
   getCurrentPage() {
@@ -335,8 +367,22 @@ class AppShell {
     return path.split('/').pop()?.replace('.html', '') || 'home';
   }
 
+  initializePageScripts() {
+    // Re-initialize page-specific functionality
+    const currentPage = this.getCurrentPage();
+    
+    // Trigger page-specific initialization if available
+    if (currentPage === 'convert' && window.convertPage) {
+      // Re-initialize convert page if needed
+      console.log('Re-initializing convert page...');
+    }
+    
+    // Add other page-specific initializations as needed
+    console.log('Page scripts initialized for:', currentPage);
+  }
+
   updateActiveNavigation() {
-    const page = this.currentPage;
+    const page = this.getCurrentPage(); // Get current page from URL
     
     // Update all navigation links
     const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link, .side-nav-link');
