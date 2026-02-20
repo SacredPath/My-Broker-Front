@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KYC Verification - Broker</title>
+    <title>Premium KYC Verification - Broker Trading Platform</title>
+    <meta name="description" content="Institutional-grade KYC verification with instant processing and advanced security protocols">
     
     <!-- Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg">
@@ -20,6 +21,95 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* KYC Page Specific Styles */
+        .kyc-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px 24px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        
+        .kyc-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+        
+        .kyc-hero h1 {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(45deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .kyc-hero p {
+            font-size: 1.1em;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+        
+        .hero-features {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1em;
+        }
+        
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.9;
+        }
+        
+        .premium-badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .premium-badge {
+            background: linear-gradient(135deg, var(--success) 0%, #00ff88 100%);
+            color: var(--background);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
         .kyc-header {
             background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
             border: 1px solid var(--border);
@@ -413,6 +503,39 @@
     <!-- Main Content -->
     <main class="app-main">
         <div class="container">
+            <!-- Premium Hero Section -->
+            <section class="kyc-hero">
+                <h1 class="hero-title">Premium KYC Verification</h1>
+                <p class="hero-subtitle">Complete institutional-grade verification with instant processing and advanced security protocols</p>
+                
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11H3v2m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                        </svg>
+                        <span>Instant Processing</span>
+                    </div>
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                        </svg>
+                        <span>Bank-Level Security</span>
+                    </div>
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                        </svg>
+                        <span>Advanced Verification</span>
+                    </div>
+                </div>
+                
+                <div class="premium-badges">
+                    <span class="premium-badge">Instant Verification</span>
+                    <span class="premium-badge">Enhanced Security</span>
+                    <span class="premium-badge">Priority Support</span>
+                </div>
+            </section>
+            
             <!-- Header -->
             <section class="kyc-header">
                 <h1>Identity Verification</h1>

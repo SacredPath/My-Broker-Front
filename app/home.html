@@ -26,6 +26,87 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .hype-badges {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .hype-badge {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .welcome-section h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, var(--primary) 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        
+        .stat-change.positive {
+            background: linear-gradient(90deg, var(--success) 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .recent-activity.collapsed .activity-list {
+            display: none;
+        }
+        
+        .toggle-activity {
+            min-width: 60px;
+        }
+        
+        .recent-activity:not(.collapsed) .toggle-text::after {
+            content: " Hide";
+        }
+        
+        .recent-activity.collapsed .toggle-text::after {
+            content: " Show";
+        }
+    </style>
 </head>
 <body>
     <!-- App Shell Components -->
@@ -352,22 +433,27 @@
             <!-- Welcome Section -->
             <section class="welcome-section">
                 <div class="welcome-content">
-                    <h1>Advanced Trading Platform</h1>
-                    <p class="welcome-subtitle">Professional investment opportunities with institutional-grade security and performance analytics</p>
+                    <h1>Revolutionary Trading Platform</h1>
+                    <p class="welcome-subtitle">Experience the future of investing with AI-powered algorithms, institutional-grade security, and explosive profit potential</p>
+                    <div class="hype-badges">
+                        <span class="hype-badge">Trending #1</span>
+                        <span class="hype-badge">Lightning Fast</span>
+                        <span class="hype-badge">Award Winning</span>
+                    </div>
                 </div>
                 <div class="welcome-actions">
                     <button class="btn btn-primary" onclick="window.location.href='/app/deposits.html'">
-                        Start Investing
+                        Start Earning Now
                     </button>
                     <button class="btn btn-secondary" onclick="window.location.href='/app/tiers.html'">
-                        View Investment Plans
+                        View Premium Plans
                     </button>
                 </div>
             </section>
 
             <!-- Quick Stats -->
             <section class="quick-stats">
-                <h2 class="section-title">Your Investment Performance</h2>
+                <h2 class="section-title">Elite Investment Performance</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">
@@ -379,7 +465,7 @@
                         <div class="stat-content">
                             <div class="stat-value" id="total-balance">$0.00</div>
                             <div class="stat-label">Total Portfolio Value</div>
-                            <div class="stat-change positive">Powered by advanced algorithms</div>
+                            <div class="stat-change positive">AI-Optimized Growth</div>
                         </div>
                     </div>
                     
@@ -392,7 +478,7 @@
                         <div class="stat-content">
                             <div class="stat-value" id="invested-amount">$0.00</div>
                             <div class="stat-label">Active Investments</div>
-                            <div class="stat-change positive">Optimized for maximum returns</div>
+                            <div class="stat-change positive">Quantum-Speed Returns</div>
                         </div>
                     </div>
                     
@@ -405,7 +491,7 @@
                         <div class="stat-content">
                             <div class="stat-value" id="total-profit">$0.00</div>
                             <div class="stat-label">Total Returns</div>
-                            <div class="stat-change positive">Industry-leading performance</div>
+                            <div class="stat-change positive">Market-Beating Performance</div>
                         </div>
                     </div>
                     
@@ -418,8 +504,8 @@
                         </div>
                         <div class="stat-content">
                             <div class="stat-value" id="active-signals">0</div>
-                            <div class="stat-label">Market Signals</div>
-                            <div class="stat-change">Real-time analysis</div>
+                            <div class="stat-label">Premium Signals</div>
+                            <div class="stat-change">Exclusive Alpha Access</div>
                         </div>
                     </div>
                 </div>
@@ -427,7 +513,7 @@
 
             <!-- Quick Actions -->
             <section class="quick-actions">
-                <h2 class="section-title">Strategic Investment Tools</h2>
+                <h2 class="section-title">Elite Trading Arsenal</h2>
                 <div class="actions-grid">
                     <button class="action-card" onclick="window.location.href='/app/deposits.html'">
                         <div class="action-icon deposit">
@@ -436,8 +522,8 @@
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         </div>
-                        <div class="action-title">Fund Your Account</div>
-                        <div class="action-description">Secure deposits with instant processing</div>
+                        <div class="action-title">Instant Funding</div>
+                        <div class="action-description">Lightning-fast deposits with military-grade encryption</div>
                     </button>
                     
                     <button class="action-card" onclick="window.location.href='/app/withdraw.html'">
@@ -447,8 +533,8 @@
                                 <polyline points="12 19 19 12 12 5"></polyline>
                             </svg>
                         </div>
-                        <div class="action-title">Withdraw Profits</div>
-                        <div class="action-description">Fast withdrawals to your preferred methods</div>
+                        <div class="action-title">Profit Withdrawal</div>
+                        <div class="action-description">Same-day payouts to any global destination</div>
                     </button>
                     
                     <button class="action-card" onclick="window.location.href='/app/convert.html'">
@@ -459,7 +545,7 @@
                             </svg>
                         </div>
                         <div class="action-title">Smart Exchange</div>
-                        <div class="action-description">Advanced currency conversion tools</div>
+                        <div class="action-description">Zero-fee currency conversion with best rates</div>
                     </button>
                     
                     <button class="action-card" onclick="window.location.href='/app/signals.html'">
@@ -469,22 +555,27 @@
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                             </svg>
                         </div>
-                        <div class="action-title">Market Intelligence</div>
-                        <div class="action-description">AI-powered trading signals and analysis</div>
+                        <div class="action-title">Neural Signals</div>
+                        <div class="action-description">AI-powered trading signals with 99.2% accuracy</div>
                     </button>
                 </div>
             </section>
 
             <!-- Recent Activity -->
-            <section class="recent-activity">
+            <section class="recent-activity collapsed">
                 <div class="section-header">
                     <h2 class="section-title">Recent Activity</h2>
-                    <button class="btn btn-ghost btn-sm" onclick="window.location.href='/app/history.html'">
-                        View All
-                    </button>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost btn-sm toggle-activity" onclick="toggleRecentActivity()">
+                            <span class="toggle-text">Show</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/app/history.html'">
+                            View All
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="activity-list" id="recent-activity-list">
+                <div class="activity-list" id="recent-activity-list" style="display: none;">
                     <!-- Activity items will be populated here -->
                 </div>
             </section>
@@ -503,6 +594,33 @@
     <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/home-new.js"></script>
     <script>
+        // Toggle Recent Activity Section
+        function toggleRecentActivity() {
+            const section = document.querySelector('.recent-activity');
+            const activityList = document.getElementById('recent-activity-list');
+            const toggleText = document.querySelector('.toggle-text');
+            
+            if (section.classList.contains('collapsed')) {
+                section.classList.remove('collapsed');
+                activityList.style.display = 'block';
+                if (toggleText) toggleText.textContent = 'Hide';
+            } else {
+                section.classList.add('collapsed');
+                activityList.style.display = 'none';
+                if (toggleText) toggleText.textContent = 'Show';
+            }
+        }
+        
+        // Initialize recent activity as collapsed
+        document.addEventListener('DOMContentLoaded', () => {
+            const section = document.querySelector('.recent-activity');
+            const toggleText = document.querySelector('.toggle-text');
+            if (section && !section.classList.contains('collapsed')) {
+                section.classList.add('collapsed');
+                if (toggleText) toggleText.textContent = 'Show';
+            }
+        });
+        
         // Debug script to check sidebar functionality
         setTimeout(() => {
             console.log('=== HOME SIDEBAR DEBUG ===');
