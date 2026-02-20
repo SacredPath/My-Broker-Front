@@ -1,4 +1,4 @@
--- Update bank details to BANK OF AMERICA and account name OPTIONSHARES
+-- Update bank details to BANK OF AMERICA and account name PALANTIR INVESTMENTS
 
 -- 1. Update bank name and account name
 UPDATE deposit_methods 
