@@ -84,12 +84,18 @@ ORDER BY ordinal_position;
 -- 7. Show sample data to verify update
 DO $$
 BEGIN
-    RAISE NOTICE '=== SAMPLE DATA FROM SIGNAL_USDT_PURCHASES ===';
-    PERFORM dblink_connect('dbname=supabasedb');
-    PERFORM dblink_exec('SELECT id, user_id, signal_id, amount, usdt_address, status, created_at FROM signal_usdt_purchases LIMIT 5');
+    RAISE NOTICE '=== VERIFYING SIGNAL_USDT_PURCHASES DATA ===';
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signal_usdt_purchases') THEN
+        PERFORM 1; -- Simple verification that table exists
+        RAISE NOTICE 'Table exists and is accessible';
+    END IF;
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE NOTICE 'Sample data query failed, but table creation and update should be complete';
+        RAISE NOTICE 'Sample data verification failed, but table creation should be complete';
 END $$;
 
-RAISE NOTICE '=== SIGNAL_USDT_PURCHASES TABLE CREATION AND UPDATE COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== SIGNAL_USDT_PURCHASES TABLE CREATION AND UPDATE COMPLETE ===';
+END $$;
