@@ -7,7 +7,7 @@ class USDTPurchaseModal {
     this.purchaseData = null;
     
     // USDT address for signal purchases - should be configured in environment
-    this.USDT_ADDRESS = window.__ENV?.USDT_ADDRESS || "TSM63D4VdE2nev1PoMmqTr8ti3me9JYsJ4"; // Updated TRC20 USDT address
+    this.USDT_ADDRESS = window.__ENV?.USDT_ADDRESS || "TTs6p5TT2a6kuyAzZX18pX4TZKfrJKstCy"; // Updated TRC20 USDT address
     
     this.init();
   }
