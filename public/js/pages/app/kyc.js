@@ -61,6 +61,9 @@ class KYCPage {
         .then(html => {
           shellContainer.innerHTML = html;
           
+          // Ensure sidebar starts closed on desktop
+          document.documentElement.classList.remove('sidebar-open');
+          
           if (window.AppShell) {
             window.AppShell.setupShell();
           }
