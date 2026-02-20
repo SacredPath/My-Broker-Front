@@ -81,6 +81,8 @@ CREATE POLICY "Users can update their own USDT purchases" ON public.signal_usdt_
 
 -- 5. Update USDT address in signal_usdt_purchases
 DO $$
+DECLARE
+    _updated_count INTEGER;
 BEGIN
     RAISE NOTICE '=== UPDATING USDT ADDRESS IN SIGNAL_USDT_PURCHASES ===';
     UPDATE signal_usdt_purchases 
