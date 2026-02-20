@@ -14,6 +14,10 @@ ORDER BY created_at DESC;
 
 -- 2. Remove the test address record
 DO $$
+DECLARE
+    _deleted INTEGER;
+    _deactivated INTEGER;
+    _deactivated_usdt INTEGER;
 BEGIN
     RAISE NOTICE '=== CLEANING UP DEPOSIT_METHODS ===';
     
