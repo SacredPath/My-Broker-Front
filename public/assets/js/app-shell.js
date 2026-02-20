@@ -131,6 +131,12 @@ class AppShell {
     // Setup core UI components that don't depend on data
     // Note: Theme toggle event listeners are already handled by bindCoreUIEvents()
     this.initializeTheme(); // Initialize theme state
+    
+    // Ensure sidebar starts closed on desktop
+    if (window.innerWidth > 1024) {
+      document.documentElement.classList.remove('sidebar-open');
+    }
+    
     this.setupResponsiveBehavior();
     
     console.log('Core UI setup complete');
