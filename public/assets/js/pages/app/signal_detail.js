@@ -464,7 +464,12 @@ class SignalDetailPage {
       
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        return 'N/A';
+        // Return current date if signal date is invalid
+        return new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
       }
       
       return date.toLocaleDateString('en-US', {
