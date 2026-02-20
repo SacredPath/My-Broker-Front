@@ -135,4 +135,8 @@ EXCEPTION
         RAISE NOTICE 'Sample data verification failed';
 END $$;
 
-RAISE NOTICE '=== APP_SETTINGS TABLE SETUP COMPLETE ===';
+-- Final confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '=== APP_SETTINGS TABLE SETUP COMPLETE ===';
+END $$;
