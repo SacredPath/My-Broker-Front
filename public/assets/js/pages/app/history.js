@@ -105,7 +105,7 @@ class HistoryPage {
       }
 
       // Load unified history from database
-      const data = await this.api.getUnifiedHistory(userId);
+      const data = await this.api.getConversionHistory(userId);
       
       this.historyData = data;
       console.log('History data loaded:', this.historyData.length, 'items');
