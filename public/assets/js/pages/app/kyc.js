@@ -4,7 +4,7 @@
  */
 
 // Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
+import '/assets/js/_shared/app_init.js';
 
 class KYCPage {
   constructor() {
@@ -308,7 +308,7 @@ class KYCPage {
       const fileName = `${fileKey}_${Date.now()}_${file.name}`;
       const filePath = `kyc/${this.currentUser.id}/${fileName}`;
 
-      const { data, error } = await window.supabaseClient.storage
+      const { data, error } = await window.API.supabase.storage
         .from('KYC_KEEP')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -320,7 +320,7 @@ class KYCPage {
       }
 
       // Get public URL
-      const { data: { publicUrl } } = window.supabaseClient.storage
+      const { data: { publicUrl } } = window.API.supabase.storage
         .from('KYC_KEEP')
         .getPublicUrl(filePath);
 
