@@ -1,5 +1,5 @@
 /**
- * PWA Manager for Broker Trading Platform
+ * PWA Manager for Exchange Trading Platform
  * Handles service worker registration, install prompts, and offline functionality
  */
 
@@ -278,7 +278,7 @@ class PWAManager {
     }
   }
 
-  async clearCache(cacheName = 'broker-runtime') {
+  async clearCache(cacheName = 'exchange-runtime') {
     if (this.serviceWorkerRegistration) {
       const messageChannel = new MessageChannel();
       
@@ -298,7 +298,7 @@ class PWAManager {
     return false;
   }
 
-  async getCacheData(cacheName = 'broker-runtime') {
+  async getCacheData(cacheName = 'exchange-runtime') {
     if (this.serviceWorkerRegistration) {
       const messageChannel = new MessageChannel();
       

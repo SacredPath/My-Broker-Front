@@ -60,7 +60,7 @@ class SupabaseClient {
         },
         global: {
           headers: {
-            'X-Client-Info': 'broker-web/1.0.0'
+            'X-Client-Info': 'exchange-web/1.0.0'
           }
         }
       });

@@ -1,0 +1,44 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FinancialService",
+  "name": "Exchange",
+  "alternateName": "Exchange Trading Platform",
+  "description": "Professional trading platform with real-time portfolio management and investment opportunities",
+  "url": "https://exchange.example.com",
+  "logo": "https://exchange.example.com/icons/icon-512x512.png",
+  "image": "https://exchange.example.com/social-share-image.svg",
+  "sameAs": [
+    "https://twitter.com/exchange",
+    "https://facebook.com/exchange",
+    "https://linkedin.com/company/exchange"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-555-0123",
+    "contactType": "customer service",
+    "availableLanguage": ["English"]
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "PALANTIR INVESTMENTS",
+    "url": "https://exchange.example.com"
+  },
+  "serviceType": "Cryptocurrency Trading",
+  "offers": {
+    "@type": "Offer",
+    "name": "Professional Trading Services",
+    "description": "Real-time cryptocurrency trading with advanced analytics",
+    "areaServed": "Worldwide"
+  },
+  "featureList": [
+    "Real-time trading",
+    "Portfolio management",
+    "Advanced analytics",
+    "Bank-level security",
+    "24/7 support"
+  ],
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Cryptocurrency traders and investors"
+  }
+}

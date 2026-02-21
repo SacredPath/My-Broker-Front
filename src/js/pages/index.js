@@ -172,9 +172,9 @@ class IndexPage {
       learnMoreBtn.addEventListener('click', () => {
         if (window.UI) {
           window.UI.createModal({
-            title: 'About Broker',
+            title: 'About Exchange',
             body: `
-              <p>Broker is a premium trading platform designed for both beginners and experienced traders.</p>
+              <p>Exchange is a premium trading platform designed for both beginners and experienced traders.</p>
               <h3>Key Features:</h3>
               <ul>
                 <li>Real-time market data</li>

@@ -1,5 +1,5 @@
 /**
- * Global Error Boundary for Broker Trading Platform
+ * Global Error Boundary for Exchange Trading Platform
  */
 
 class ErrorBoundary {
