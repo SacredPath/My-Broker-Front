@@ -316,6 +316,9 @@ export const {
   reset
 } = supabaseClient;
 
+// Export the class for other modules
+export { SupabaseClient };
+
 // Export the instance getter for other modules
 export { getSupabaseClientInstance };
 
