@@ -407,6 +407,52 @@ class APIClient {
     }
   }
 
+  // Edge function replacement - use REST API calls instead
+  async fetchEdge(functionName, options = {}) {
+    console.warn(`[API] fetchEdge called for ${functionName} - using REST API instead`);
+    
+    // Map edge functions to REST API calls
+    switch (functionName) {
+      case 'positions_list':
+        return await this.fetchSupabase('user_positions', {
+          ...options,
+          filters: { user_id: await this.getCurrentUserId() }
+        });
+      
+      case 'conversion_quote':
+        // For conversion quotes, return mock data for now
+        return {
+          data: {
+            from_amount: options.body?.from_amount || 0,
+            to_amount: options.body?.from_amount || 0, // 1:1 conversion for now
+            rate: 1,
+            fee: 0.01
+          }
+        };
+      
+      case 'keepalive':
+        return { data: { status: 'ok', timestamp: new Date().toISOString() } };
+      
+      default:
+        throw new Error(`Unknown edge function: ${functionName}`);
+    }
+  }
+
+  // Get investment tiers list
+  async fetchTiersList() {
+    try {
+      const response = await this.fetchSupabase('investment_tiers', {
+        select: '*',
+        order: { min_amount: 'asc' }
+      });
+      
+      return response?.data || [];
+    } catch (error) {
+      console.error('Failed to fetch tiers:', error);
+      return [];
+    }
+  }
+
   // Cleanup method
   destroy() {
     if (this.keepAliveInterval) {
@@ -430,6 +476,7 @@ if (typeof module !== 'undefined' && module.exports) {
 export const {
   fetchSupabase,
   fetchEdge,
+  fetchTiersList,
   getProfile,
   updateProfile,
   fetchBalances,

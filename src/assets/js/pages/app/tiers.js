@@ -532,6 +532,39 @@ class TiersPage {
     });
   }
 
+  // Setup modal functionality
+  setupModal() {
+    const modal = document.getElementById('tier-modal');
+    const closeButtons = modal?.querySelectorAll('.modal-close, [onclick*="closeModal"]');
+    
+    if (closeButtons) {
+      closeButtons.forEach(button => {
+        button.addEventListener('click', () => this.closeModal());
+      });
+    }
+    
+    // Close modal on overlay click
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    });
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal?.style.display !== 'none') {
+        this.closeModal();
+      }
+    });
+  }
+
+  closeModal() {
+    const modal = document.getElementById('tier-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
   // Cleanup method
   destroy() {
     console.log('Tiers page cleanup');
