@@ -578,6 +578,47 @@ class TiersPage {
     }
   }
 
+  // Update tier statistics and display
+  updateStats() {
+    const statsContainer = document.getElementById('tier-stats');
+    if (!statsContainer) return;
+
+    const userTotalEquity = this.calculateTotalEquity();
+    const currentTierId = this.getCurrentTierId();
+    const currentTier = this.tiers.find(t => t.id === currentTierId);
+
+    let statsHTML = '';
+    
+    if (currentTier) {
+      statsHTML = `
+        <div class="current-tier-stats">
+          <h3>Current Tier: ${currentTier.name}</h3>
+          <div class="stat-row">
+            <span class="stat-label">Daily ROI:</span>
+            <span class="stat-value">${(currentTier.daily_roi * 100).toFixed(1)}%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Investment Period:</span>
+            <span class="stat-value">${currentTier.days} days</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Your Equity:</span>
+            <span class="stat-value">$${this.formatMoney(userTotalEquity)}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      statsHTML = `
+        <div class="no-tier-stats">
+          <h3>No Active Investment</h3>
+          <p>You haven't started any investment tier yet.</p>
+        </div>
+      `;
+    }
+
+    statsContainer.innerHTML = statsHTML;
+  }
+
   // Cleanup method
   destroy() {
     console.log('Tiers page cleanup');
