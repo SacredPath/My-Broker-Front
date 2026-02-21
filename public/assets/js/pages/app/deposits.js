@@ -372,7 +372,7 @@ class DepositsPage {
     });
 
     // Remove any existing modals
-    this.closeDepositModal();
+    this.closeModal();
   }
 
   updateDepositAmount(amount) {
