@@ -278,18 +278,30 @@ class DepositsPage {
   }
 
   selectMethod(methodId) {
+    console.log('selectMethod called with methodId:', methodId);
+    console.log('Available methods:', this.depositSettings?.methods);
+    
     // Find method data
     const method = this.depositSettings.methods.find(m => m.id === methodId);
-    if (!method) return;
+    if (!method) {
+      console.error('Method not found for ID:', methodId);
+      return;
+    }
+
+    console.log('Found method:', method);
+    console.log('About to call openDepositModal');
 
     // Open deposit modal with method details
     this.openDepositModal(method);
   }
 
   openDepositModal(method) {
+    console.log('openDepositModal called with method:', method);
+    
     // Create modal if it doesn't exist
     let modal = document.getElementById('deposit-modal');
     if (!modal) {
+      console.log('Creating new modal element');
       modal = document.createElement('div');
       modal.id = 'deposit-modal';
       modal.style.position = 'fixed';
@@ -304,8 +316,12 @@ class DepositsPage {
       modal.style.background = 'rgba(0, 0, 0, 0.8)';
       modal.style.backdropFilter = 'blur(5px)';
       document.body.appendChild(modal);
+      console.log('Modal element created and appended to body');
+    } else {
+      console.log('Using existing modal element');
     }
 
+    console.log('About to generate modal content');
     // Generate modal content
     modal.innerHTML = `
       <div class="modal-content" style="position: relative; z-index: 10000; max-width: 90%; max-height: 90vh; overflow: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 12px;">
@@ -313,13 +329,17 @@ class DepositsPage {
       </div>
     `;
     
+    console.log('Modal content set, about to show modal');
     // Show modal
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
+    console.log('Modal should now be visible');
+    
     // Add click outside to close
     modal.onclick = (e) => {
       if (e.target === modal) {
+        console.log('Clicked outside modal, closing');
         this.closeModal();
       }
     };
