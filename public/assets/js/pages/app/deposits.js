@@ -19,7 +19,8 @@ class DepositsPage {
       console.warn("DepositsPage: API client not found on load. Retrying in 500ms...");
       setTimeout(() => this.retryInit(), 500);
     } else {
-      this.init();
+      // Add small delay to ensure API is fully initialized
+      setTimeout(() => this.init(), 100);
     }
   }
 
