@@ -287,6 +287,9 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = supabaseClient;
 }
 
+// Export the class and instance
+export { SupabaseClient };
+
 // Export individual methods for convenience
 export const {
   getClient,

@@ -540,20 +540,32 @@ class AppShell {
 
   async loadNotifications() {
     try {
-      const API_BASE = '/api/v1';
-      const response = await fetch(`${API_BASE}/notifications`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Use Supabase instead of non-existent API endpoint
+      if (!window.API) {
+        console.warn('API not available, cannot load notifications');
+        return;
+      }
+      
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        console.warn('User not authenticated, cannot load notifications');
+        return;
       }
 
-      const data = await response.json();
-      this.notifications = data.notifications || [];
+      const { data, error } = await window.API.supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Failed to load notifications:', error);
+        this.notifications = [];
+      } else {
+        this.notifications = data || [];
+      }
+      
       this.updateNotificationBadge();
       this.renderNotifications();
     } catch (error) {

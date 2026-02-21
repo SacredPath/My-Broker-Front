@@ -206,6 +206,17 @@ class APIClient {
     }
   }
 
+  // Get current user ID
+  async getCurrentUserId() {
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      return user?.id || null;
+    } catch (error) {
+      console.error('[APIClient] Failed to get current user ID:', error);
+      return null;
+    }
+  }
+
   // Profile-specific methods using REST API
   async getProfile(userId) {
     return await this.fetchSupabase('profiles', {
@@ -340,6 +351,7 @@ export const {
   fetchBalances,
   getDepositMethods,
   createDepositRequest,
+  getCurrentUserId,
   verifyEdgeFunctions,
   destroy
 } = APIClient;
