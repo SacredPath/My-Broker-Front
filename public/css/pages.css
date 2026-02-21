@@ -441,7 +441,7 @@
   z-index: 10000 !important;
   max-width: 90% !important;
   max-height: 90vh !important;
-  overflow: auto !important;
+  overflow: hidden !important;
   background: #1a1a1a !important;
   border: 1px solid #333 !important;
   border-radius: 12px !important;
