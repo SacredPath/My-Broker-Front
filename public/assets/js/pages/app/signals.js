@@ -117,7 +117,7 @@ class SignalsPage {
       // Load signals from signals table using shared client
       const { data, error } = await window.API.supabase
         .from('signals')
-        .select("id,title,category,risk_rating,description,price_usdt,access_days,type,status,created_at")
+        .select("id,category,risk_rating,description,price_usdt,access_days,type,status,created_at")
         .eq('status', 'active')
         .order('created_at', { ascending: false });
       
@@ -347,7 +347,7 @@ class SignalsPage {
       return `
         <div class="signal-card ${hasAccess ? 'purchased' : ''}" data-signal-id="${signal.id}">
           <div class="signal-header">
-            <h3 class="signal-title">${signal.title}</h3>
+            <h3 class="signal-title">${signal.category} Signal</h3>
                 <p class="signal-description">${signal.description}</p>
             </div>
             
