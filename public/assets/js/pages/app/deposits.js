@@ -323,6 +323,22 @@ class DepositsPage {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
+    // Debug: Check modal visibility and positioning
+    setTimeout(() => {
+      console.log('=== MODAL DEBUG ===');
+      console.log('Modal element:', modal);
+      console.log('Modal classes:', modal.className);
+      console.log('Modal display:', window.getComputedStyle(modal).display);
+      console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
+      console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+      console.log('Modal position:', window.getComputedStyle(modal).position);
+      console.log('Modal in DOM:', document.body.contains(modal));
+      console.log('Modal offsetWidth:', modal.offsetWidth);
+      console.log('Modal offsetHeight:', modal.offsetHeight);
+      console.log('Modal computed style display:', window.getComputedStyle(modal).display);
+      console.log('Modal has active class:', modal.classList.contains('active'));
+    }, 100);
+    
     console.log('Modal should now be visible');
     
     // Add click outside to close
