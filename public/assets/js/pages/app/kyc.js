@@ -56,7 +56,7 @@ class KYCPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/src/components/app-shell.html')
+      fetch('/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
@@ -309,7 +309,7 @@ class KYCPage {
       const filePath = `kyc/${this.currentUser.id}/${fileName}`;
 
       const { data, error } = await window.API.supabase.storage
-        .from('KYC_KEEP')
+        .from('kyc-documents')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -321,7 +321,7 @@ class KYCPage {
 
       // Get public URL
       const { data: { publicUrl } } = window.API.supabase.storage
-        .from('KYC_KEEP')
+        .from('kyc-documents')
         .getPublicUrl(filePath);
 
       // Store file info

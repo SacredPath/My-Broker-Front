@@ -379,7 +379,7 @@ class APIClient {
   async getKYCStatus(userId) {
     try {
       const { data, error } = await this.supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('kyc_status, kyc_submitted_at, kyc_approved_at, kyc_rejection_reason')
         .eq('user_id', userId)
         .single();
