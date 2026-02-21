@@ -118,16 +118,27 @@ class DepositsPage {
         console.error('Database error loading deposit methods:', error);
         throw new Error(`Failed to load deposit methods: ${error.message}`);
       }
+
+      console.log('Raw deposit methods data from database:', data);
+      console.log('Data length:', data?.length);
+      if (data && data.length > 0) {
+        console.log('Sample method data:', data[0]);
+      }
       
       this.depositSettings = {
         methods: data || [],
-        currencies: [...new Set((data || []).map(method => method.currency))],
-        methodTypes: [...new Set((data || []).map(method => method.method_type))]
+        currencies: [...new Set((data || []).filter(method => method.currency).map(method => method.currency))],
+        methodTypes: [...new Set((data || []).filter(method => method.method_type).map(method => method.method_type))]
       };
       
       console.log('Deposit methods loaded from database:', this.depositSettings.methods.length, 'methods');
     } catch (error) {
       console.error('Failed to load deposit methods:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       if (window.Notify) {
         window.Notify.error('Failed to load deposit methods. Please try again.');
       }
@@ -177,6 +188,10 @@ class DepositsPage {
     // Create grid container for cards with enhanced styling
     const cardsHTML = this.depositSettings.methods.map(method => {
       console.log('DEBUG: Mapping method:', method.method_name, 'type:', method.method_type);
+      if (!method || !method.id) {
+        console.warn('Invalid method data:', method);
+        return '';
+      }
       return this.createMethodCard(method);
     }).join('');
     
@@ -192,6 +207,11 @@ class DepositsPage {
   }
 
   createMethodCard(method) {
+    if (!method) {
+      console.error('createMethodCard called with null/undefined method');
+      return '';
+    }
+    
     console.log('DEBUG: createMethodCard called with:', {
       method_name: method.method_name,
       method_type: method.method_type,
@@ -215,7 +235,7 @@ class DepositsPage {
       'paypal': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' }
     };
 
-    const colors = methodSpecificColors[method.method_name] || methodTypeColors[method.method_type] || { bg: '#6B7280', border: '#4B5563', hover: '#374151' };
+    const colors = methodSpecificColors[method.method_name || 'Unknown'] || methodTypeColors[method.method_type || 'crypto'] || { bg: '#6B7280', border: '#4B5563', hover: '#374151' };
     
     // Method icons
     const methodIcons = {
@@ -249,7 +269,7 @@ class DepositsPage {
       
       keyFeatures = [
         `Network: ${method.network || 'Not set'}`,
-        `Currency: ${method.currency}`,
+        `Currency: ${method.currency || 'Not set'}`,
         `Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`,
         `Processing: ${displayTime}`
       ];
@@ -282,11 +302,11 @@ class DepositsPage {
         
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
           <div style="background: ${colors.bg}20; color: ${colors.bg}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px; transition: all 0.3s ease; border: 1px solid ${colors.bg}30;" onmouseover="this.style.background='${colors.bg}30'; this.style.transform='scale(1.1)'; this.style.borderColor='${colors.bg}50';" onmouseout="this.style.background='${colors.bg}20'; this.style.transform='scale(1)'; this.style.borderColor='${colors.bg}30';">
-            ${methodIcons[method.method_type] || methodIcons['crypto']}
+            ${methodIcons[method.method_type || 'crypto'] || methodIcons['crypto']}
           </div>
           <div style="flex: 1;">
-            <h3 style="color: #000000; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${method.method_name}</h3>
-            <p style="color: #1F2937; margin: 0; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.3);">${method.method_type.toUpperCase()}</p>
+            <h3 style="color: #000000; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${method.method_name || 'Unknown Method'}</h3>
+            <p style="color: #1F2937; margin: 0; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.3);">${(method.method_type || 'unknown').toUpperCase()}</p>
           </div>
         </div>
         
