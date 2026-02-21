@@ -86,15 +86,17 @@ class KYCPage {
 
   async loadKYCStatus() {
     try {
-      const { data, error } = await window.API.fetchEdge('kyc_status', {
-        method: 'GET'
-      });
+      if (!this.currentUser || !this.currentUser.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await window.API.getKYCStatus(this.currentUser.id);
 
       if (error) {
         throw error;
       }
 
-      this.kycStatus = data.status || { status: 'not_submitted' };
+      this.kycStatus = data;
     } catch (error) {
       console.error('Failed to load KYC status:', error);
       this.kycStatus = { status: 'not_submitted' };
