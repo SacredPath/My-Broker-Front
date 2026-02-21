@@ -173,10 +173,15 @@ class TiersPage {
       const isCurrentTier = tier.id === currentTierId;
       const isEligible = userTotalEquity >= tier.min_amount;
       
+      // Handle missing data gracefully
+      const tierName = tier.name || `Tier ${tier.id}`;
+      const tierDays = tier.days || 0;
+      const tierDailyRoi = tier.daily_roi || 0;
+      
       return `
         <div class="tier-card ${isCurrentTier ? 'current' : ''}" data-tier-id="${tier.id}">
           <div class="tier-header">
-            <div class="tier-name">${tier.name}</div>
+            <div class="tier-name">${tierName}</div>
             <div class="tier-range">
               $${this.formatMoney(tier.min_amount)}${tier.max_amount ? ` - $${this.formatMoney(tier.max_amount)}` : '+'}
             </div>
@@ -184,11 +189,11 @@ class TiersPage {
           
           <div class="tier-stats">
             <div class="tier-stat">
-              <div class="tier-stat-value">${tier.days}</div>
+              <div class="tier-stat-value">${tierDays}</div>
               <div class="tier-stat-label">Days</div>
             </div>
             <div class="tier-stat">
-              <div class="tier-stat-value">${(tier.daily_roi * 100).toFixed(1)}%</div>
+              <div class="tier-stat-value">${(tierDailyRoi * 100).toFixed(1)}%</div>
               <div class="tier-stat-label">Daily ROI</div>
             </div>
           </div>
@@ -590,16 +595,20 @@ class TiersPage {
     let statsHTML = '';
     
     if (currentTier) {
+      const tierName = currentTier.name || `Tier ${currentTier.id}`;
+      const tierDays = currentTier.days || 0;
+      const tierDailyRoi = currentTier.daily_roi || 0;
+      
       statsHTML = `
         <div class="current-tier-stats">
-          <h3>Current Tier: ${currentTier.name}</h3>
+          <h3>Current Tier: ${tierName}</h3>
           <div class="stat-row">
             <span class="stat-label">Daily ROI:</span>
-            <span class="stat-value">${(currentTier.daily_roi * 100).toFixed(1)}%</span>
+            <span class="stat-value">${(tierDailyRoi * 100).toFixed(1)}%</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">Investment Period:</span>
-            <span class="stat-value">${currentTier.days} days</span>
+            <span class="stat-value">${tierDays} days</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">Your Equity:</span>

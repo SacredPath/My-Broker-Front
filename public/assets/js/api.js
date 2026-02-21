@@ -448,6 +448,7 @@ class APIClient {
       
       const tiers = response?.data || [];
       console.log('[API] Tiers loaded from database:', tiers.length, 'items');
+      console.log('[API] Tier data sample:', tiers.slice(0, 2)); // Debug first 2 items
       return tiers;
     } catch (error) {
       console.error('Failed to fetch tiers:', error);
