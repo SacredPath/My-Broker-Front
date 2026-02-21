@@ -89,13 +89,14 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
-      // Initialize deposit settings if not already set
+      // Ensure depositSettings is initialized
       if (!this.depositSettings) {
         this.depositSettings = {
           methods: [],
           currencies: [],
           processing: false
         };
+        console.log('Deposit settings initialized with defaults');
       }
       
       const response = await this.api.getDepositMethods();
@@ -104,9 +105,23 @@ class DepositsPage {
         console.log('Deposit settings loaded:', response.data);
       } else {
         console.error('Failed to load deposit settings:', response.error);
+        // Keep default settings on error
+        this.depositSettings = {
+          methods: [],
+          currencies: [],
+          processing: false
+        };
       }
     } catch (error) {
       console.error('Error loading deposit settings:', error);
+      // Ensure depositSettings exists even on error
+      if (!this.depositSettings) {
+        this.depositSettings = {
+          methods: [],
+          currencies: [],
+          processing: false
+        };
+      }
     }
   }
 
