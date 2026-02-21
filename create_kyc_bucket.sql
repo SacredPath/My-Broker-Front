@@ -17,7 +17,7 @@ CREATE POLICY "Users can upload their own KYC documents" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'kyc-documents' AND
   auth.role() = 'authenticated' AND
-  (storage.foldername(name))[1] = auth.uid()
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
 -- Policy to allow users to read their own files
@@ -25,7 +25,7 @@ CREATE POLICY "Users can read their own KYC documents" ON storage.objects
 FOR SELECT USING (
   bucket_id = 'kyc-documents' AND
   auth.role() = 'authenticated' AND
-  (storage.foldername(name))[1] = auth.uid()
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
 -- Policy to allow users to update their own files
@@ -33,7 +33,7 @@ CREATE POLICY "Users can update their own KYC documents" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'kyc-documents' AND
   auth.role() = 'authenticated' AND
-  (storage.foldername(name))[1] = auth.uid()
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
 -- Policy to allow users to delete their own files
@@ -41,7 +41,7 @@ CREATE POLICY "Users can delete their own KYC documents" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'kyc-documents' AND
   auth.role() = 'authenticated' AND
-  (storage.foldername(name))[1] = auth.uid()
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
 -- 3. Grant necessary permissions
