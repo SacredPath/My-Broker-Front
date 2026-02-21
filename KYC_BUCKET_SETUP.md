@@ -17,7 +17,16 @@
      - `application/pdf`
 6. Click "Save"
 
-## Option 2: Through SQL Editor (Simple Version)
+## Option 2: Through SQL Editor (Minimal Version - Recommended)
+
+1. Go to your Supabase Dashboard
+2. Select your project
+3. Go to SQL Editor in the left sidebar
+4. Click "New query"
+5. Copy and paste the SQL from `create_kyc_bucket_minimal.sql`
+6. Click "Run"
+
+## Option 3: Through SQL Editor (Simple Version)
 
 1. Go to your Supabase Dashboard
 2. Select your project
@@ -26,7 +35,7 @@
 5. Copy and paste the SQL from `create_kyc_bucket_simple.sql`
 6. Click "Run"
 
-## Option 3: Through SQL Editor (Advanced Version with User Isolation)
+## Option 4: Through SQL Editor (Advanced Version with User Isolation)
 
 1. Go to your Supabase Dashboard
 2. Select your project
@@ -60,4 +69,6 @@ The bucket is private by default, meaning:
 
 ## Troubleshooting:
 
-If you get a UUID comparison error, use the simple version (Option 2) which avoids complex folder name parsing.
+- **UUID comparison error**: Use the simple version (Option 3) which avoids complex folder name parsing
+- **Permission error ("must be owner of table objects")**: Use the minimal version (Option 2) or create through Dashboard (Option 1)
+- **Best approach**: Use Option 1 (Dashboard) or Option 2 (Minimal SQL) for most reliable results
