@@ -282,10 +282,11 @@ class IndexPage {
       this.loadStats();
     }, 30000);
 
-    // Update auth status every 10 seconds
-    setInterval(() => {
+    // Listen for auth state changes instead of polling every 10 seconds
+    // This prevents frequent reloads caused by periodic auth checks
+    AuthStateManager.addListener((event, session) => {
       this.updateAuthButton();
-    }, 10000);
+    }, { id: 'indexPageAuthListener' });
   }
 
   showStatsError() {

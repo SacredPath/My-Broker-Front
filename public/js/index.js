@@ -392,16 +392,16 @@ class BackOfficeDashboard {
   }
 
   startRealTimeUpdates() {
-    // Update stats every 30 seconds
+    // Update stats every 60 seconds (reduced frequency)
     setInterval(async () => {
       try {
         await this.loadDashboardData();
       } catch (error) {
         console.error('Failed to update dashboard stats:', error);
       }
-    }, 30000);
+    }, 60000);
 
-    // Update activity every 60 seconds
+    // Update activity every 120 seconds (reduced frequency)
     setInterval(async () => {
       try {
         await this.loadRecentActivity();

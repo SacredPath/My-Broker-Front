@@ -68,8 +68,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION handle_new_auth_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO profiles (user_id, email, display_name, email_verified, created_at, updated_at)
-    VALUES (NEW.id, NEW.email, NEW.email, NEW.email_confirmed, NOW(), NOW());
+    INSERT INTO profiles (id, email, email_verified, created_at, updated_at)
+    VALUES (NEW.id, NEW.email, NEW.email_confirmed, NOW(), NOW());
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

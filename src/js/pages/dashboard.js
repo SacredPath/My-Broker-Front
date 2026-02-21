@@ -400,10 +400,10 @@ class DashboardPage {
   }
 
   setupPeriodicUpdates() {
-    // Update dashboard data every 30 seconds
+    // Update dashboard data every 60 seconds (reduced frequency)
     this.refreshInterval = setInterval(() => {
       this.loadDashboardData();
-    }, 30000);
+    }, 60000);
   }
 
   // Cleanup method
