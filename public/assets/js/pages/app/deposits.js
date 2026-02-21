@@ -304,49 +304,24 @@ class DepositsPage {
       console.log('Creating new modal element');
       modal = document.createElement('div');
       modal.id = 'deposit-modal';
-      modal.style.position = 'fixed';
-      modal.style.top = '0';
-      modal.style.left = '0';
-      modal.style.right = '0';
-      modal.style.bottom = '0';
-      modal.style.zIndex = '9999';
-      modal.style.display = 'none';
-      modal.style.alignItems = 'center';
-      modal.style.justifyContent = 'center';
-      modal.style.background = 'rgba(0, 0, 0, 0.8)';
-      modal.style.backdropFilter = 'blur(5px)';
+      modal.className = 'modal';
       document.body.appendChild(modal);
       console.log('Modal element created and appended to body');
     } else {
       console.log('Using existing modal element');
     }
 
-    console.log('About to generate modal content');
     // Generate modal content
     modal.innerHTML = `
-      <div class="modal-content" style="position: relative; z-index: 10000; max-width: 90%; max-height: 90vh; overflow: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 12px;">
+      <div class="modal-content">
         ${this.generateModalContent(method)}
       </div>
     `;
     
     console.log('Modal content set, about to show modal');
     // Show modal
-    modal.style.display = 'flex';
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    
-    // Debug: Check modal's actual styles and visibility
-    setTimeout(() => {
-      console.log('Modal debug info:');
-      console.log('- Modal element:', modal);
-      console.log('- Modal display style:', modal.style.display);
-      console.log('- Modal computed style:', window.getComputedStyle(modal).display);
-      console.log('- Modal z-index:', modal.style.zIndex);
-      console.log('- Modal position:', modal.style.position);
-      console.log('- Modal visibility:', window.getComputedStyle(modal).visibility);
-      console.log('- Modal in DOM:', document.body.contains(modal));
-      console.log('- Modal offsetWidth:', modal.offsetWidth);
-      console.log('- Modal offsetHeight:', modal.offsetHeight);
-    }, 100);
     
     console.log('Modal should now be visible');
     
@@ -847,7 +822,8 @@ class DepositsPage {
   closeModal() {
     const modal = document.getElementById('deposit-modal');
     if (modal) {
-      modal.classList.remove();
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
     }
   }
 
