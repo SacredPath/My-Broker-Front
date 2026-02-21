@@ -88,17 +88,13 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
-      // Mock deposit settings for now since getDepositMethods doesn't exist
-      const mockSettings = {
-        methods: [
-          { id: 'bank', name: 'Bank Transfer', is_active: true, minAmount: 100, maxAmount: 50000 },
-          { id: 'crypto', name: 'Cryptocurrency', is_active: true, minAmount: 50, maxAmount: 100000 },
-          { id: 'card', name: 'Credit/Debit Card', is_active: false, minAmount: 10, maxAmount: 10000 }
-        ]
-      };
-      
-      this.depositSettings = mockSettings;
-      console.log('Deposit settings loaded (mock):', mockSettings);
+      const response = await this.api.getDepositMethods();
+      if (response.success) {
+        this.depositSettings = response.data;
+        console.log('Deposit settings loaded:', response.data);
+      } else {
+        console.error('Failed to load deposit settings:', response.error);
+      }
     } catch (error) {
       console.error('Error loading deposit settings:', error);
     }

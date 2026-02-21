@@ -222,6 +222,39 @@ class APIClient {
     });
   }
 
+  // Deposit methods fetching
+  async getDepositMethods() {
+    try {
+      const data = await this.fetchSupabase('deposit_methods');
+      return this.transformDepositMethods(data);
+    } catch (error) {
+      console.error('Failed to fetch deposit methods:', error);
+      return [];
+    }
+  }
+
+  transformDepositMethods(data) {
+    if (!data) return [];
+    return data.map(method => ({
+      id: method.id,
+      name: method.name,
+      method_name: method.name,
+      method_type: method.type,
+      currency: method.currency,
+      is_active: method.is_active,
+      minAmount: method.min_amount,
+      maxAmount: method.max_amount,
+      description: method.description,
+      icon: method.icon,
+      network: method.network,
+      address: method.address,
+      bank_name: method.bank_name,
+      account_number: method.account_number,
+      routing_number: method.routing_number,
+      paypal_email: method.paypal_email
+    }));
+  }
+
   // Balance fetching with canonical mapping
   async fetchBalances() {
     try {
@@ -240,6 +273,28 @@ class APIClient {
       amount: item.amount,
       value: item.usd_value || 0
     }));
+  }
+
+  // Deposit request creation
+  async createDepositRequest(depositData) {
+    try {
+      const data = await this.fetchSupabase('deposit_requests', {
+        method: 'POST',
+        body: depositData
+      });
+      return this.transformDepositRequest(data);
+    } catch (error) {
+      console.error('Failed to create deposit request:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  transformDepositRequest(data) {
+    if (!data) return { success: false, error: 'No data returned' };
+    return {
+      success: true,
+      data: data[0] || {}
+    };
   }
 
   // Verify Edge Functions are working
