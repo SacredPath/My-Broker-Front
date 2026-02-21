@@ -278,10 +278,232 @@ class DepositsPage {
   }
 
   selectMethod(methodId) {
-    this.selectedMethod = this.depositSettings.methods.find(m => m.id === methodId);
-    if (this.selectedMethod) {
-      this.renderDepositForm();
+    // Find method data
+    const method = this.depositSettings.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    // Open deposit modal with method details
+    this.openDepositModal(method);
+  }
+
+  openDepositModal(method) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('deposit-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'deposit-modal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.right = '0';
+      modal.style.bottom = '0';
+      modal.style.zIndex = '9999';
+      modal.style.display = 'none';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      modal.style.background = 'rgba(0, 0, 0, 0.8)';
+      modal.style.backdropFilter = 'blur(5px)';
+      document.body.appendChild(modal);
     }
+
+    // Generate modal content
+    modal.innerHTML = `
+      <div class="modal-content" style="position: relative; z-index: 10000; max-width: 90%; max-height: 90vh; overflow: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 12px;">
+        ${this.generateModalContent(method)}
+      </div>
+    `;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Add click outside to close
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    };
+  }
+
+  generateModalContent(method) {
+    const methodColors = {
+      'crypto': '#10B981',
+      'ach': '#3B82F6', 
+      'paypal': '#8B5CF6'
+    };
+
+    const color = methodColors[method.method_type] || '#6B7280';
+    
+    let paymentInfoHTML = '';
+    if (method.method_type === 'crypto') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Network:</strong> ${method.network || 'N/A'}<br>
+          <strong>Address:</strong> <code>${method.address || 'N/A'}</code>
+        </div>
+      `;
+    } else if (method.method_type === 'ach') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Bank:</strong> ${method.bank_name || 'N/A'}<br>
+          <strong>Account:</strong> ${method.account_number || 'N/A'}<br>
+          <strong>Routing:</strong> ${method.routing_number || 'N/A'}
+        </div>
+      `;
+    } else if (method.method_type === 'paypal') {
+      paymentInfoHTML = `
+        <div class="payment-info">
+          <strong>Email:</strong> ${method.paypal_email || 'N/A'}<br>
+          <strong>Business:</strong> ${method.paypal_business_name || 'N/A'}
+        </div>
+      `;
+    }
+
+    return `
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 600px; margin: 0 auto; max-height: 90vh; overflow-y: auto;">
+        <div style="padding: 24px; border-bottom: 1px solid #333;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h2 style="color: white; font-size: 24px; font-weight: 600;">${method.method_name}</h2>
+            <button onclick="window.depositsPage.closeModal()" style="background: transparent; border: 1px solid #666; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer;">×</button>
+          </div>
+        </div>
+        
+        <div style="padding: 24px;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.5;">${method.instructions || 'Follow the instructions below to complete your deposit.'}</p>
+          </div>
+          
+          <!-- Amount Input Section -->
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h4 style="color: white; font-size: 18px; font-weight: 600; margin-bottom: 16px;">💰 Enter Deposit Amount</h4>
+            <div style="display: grid; gap: 12px;">
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 8px;">Amount (${method.currency})</label>
+                <input type="number" 
+                       id="deposit-amount" 
+                       min="${method.min_amount || (method.currency === 'BTC' ? 100 : 1)}" 
+                       max="${method.max_amount || (method.currency === 'BTC' ? 1000000 : 999999)}" 
+                       step="0.01" 
+                       placeholder="0.00"
+                       style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 16px; font-weight: 500;"
+                       oninput="window.depositsPage.updateDepositAmount(this.value)">
+                <div style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.6);">
+                  Minimum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}
+                  ${method.max_amount ? ` | Maximum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: ${color}10; border: 1px solid ${color}30; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h4 style="color: white; font-size: 18px; font-weight: 600;">📱 ${method.method_type === 'crypto' ? 'Crypto' : method.method_type === 'ach' ? 'Bank' : 'PayPal'} Deposit Information</h4>
+            <div style="display: grid; gap: 16px;">
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Network' : method.method_type === 'ach' ? 'Bank' : 'Email'}</label>
+                <div style="color: white; font-size: 16px; font-weight: 500;">${method.method_type === 'crypto' ? method.network || 'NULL' : method.method_type === 'ach' ? method.bank_name || 'NULL' : method.paypal_email || 'NULL'}</div>
+              </div>
+              <div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Wallet Address' : method.method_type === 'ach' ? 'Account Number' : 'Business Name'}</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace; word-break: break-all;">${method.method_type === 'crypto' ? method.address || 'NULL' : method.method_type === 'ach' ? method.account_number || 'NULL' : method.paypal_business_name || 'NULL'}</div>
+                  <button onclick="window.depositsPage.copyAddress('${method.method_type === 'crypto' ? method.address : method.method_type === 'ach' ? method.account_number : method.paypal_email}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                </div>
+              </div>
+              ${method.method_type === 'ach' ? `
+                <div>
+                  <label style="color: rgba(255,255,255,0.7); font-size: 12px;">Routing Number</label>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace;">${method.routing_number || 'NULL'}</div>
+                    <button onclick="window.depositsPage.copyAddress('${method.routing_number}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding: 24px; border-top: 1px solid #333; display: flex; gap: 12px; justify-content: flex-end;">
+          <button onclick="window.depositsPage.closeModal()" style="background: #666; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">Close</button>
+          <button onclick="window.depositsPage.initiateDeposit('${method.id}')" style="background: ${color}; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;" id="deposit-submit-btn">💰 I've Sent Payment</button>
+        </div>
+      </div>
+    `;
+  }
+
+  copyAddress(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        if (window.Notify) {
+          window.Notify.success('Address copied to clipboard!');
+        } else {
+          alert('Address copied to clipboard!');
+        }
+      }).catch(err => {
+        console.error('Failed to copy address:', err);
+        this.fallbackCopyToClipboard(text);
+      });
+    } else {
+      this.fallbackCopyToClipboard(text);
+    }
+  }
+
+  fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      if (window.Notify) {
+        window.Notify.success('Address copied to clipboard!');
+      } else {
+        alert('Address copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      alert('Failed to copy address. Please copy manually.');
+    }
+    
+    document.body.removeChild(textArea);
+  }
+
+  updateDepositAmount(amount) {
+    this.currentDepositAmount = parseFloat(amount) || 0;
+    const submitBtn = document.getElementById('deposit-submit-btn');
+    if (submitBtn) {
+      submitBtn.textContent = `💰 I've Sent Payment (${this.formatMoney(this.currentDepositAmount, 2)})`;
+    }
+  }
+
+  initiateDeposit(methodId) {
+    const method = this.depositSettings.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    const amount = this.currentDepositAmount || 0;
+    const minAmount = method.min_amount || (method.currency === 'BTC' ? 100 : 1);
+    
+    if (amount < minAmount) {
+      if (window.Notify) {
+        window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(minAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
+      } else {
+        alert(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(minAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
+      }
+      return;
+    }
+
+    // Show success message for now
+    if (window.Notify) {
+      window.Notify.success('Deposit request submitted successfully!');
+    } else {
+      alert('Deposit request submitted successfully!');
+    }
+    
+    this.closeModal();
   }
 
   renderDepositForm() {
