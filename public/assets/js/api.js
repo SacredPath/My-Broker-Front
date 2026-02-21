@@ -375,6 +375,49 @@ class APIClient {
     return results;
   }
 
+  // KYC related methods
+  async getKYCStatus(userId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .select('kyc_status, kyc_submitted_at, kyc_approved_at, kyc_rejection_reason')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        // If no record found, return default status
+        if (error.code === 'PGRST116') {
+          return {
+            success: true,
+            data: {
+              status: 'not_submitted',
+              submitted_at: null,
+              approved_at: null,
+              rejection_reason: null
+            }
+          };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          status: data.kyc_status || 'not_submitted',
+          submitted_at: data.kyc_submitted_at,
+          approved_at: data.kyc_approved_at,
+          rejection_reason: data.kyc_rejection_reason
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get KYC status:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   // Cleanup method
   destroy() {
     if (this.keepAliveInterval) {
@@ -405,6 +448,7 @@ export const {
   createDepositRequest,
   getCurrentUserId,
   getPortfolioSnapshot,
+  getKYCStatus,
   verifyEdgeFunctions,
   destroy
 } = APIClient;
