@@ -206,6 +206,56 @@ class APIClient {
     }
   }
 
+  // Get portfolio snapshot with current balances and positions
+  async getPortfolioSnapshot() {
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get balances
+      const { data: balances, error: balanceError } = await this.supabase
+        .from('wallet_balances')
+        .select('*')
+        .eq('user_id', userId);
+
+      // Get positions
+      const { data: positions, error: positionError } = await this.supabase
+        .from('user_positions')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (balanceError || positionError) {
+        throw new Error(`Failed to fetch portfolio data: ${balanceError?.message || positionError?.message}`);
+      }
+
+      // Calculate total portfolio value
+      const totalBalance = balances?.reduce((sum, balance) => 
+        sum + (parseFloat(balance.total) || 0), 0) || 0;
+      
+      const totalInvested = positions?.reduce((sum, position) => 
+        sum + (parseFloat(position.invested_amount) || 0), 0) || 0;
+
+      return {
+        totalBalance,
+        totalInvested,
+        positions: positions || [],
+        balances: balances || [],
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[APIClient] Failed to get portfolio snapshot:', error);
+      return {
+        totalBalance: 0,
+        totalInvested: 0,
+        positions: [],
+        balances: [],
+        lastUpdated: new Date().toISOString()
+      };
+    }
+  }
+
   // Get current user ID
   async getCurrentUserId() {
     try {
@@ -352,6 +402,7 @@ export const {
   getDepositMethods,
   createDepositRequest,
   getCurrentUserId,
+  getPortfolioSnapshot,
   verifyEdgeFunctions,
   destroy
 } = APIClient;
