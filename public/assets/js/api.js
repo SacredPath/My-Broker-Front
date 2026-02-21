@@ -448,7 +448,22 @@ class APIClient {
       
       const tiers = response?.data || [];
       console.log('[API] Tiers loaded from database:', tiers.length, 'items');
-      console.log('[API] Tier data sample:', tiers.slice(0, 2)); // Debug first 2 items
+      
+      // Debug: Show field names and values for first tier
+      if (tiers.length > 0) {
+        const firstTier = tiers[0];
+        console.log('[API] First tier fields:', Object.keys(firstTier));
+        console.log('[API] First tier data:', {
+          id: firstTier.id,
+          name: firstTier.name,
+          min_amount: firstTier.min_amount,
+          max_amount: firstTier.max_amount,
+          days: firstTier.days,
+          daily_roi: firstTier.daily_roi,
+          allocation_mix: firstTier.allocation_mix
+        });
+      }
+      
       return tiers;
     } catch (error) {
       console.error('Failed to fetch tiers:', error);
