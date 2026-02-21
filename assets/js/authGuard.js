@@ -223,11 +223,8 @@ class AuthGuard {
     // Clear any stored data
     sessionStorage.removeItem('intendedDestination');
     
-    // If currently on a protected route, redirect to home
-    const requirements = this.getCurrentRouteRequirements();
-    if (requirements.requireAuth) {
-      window.location.href = '/index.html';
-    }
+    // Always redirect to login page after sign out
+    window.location.href = '/login.html';
   }
 
   // Handle sign in
