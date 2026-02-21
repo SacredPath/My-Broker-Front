@@ -89,6 +89,13 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
+      // Check if API client is available
+      if (!this.api) {
+        console.warn('API client not available, retrying in 1 second...');
+        setTimeout(() => this.loadDepositSettings(), 1000);
+        return;
+      }
+      
       // Ensure depositSettings is initialized
       if (!this.depositSettings) {
         this.depositSettings = {
