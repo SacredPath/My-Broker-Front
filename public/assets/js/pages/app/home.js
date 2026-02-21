@@ -1,31 +1,14 @@
 /**
- * Home Page Controller (App Shell Example)
- * Demonstrates how to use the app shell components
+ * Home Dashboard Controller
+ * Main dashboard with overview stats and quick actions
  */
+
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
 
 class HomePage {
   constructor() {
-    this.currentUser = null;
-    
-    // Get API client
-    this.api = window.API || null;
-
-    if (!this.api) {
-      console.warn("HomePage: API client not found on load. Retrying in 500ms...");
-      setTimeout(() => this.retryInit(), 500);
-    } else {
-      this.init();
-    }
-  }
-
-  retryInit() {
-    this.api = window.API || null;
-    if (this.api) {
-      this.init();
-    } else {
-      // Retry again if API client still not available
-      setTimeout(() => this.retryInit(), 500);
-    }
+    this.init();
   }
 
   async init() {
@@ -40,6 +23,11 @@ class HomePage {
 
   async setupPage() {
     try {
+      // Initialize app shell (sidebar, navigation, etc.)
+      if (window.AppShell) {
+        window.AppShell.initShell();
+      }
+      
       // Setup page content
       this.updateUserDisplay();
       this.loadDashboardData();
@@ -51,6 +39,27 @@ class HomePage {
       if (window.Notify) {
         window.Notify.error('Failed to load home page');
       }
+    }
+  }
+
+  loadAppShell() {
+    // Load app shell HTML components
+    const shellContainer = document.getElementById('app-shell-container');
+    if (shellContainer) {
+      fetch('/src/components/app-shell.html')
+        .then(response => response.text())
+        .then(html => {
+          shellContainer.innerHTML = html;
+          
+          // Initialize app shell after loading
+          if (window.AppShell) {
+            // Re-initialize app shell with new DOM
+            window.AppShell.setupShell();
+          }
+        })
+        .catch(error => {
+          console.error('Failed to load app shell:', error);
+        });
     }
   }
 
@@ -72,117 +81,68 @@ class HomePage {
 
   async loadDashboardData() {
     try {
-      console.log('Loading dashboard data via REST API...');
+      // Use canonical dashboard summary from server
+      const dashboardData = await window.API.fetchDashboardSummary();
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      // Fetch real data via REST API
-      const [portfolio, prices] = await Promise.all([
-        this.api.getPortfolioSnapshot(userId),
-        this.api.getMarketPrices()
-      ]);
-
-      // Transform data for dashboard
-      const dashboardData = {
-        totalBalance: portfolio.summary.total_balance || 0,
-        investedAmount: portfolio.summary.total_value || 0,
-        totalProfit: (portfolio.summary.total_balance || 0) - (portfolio.summary.total_value || 0),
-        activeSignals: 3 // TODO: Replace with actual signals count when available
-      };
-
-      console.log('Dashboard data loaded:', dashboardData);
       this.updateDashboardStats(dashboardData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      // Show error to user instead of fallback mock data
-      if (window.Notify) {
-        window.Notify.error('Failed to load dashboard data. Please try again.');
-      }
-      this.updateDashboardStats({
-        totalBalance: 0,
-        investedAmount: 0,
-        totalProfit: 0,
-        activeSignals: 0
-      });
+      this.renderErrorState('Failed to load dashboard');
     }
   }
 
   updateDashboardStats(data) {
-    // Update stats with proper formatting
+    // Use canonical server data - no client calculations
     const totalBalance = document.getElementById('total-balance');
-    const investedAmount = document.getElementById('invested-amount');
-    const totalProfit = document.getElementById('total-profit');
-    const activeSignals = document.getElementById('active-signals');
+    const availableBalance = document.getElementById('available-balance');
+    const totalEquity = document.getElementById('total-equity');
+    const todayPnl = document.getElementById('today-pnl');
+    const totalPnl = document.getElementById('total-pnl');
 
-    if (window.Money) {
-      const balanceMoney = window.Money.create(data.totalBalance, 'USD');
-      const investedMoney = window.Money.create(data.investedAmount, 'USD');
-      const profitMoney = window.Money.create(data.totalProfit, 'USD');
-
-      if (totalBalance) totalBalance.textContent = window.Money.format(balanceMoney);
-      if (investedAmount) investedAmount.textContent = window.Money.format(investedMoney);
-      if (totalProfit) totalProfit.textContent = window.Money.format(profitMoney);
-    } else {
-      // Fallback formatting
-      if (totalBalance) totalBalance.textContent = `$${data.totalBalance.toFixed(2)}`;
-      if (investedAmount) investedAmount.textContent = `$${data.investedAmount.toFixed(2)}`;
-      if (totalProfit) totalProfit.textContent = `$${data.totalProfit.toFixed(2)}`;
+    // Format using money.js
+    if (totalBalance) {
+      totalBalance.textContent = window.Money.formatUSD(data.totalBalance);
     }
-
-    if (activeSignals) {
-      activeSignals.textContent = data.activeSignals.toString();
+    
+    if (availableBalance) {
+      availableBalance.textContent = window.Money.formatUSD(data.availableBalance);
+    }
+    
+    if (totalEquity) {
+      totalEquity.textContent = window.Money.formatUSD(data.totalEquity);
+    }
+    
+    if (todayPnl) {
+      const pnlClass = data.todayPnl >= 0 ? 'text-success' : 'text-danger';
+      todayPnl.textContent = `${data.todayPnl >= 0 ? '+' : ''}${window.Money.formatUSD(data.todayPnl)}`;
+      todayPnl.className = pnlClass;
+    }
+    
+    if (totalPnl) {
+      const pnlClass = data.totalPnl >= 0 ? 'text-success' : 'text-danger';
+      totalPnl.textContent = `${data.totalPnl >= 0 ? '+' : ''}${window.Money.formatUSD(data.totalPnl)}`;
+      totalPnl.className = pnlClass;
     }
   }
 
-  loadRecentActivity() {
+  async loadRecentActivity() {
     try {
-      // Mock activity data
-      const activities = [
-        {
-          type: 'deposit',
-          title: 'Deposit Received',
-          description: 'USD deposit processed successfully',
-          amount: 1000.00,
-          currency: 'USD',
-          time: '2 hours ago',
-          icon: 'deposit'
-        },
-        {
-          type: 'trade',
-          title: 'BTC Purchase',
-          description: 'Bought 0.025 BTC',
-          amount: -500.00,
-          currency: 'USD',
-          time: '5 hours ago',
-          icon: 'trade'
-        },
-        {
-          type: 'signal',
-          title: 'New Signal',
-          description: 'Buy signal for ETH/USD',
-          amount: null,
-          currency: null,
-          time: '1 day ago',
-          icon: 'signal'
-        },
-        {
-          type: 'withdrawal',
-          title: 'Withdrawal Processed',
-          description: 'Bank transfer completed',
-          amount: -200.00,
-          currency: 'USD',
-          time: '2 days ago',
-          icon: 'withdrawal'
+      const { data, error } = await window.API.fetchEdge('history_feed', {
+        method: 'GET',
+        params: {
+          page: 1,
+          limit: 5
         }
-      ];
+      });
 
-      this.renderRecentActivity(activities);
+      if (error) {
+        throw error;
+      }
+
+      this.renderRecentActivity(data.events || []);
     } catch (error) {
       console.error('Failed to load recent activity:', error);
+      this.renderEmptyActivity();
     }
   }
 
@@ -215,6 +175,39 @@ class HomePage {
         ` : ''}
       </div>
     `).join('');
+  }
+
+  renderEmptyActivity() {
+    const activityList = document.getElementById('recent-activity-list');
+    if (!activityList) return;
+    
+    activityList.innerHTML = `
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+        </svg>
+        <h3>No recent activity</h3>
+        <p>Your recent transactions and events will appear here</p>
+      </div>
+    `;
+  }
+
+  renderErrorState(message) {
+    const quickStats = document.querySelector('.quick-stats');
+    if (!quickStats) return;
+    
+    quickStats.innerHTML = `
+      <div class="error-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <h3>Failed to load dashboard</h3>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="window.location.reload()">Retry</button>
+      </div>
+    `;
   }
 
   // Cleanup method

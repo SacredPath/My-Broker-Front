@@ -3,6 +3,9 @@
  * Handles USDT to USD conversion with live rates and detailed quote breakdown
  */
 
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
+
 class ConvertPage {
   constructor() {
     this.currentUser = null;
@@ -10,26 +13,7 @@ class ConvertPage {
     this.currentQuote = null;
     this.conversionSettings = null;
     this.lastConversions = null;
-    
-    // Get API client
-    this.api = window.API || null;
-
-    if (!this.api) {
-      console.warn("ConvertPage: API client not found on load. Retrying in 500ms...");
-      setTimeout(() => this.retryInit(), 500);
-    } else {
-      this.init();
-    }
-  }
-
-  retryInit() {
-    this.api = window.API || null;
-    if (this.api) {
-      this.init();
-    } else {
-      // Retry again if API client still not available
-      setTimeout(() => this.retryInit(), 500);
-    }
+    this.init();
   }
 
   async init() {
@@ -44,7 +28,15 @@ class ConvertPage {
 
   async setupPage() {
     try {
-      // Load data
+      // Initialize app shell (sidebar, navigation, etc.)
+      if (window.AppShell) {
+        window.AppShell.initShell();
+      }
+      
+      // Show skeleton while loading
+      this.showLoadingState();
+      
+      // Load data with error handling
       await this.loadUserData();
       await this.loadConversionSettings();
       await this.loadUserBalances();
@@ -52,121 +44,221 @@ class ConvertPage {
       
       // Setup UI
       this.updateBalanceDisplay();
-      this.setupFormHandlers();
-      this.setupAutoRefresh();
+      this.setupSearchAndFilters();
+      this.setupRefreshButton();
       
       console.log('Convert page setup complete');
     } catch (error) {
       console.error('Error setting up convert page:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load convert page');
+      
+      // Show error modal with retry
+      const mappedError = error.mappedError || {
+        kind: 'unknown',
+        title: 'Setup Failed',
+        message: 'Failed to load conversion page. Please try again.'
+      };
+      
+      window.showModal({
+        title: mappedError.title,
+        message: mappedError.message,
+        primaryText: 'Retry',
+        onPrimary: () => this.setupPage(),
+        secondaryText: 'Cancel',
+        onSecondary: () => this.showErrorState()
+      });
+    }
+  }
+
+  showLoadingState() {
+    // Show skeleton for conversion history
+    const historyContainer = document.querySelector('[data-list="conversion-history"]');
+    if (historyContainer) {
+      window.renderSkeletonList(historyContainer, 5);
+    }
+  }
+
+  showErrorState() {
+    const historyContainer = document.querySelector('[data-list="conversion-history"]');
+    if (historyContainer) {
+      window.renderError(historyContainer, {
+        title: 'Failed to Load',
+        body: 'Could not load conversion history. Please refresh the page.',
+        actionText: 'Refresh',
+        onAction: () => this.setupPage()
+      });
+    }
+  }
+
+  setupSearchAndFilters() {
+    // Add search input for conversion history
+    const searchInput = document.querySelector('[data-search="conversions"]');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.filterConversions(e.target.value);
+      });
+    }
+
+    // Add filter chips
+    const filterChips = document.querySelectorAll('[data-filter]');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Remove active class from all chips
+        filterChips.forEach(c => c.classList.remove('active'));
+        // Add active class to clicked chip
+        chip.classList.add('active');
+        // Apply filter
+        this.filterConversionsByStatus(chip.dataset.filter);
+      });
+    });
+  }
+
+  setupRefreshButton() {
+    const refreshBtn = document.querySelector('[data-refresh="conversions"]');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = 'Refreshing...';
+        
+        try {
+          await this.loadConversionHistory();
+          window.toast.success('Conversion history refreshed');
+        } catch (error) {
+          window.toast.error('Failed to refresh history');
+        } finally {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = 'Refresh';
+        }
+      });
+    }
+  }
+
+  filterConversions(searchTerm) {
+    const items = document.querySelectorAll('[data-list="conversion-history"] .list-item');
+    const term = searchTerm.toLowerCase();
+    
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = text.includes(term) ? 'block' : 'none';
+    });
+  }
+
+  filterConversionsByStatus(status) {
+    const items = document.querySelectorAll('[data-list="conversion-history"] .list-item');
+    
+    items.forEach(item => {
+      if (status === 'all') {
+        item.style.display = 'block';
+      } else {
+        const itemStatus = item.dataset.status;
+        item.style.display = itemStatus === status ? 'block' : 'none';
       }
+    });
+  }
+
+  loadAppShell() {
+    const shellContainer = document.getElementById('app-shell-container');
+    if (shellContainer) {
+      fetch('/src/components/app-shell.html')
+        .then(response => response.text())
+        .then(html => {
+          shellContainer.innerHTML = html;
+          
+          if (window.AppShell) {
+            window.AppShell.setupShell();
+          }
+        })
+        .catch(error => {
+          console.error('Failed to load app shell:', error);
+        });
     }
   }
 
   async loadUserData() {
     try {
-      console.log('Loading user data via REST API...');
+      this.currentUser = await window.AuthService.getCurrentUserWithProfile();
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
+      if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
-
-      // Load user profile from database
-      const data = await this.api.getUserProfile(userId);
-      
-      this.currentUser = data;
-      console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load user profile. Please try again.');
-      }
       throw error;
     }
   }
 
   async loadConversionSettings() {
     try {
-      console.log('Loading conversion settings via REST API...');
-      
-      // Load conversion settings from database
-      const data = await this.api.getConversionSettings();
-      
-      this.conversionSettings = data;
-      console.log('Conversion settings loaded:', this.conversionSettings);
+      // Use withdrawal_settings to get conversion fees
+      const { data, error } = await window.API.fetchEdge('withdrawal_settings', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Use real settings only
+      this.conversionSettings = {
+        auto_convert_enabled: data.auto_convert_enabled ?? true,
+        fees: {
+          markup_percentage: data.markup_percentage ?? 0,
+          fixed_fee_usd: data.fixed_fee_usd ?? 0,
+          variable_fee_percentage: data.variable_fee_percentage ?? 0
+        },
+        rounding: {
+          usd_decimals: data.usd_decimals ?? 2,
+          usdt_decimals: data.usdt_decimals ?? 6
+        },
+        rate_provider: data.rate_provider ?? 'fixed',
+        refresh_interval: data.refresh_interval ?? 30
+      };
     } catch (error) {
       console.error('Failed to load conversion settings:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load conversion settings. Please try again.');
-      }
-      throw error;
+      // No fallback - show error state
+      this.conversionSettings = null;
     }
   }
 
   async loadUserBalances() {
     try {
-      console.log('Loading user balances via REST API...');
-      
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      // Load user balances from database
-      const data = await this.api.getWalletBalances(userId);
-      
-      this.userBalances = data;
-      console.log('User balances loaded:', this.userBalances);
+      // Use centralized balance fetch method
+      this.userBalances = await window.API.fetchBalances();
     } catch (error) {
       console.error('Failed to load user balances:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load user balances. Please try again.');
-      }
-      throw error;
+      // No fallback - show error state
+      this.userBalances = null;
     }
   }
 
   async loadConversionHistory() {
     try {
-      console.log('Loading conversion history via REST API...');
-      
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
+      const { data, error } = await window.API.fetchEdge('conversion_history', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Load conversion history from database
-      const data = await this.api.getConversionHistory(userId);
-      
-      this.lastConversions = data || [];
+      // Use real conversions or empty array
+      this.lastConversions = data.conversions || [];
       this.renderConversionHistory();
-      console.log('Conversion history loaded from database:', this.lastConversions.length, 'conversions');
     } catch (error) {
       console.error('Failed to load conversion history:', error);
       
-      // Check if it's a table not found error
-      if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-        console.warn('[ConvertPage] Conversions table does not exist yet. Showing empty history.');
-        this.lastConversions = [];
-        this.renderConversionHistory();
-        
-        // Show info message to user
-        if (window.Notify) {
-          window.Notify.info('Conversion history will be available once database is set up.');
-        }
-      } else {
-        // Show error to user for other errors
-        if (window.Notify) {
-          window.Notify.error('Failed to load conversion history. Please try again.');
-        }
-        this.lastConversions = [];
-        this.renderConversionHistory();
+      // Show error state for conversion history
+      const historyContainer = document.querySelector('[data-list="conversion-history"]');
+      if (historyContainer) {
+        window.renderError(historyContainer, {
+          title: 'Failed to Load History',
+          body: 'Could not load conversion history. Please try refreshing.',
+          actionText: 'Retry',
+          onAction: () => this.loadConversionHistory()
+        });
       }
+      
+      // Set empty array for other UI components
+      this.lastConversions = [];
     }
   }
 
@@ -176,20 +268,24 @@ class ConvertPage {
     const lastUSDTConversion = document.getElementById('last-usdt-conversion');
     const lastUSDConversion = document.getElementById('last-usd-conversion');
 
-    // Check if balances are available
+    // Handle missing balance data gracefully
     if (!this.userBalances) {
-      if (usdtBalance) usdtBalance.textContent = '₮0.000000';
-      if (usdBalance) usdBalance.textContent = '$0.00';
-      console.log('Balances not available yet');
+      if (usdtBalance) usdtBalance.textContent = 'Balance unavailable';
+      if (usdBalance) usdBalance.textContent = 'Balance unavailable';
       return;
     }
 
+    const usdt = Number(this.userBalances?.USDT?.available || 0);
+    const usd = Number(this.userBalances?.USD?.available || 0);
+    if (!Number.isFinite(usdt)) usdt = 0;
+    if (!Number.isFinite(usd)) usd = 0;
+
     if (usdtBalance) {
-      usdtBalance.textContent = `₮${this.formatMoney(this.userBalances.USDT?.available || 0, 6)}`;
+      usdtBalance.textContent = `₮${this.formatMoney(usdt, 6)}`;
     }
 
     if (usdBalance) {
-      usdBalance.textContent = `$${this.formatMoney(this.userBalances.USD?.available || 0, 2)}`;
+      usdBalance.textContent = `$${this.formatMoney(usd, 2)}`;
     }
 
     // Update last conversion info
@@ -216,30 +312,6 @@ class ConvertPage {
     return `${Math.floor(seconds / 86400)} days ago`;
   }
 
-  setupFormHandlers() {
-    // Setup form event listeners
-    const amountInput = document.getElementById('convert-amount');
-    const convertBtn = document.getElementById('execute-convert-btn');
-    const swapBtn = document.getElementById('swap-currencies');
-
-    if (amountInput) {
-      amountInput.addEventListener('input', () => this.updateQuote());
-    }
-    
-    if (convertBtn) {
-      convertBtn.addEventListener('click', () => this.executeConversion());
-      console.log('Convert button event listener attached');
-    } else {
-      console.warn('Convert button not found with ID: execute-convert-btn');
-    }
-    
-    if (swapBtn) {
-      swapBtn.addEventListener('click', () => this.swapCurrencies());
-    }
-
-    console.log('Form handlers setup complete');
-  }
-
   setupAutoRefresh() {
     // Auto-refresh quote every 30 seconds
     setInterval(() => {
@@ -250,231 +322,98 @@ class ConvertPage {
   }
 
   async updateQuote() {
-    console.log('=== updateQuote START ===');
     const amountInput = document.getElementById('convert-amount');
-    const amount = parseFloat(amountInput?.value);
-    
-    console.log('updateQuote called with amount:', amount);
+    const amount = parseFloat(amountInput.value);
     
     if (!amount || amount <= 0) {
-      console.log('Invalid amount, hiding quote');
       this.hideQuote();
       return;
     }
 
-    console.log('Amount validation passed');
-
-    // Check if balances are available
-    if (!this.userBalances || !this.userBalances.USDT) {
-      console.log('Balances not available, proceeding with quote anyway');
-      // Don't return - allow quote generation even without balance info
-    } else {
-      console.log('Balances available:', this.userBalances);
-      // Check if amount exceeds available balance
-      if (this.userBalances.USDT.available > 0 && amount > this.userBalances.USDT.available) {
-        console.log('Amount exceeds balance:', amount, '>', this.userBalances.USDT.available);
-        this.showQuoteError('Insufficient USDT balance');
-        return;
-      }
-      // Allow quote generation if balance is 0 (for demo/testing)
-      if (this.userBalances.USDT.available === 0) {
-        console.log('Balance is 0, allowing quote generation for demo purposes');
-      }
-    }
-
-    console.log('Balance check passed, calling getFXQuote');
-
-    try {
-      // For now, use mock data since we don't have a quote API endpoint yet
-      // Get FX quote from database
-      console.log('Calling getFXQuote with:', 'USDT', 'USD', amount);
-      const data = await this.api.getFXQuote('USDT', 'USD', amount);
-      console.log('getFXQuote returned:', data);
-      
-      this.currentQuote = data;
-      console.log('Generated quote:', this.currentQuote);
-      this.displayQuote();
-      console.log('Quote updated for amount:', amount);
-
-    } catch (error) {
-      console.error('Failed to update quote:', error);
-      this.showQuoteError('Failed to get quote');
-    }
-    
-    console.log('=== updateQuote END ===');
-  }
-
-  
-  executeConversion() {
-    if (!this.currentQuote) {
-      if (window.Notify) {
-        window.Notify.error('Please enter an amount to convert');
-      }
+    // Check if amount exceeds available balance
+    if (amount > this.userBalances.USDT.available) {
+      this.showQuoteError('Insufficient USDT balance');
       return;
     }
 
-    console.log('Executing conversion:', this.currentQuote);
-    
-    // For now, just show success message
-    if (window.Notify) {
-      window.Notify.success(`Converting ${this.currentQuote.from_amount} USDT to ${this.currentQuote.to_amount} USD`);
-    }
-    
-    // TODO: Implement actual conversion when API is ready
-  }
+    try {
+      const { data, error } = await window.API.fetchEdge('fx_quote', {
+        method: 'POST',
+        body: {
+          from_currency: 'USDT',
+          to_currency: 'USD',
+          amount: amount
+        }
+      });
 
-  swapCurrencies() {
-    console.log('Swap currencies clicked');
-    // TODO: Implement currency swapping when needed
-    if (window.Notify) {
-      window.Notify.info('Currency swap not implemented yet');
-    }
-  }
+      if (error) {
+        throw error;
+      }
 
-  showQuoteError(message) {
-    const quotePreview = document.getElementById('quote-preview');
-    const quoteStatus = document.getElementById('quote-status');
-    
-    if (quoteStatus) {
-      quoteStatus.textContent = message;
-      quoteStatus.className = 'quote-status error';
-    } else {
-      console.warn('quote-status element not found');
-    }
-    
-    if (quotePreview) {
-      quotePreview.style.display = 'none';
-    } else {
-      console.warn('quote-preview element not found');
-    }
-  }
+      this.currentQuote = data.quote;
+      this.displayQuote();
 
-  hideQuote() {
-    const quotePreview = document.getElementById('quote-preview');
-    const quoteStatus = document.getElementById('quote-status');
-    
-    if (quotePreview) {
-      quotePreview.style.display = 'none';
-    } else {
-      console.warn('quote-preview element not found');
-    }
-    
-    if (quoteStatus) {
-      quoteStatus.textContent = '';
-      quoteStatus.className = 'quote-status';
-    } else {
-      console.warn('quote-status element not found');
+    } catch (error) {
+      console.error('Failed to get quote:', error);
+      this.showQuoteError('Failed to get quote. Please try again.');
     }
   }
 
   displayQuote() {
-    try {
-      console.log('displayQuote called, currentQuote:', this.currentQuote);
-      
-      if (!this.currentQuote) {
-        console.log('No current quote to display');
-        return;
-      }
+    if (!this.currentQuote) return;
 
-      const quotePreview = document.getElementById('quote-preview');
-      const quoteStatus = document.getElementById('quote-status');
-      
-      console.log('Quote preview element:', !!quotePreview);
-      console.log('Quote status element:', !!quoteStatus);
-      
-      // Check if conversion settings are available
-      if (!this.conversionSettings || !this.conversionSettings.fees) {
-        console.log('Conversion settings not available, using defaults');
-        // Don't return - use default values
-      }
+    const quotePreview = document.getElementById('quote-preview');
+    const quoteStatus = document.getElementById('quote-status');
     
-      // Update quote elements with null checks
-      const usdtAmountEl = document.getElementById('quote-usdt-amount');
-      const liveRateEl = document.getElementById('quote-live-rate');
-      const markupEl = document.getElementById('quote-markup');
-      
-      if (usdtAmountEl) {
-        usdtAmountEl.textContent = `₮${this.formatMoney(this.currentQuote.from_amount, 6)}`;
-      }
+    // Update quote elements with safe defaults
+    document.getElementById('quote-usdt-amount').textContent = `₮${this.formatMoney(this.currentQuote?.from_amount || 0, 6)}`;
+    document.getElementById('quote-live-rate').textContent = `1 USDT = $${this.formatMoney(this.currentQuote?.live_rate || 0, 6)}`;
+    document.getElementById('quote-markup').textContent = `+${this.conversionSettings?.fees?.markup_percentage || 0}%`;
+    document.getElementById('quote-fixed-fee').textContent = `$${this.formatMoney(this.currentQuote?.fixed_fee || 0, 2)}`;
+    document.getElementById('quote-variable-fee').textContent = `$${this.formatMoney(this.currentQuote?.variable_fee || 0, 2)}`;
+    document.getElementById('quote-total-fees').textContent = `$${this.formatMoney(this.currentQuote?.total_fees || 0, 2)}`;
+    document.getElementById('quote-usd-received').textContent = `$${this.formatMoney(this.currentQuote?.to_amount || 0, 2)}`;
     
-    if (liveRateEl) {
-      liveRateEl.textContent = `1 USDT = $${this.formatMoney(this.currentQuote.rate || 0, 6)}`;
-    }
+    // Update rate breakdown with safe defaults
+    const fromAmount = this.currentQuote?.from_amount || 0;
+    const toAmount = this.currentQuote?.to_amount || 0;
+    const finalRate = fromAmount > 0 ? toAmount / fromAmount : 0;
+    document.getElementById('breakdown-live-rate').textContent = this.formatMoney(this.currentQuote?.live_rate || 0, 6);
+    document.getElementById('breakdown-markup-rate').textContent = `${this.conversionSettings?.fees?.markup_percentage || 0}%`;
+    document.getElementById('breakdown-final-rate').textContent = this.formatMoney(finalRate, 6);
     
-    if (markupEl) {
-      markupEl.textContent = `+${this.conversionSettings.fees.markup_percentage || 0}%`;
-    }
+    // Update status
+    quoteStatus.textContent = `Live (${new Date().toLocaleTimeString()})`;
     
-    // Update remaining quote elements with null checks
-    const fixedFeeEl = document.getElementById('quote-fixed-fee');
-    const variableFeeEl = document.getElementById('quote-variable-fee');
-    const totalFeesEl = document.getElementById('quote-total-fees');
-    const usdReceivedEl = document.getElementById('quote-usd-received');
-    
-    if (fixedFeeEl) {
-      fixedFeeEl.textContent = `$${this.formatMoney(this.currentQuote.fees || 0, 2)}`;
-    }
-    
-    if (variableFeeEl) {
-      variableFeeEl.textContent = `$${this.formatMoney(this.currentQuote.fees || 0, 2)}`;
-    }
-    
-    if (totalFeesEl) {
-      totalFeesEl.textContent = `$${this.formatMoney(this.currentQuote.fees || 0, 2)}`;
-    }
-    
-    if (usdReceivedEl) {
-      usdReceivedEl.textContent = `$${this.formatMoney(this.currentQuote.to_amount || 0, 2)}`;
-    }
-    
-    // Update rate breakdown with null checks
-    const breakdownLiveRateEl = document.getElementById('breakdown-live-rate');
-    const breakdownMarkupRateEl = document.getElementById('breakdown-markup-rate');
-    const breakdownFinalRateEl = document.getElementById('breakdown-final-rate');
-    
-    if (breakdownLiveRateEl) {
-      breakdownLiveRateEl.textContent = this.formatMoney(this.currentQuote.rate || 0, 6);
-    }
-    
-    if (breakdownMarkupRateEl) {
-      breakdownMarkupRateEl.textContent = `${this.conversionSettings.fees.markup_percentage || 0}%`;
-    }
-    
-    if (breakdownFinalRateEl) {
-      const finalRate = (this.currentQuote.to_amount || 0) / (this.currentQuote.from_amount || 1);
-      breakdownFinalRateEl.textContent = this.formatMoney(finalRate, 6);
-    }
-    
-    // Update status with null check
-    if (quoteStatus) {
-      quoteStatus.textContent = `Live (${new Date().toLocaleTimeString()})`;
-    }
-    
-    if (quotePreview) {
-      quotePreview.style.display = 'block';
-    }
-    } catch (error) {
-      console.error('Error in displayQuote:', error);
-      this.showQuoteError('Failed to display quote');
-    }
+    quotePreview.style.display = 'block';
   }
 
   showQuoteError(message) {
     const quotePreview = document.getElementById('quote-preview');
     const quoteStatus = document.getElementById('quote-status');
     
-    if (quoteStatus) {
-      quoteStatus.textContent = message;
-      quoteStatus.className = 'quote-status error';
-    } else {
-      console.warn('quote-status element not found');
-    }
+    quoteStatus.textContent = 'Error';
+    quoteStatus.style.background = 'rgba(239, 68, 68, 0.1)';
+    quoteStatus.style.color = 'var(--error)';
     
-    if (quotePreview) {
-      quotePreview.style.display = 'none';
-    } else {
-      console.warn('quote-preview element not found');
-    }
+    // Show error message instead of quote
+    quotePreview.innerHTML = `
+      <div style="text-align: center; padding: 20px; color: var(--error);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <p>${message}</p>
+      </div>
+    `;
+    
+    quotePreview.style.display = 'block';
+  }
+
+  hideQuote() {
+    const quotePreview = document.getElementById('quote-preview');
+    quotePreview.style.display = 'none';
   }
 
   async refreshQuote() {
@@ -492,201 +431,176 @@ class ConvertPage {
 
   setMaxAmount() {
     const amountInput = document.getElementById('convert-amount');
-    if (this.userBalances && this.userBalances.USDT) {
-      amountInput.value = this.userBalances.USDT.available;
-      this.updateQuote();
-    } else {
-      if (window.Notify) {
-        window.Notify.error('Balance information not available');
-      }
-    }
+    amountInput.value = this.userBalances.USDT.available;
+    this.updateQuote();
   }
 
   async executeConversion() {
-    console.log('executeConversion called, currentQuote:', this.currentQuote);
-    
-    if (!this.currentQuote) {
-      // Try to generate a quote first
-      const amountInput = document.getElementById('convert-amount');
-      const amount = parseFloat(amountInput?.value);
-      
-      if (!amount || amount <= 0) {
-        if (window.Notify) {
-          window.Notify.error('Please enter an amount to convert');
-        }
-        return;
-      }
-
-      // Generate quote automatically
-      await this.updateQuote();
-      
-      if (!this.currentQuote) {
-        if (window.Notify) {
-          window.Notify.error('Failed to generate quote. Please try again.');
-        }
-        return;
-      }
-    }
-
     const amount = parseFloat(document.getElementById('convert-amount').value);
     
     if (!amount || amount <= 0) {
-      if (window.Notify) {
-        window.Notify.error('Please enter a valid amount');
-      }
+      window.Notify.error('Please enter a valid amount');
       return;
     }
 
-    if (!this.userBalances || !this.userBalances.USDT || amount > this.userBalances.USDT.available) {
-      if (window.Notify) {
-        window.Notify.error('Insufficient USDT balance');
-      }
+    // Check balance using real data structure
+    const usdtBalance = Number(this.userBalances?.USDT || 0);
+    if (amount > usdtBalance) {
+      window.Notify.error('Insufficient USDT balance');
       return;
     }
 
     try {
       this.setButtonLoading('execute-convert-btn', true);
 
-      // Save conversion to database
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      const conversionData = {
-        user_id: userId,
-        from_currency: this.currentQuote.from_currency,
-        to_currency: this.currentQuote.to_currency,
-        from_amount: this.currentQuote.from_amount,
-        to_amount: this.currentQuote.to_amount,
-        rate: this.currentQuote.rate,
-        fees: this.currentQuote.fees,
-        status: 'completed',
-        created_at: new Date().toISOString()
-      };
-
-      // Save conversion to database
-      const { data, error } = await this.api.serviceClient
-        .from('conversions')
-        .insert([conversionData])
-        .select();
+      // Use real convert_usdt_to_usd endpoint
+      const { data, error } = await window.API.fetchEdge('convert_usdt_to_usd', {
+        method: 'POST',
+        body: {
+          usdt_amount: amount
+        }
+      });
 
       if (error) {
-        console.error('Failed to save conversion:', error);
-        
-        // Check if table doesn't exist
-        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-          console.warn('[ConvertPage] Conversions table does not exist yet. Simulating conversion success.');
-          // Don't throw error, just simulate success
-        } else {
-          throw error;
-        }
+        throw error;
       }
 
-      console.log('Conversion saved to database:', data);
-      
-      if (window.Notify) {
-        window.Notify.success(`Successfully converted ${this.currentQuote.from_amount} USDT to ${this.currentQuote.to_amount} USD`);
-      }
-      
-      // Reset button
-      this.setButtonLoading('execute-convert-btn', false);
-      
-      // Clear quote after successful conversion
-      this.currentQuote = null;
-      this.hideQuote();
-      
+      // Show success message
+      const usdReceived = data?.conversion?.usd_net || 0;
+      window.Notify.success(`Successfully converted ₮${this.formatMoney(amount, 6)} to $${this.formatMoney(usdReceived, 2)}!`);
+
+      // Reset form
+      this.resetForm();
+
       // Reload data
       await this.loadUserBalances();
       await this.loadConversionHistory();
       this.updateBalanceDisplay();
 
     } catch (error) {
-      console.error('Failed to execute conversion:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to execute conversion. Please try again.');
-      }
+      console.error('Conversion failed:', error);
+      window.Notify.error(error.message || 'Failed to execute conversion');
     } finally {
       this.setButtonLoading('execute-convert-btn', false);
     }
   }
 
-  resetForm() {
-    const amountInput = document.getElementById('convert-amount');
-    if (amountInput) {
-      amountInput.value = '';
+  renderConversionHistory() {
+    const historyContainer = document.querySelector('[data-list="conversion-history"]');
+    if (!historyContainer) return;
+
+    if (!this.lastConversions || this.lastConversions.length === 0) {
+      window.renderEmpty(historyContainer, {
+        title: 'No Conversion History',
+        body: 'You haven\'t made any conversions yet. Start by converting USDT to USD.',
+        actionText: 'Make First Conversion',
+        onAction: () => {
+          // Scroll to conversion form
+          const form = document.getElementById('conversion-form');
+          if (form) {
+            form.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+      return;
     }
-    this.currentQuote = null;
+
+    const historyHTML = `
+      <div class="list">
+        ${this.lastConversions.map(conversion => `
+          <div class="list-item" data-status="${conversion?.status || 'unknown'}">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-3">
+                <div>
+                  <div class="font-semibold">₮${this.formatMoney(conversion?.from_amount || 0, 6)}</div>
+                  <div class="text-sm text-secondary">→ $${this.formatMoney(conversion?.to_amount || 0, 2)}</div>
+                </div>
+                <div class="badge ${this.getStatusBadgeClass(conversion?.status)}">
+                  ${conversion?.status || 'unknown'}
+                </div>
+              </div>
+              <div class="text-sm text-secondary">
+                ${this.getTimeAgo(new Date(conversion?.created_at))}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-secondary">Rate:</span>
+                <span class="ml-2">${this.formatMoney(conversion?.rate || 0, 6)}</span>
+              </div>
+              <div>
+                <span class="text-secondary">Fees:</span>
+                <span class="ml-2">$${this.formatMoney(conversion?.fees || 0, 2)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    historyContainer.innerHTML = historyHTML;
+  }
+
+  getStatusBadgeClass(status) {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'badge-success';
+      case 'pending':
+        return 'badge-warning';
+      case 'failed':
+        return 'badge-error';
+      default:
+        return 'badge-info';
+    }
+  }
+
+  resetForm() {
+    // Reset form inputs
+    document.getElementById('convert-amount').value = '';
+    
+    // Hide quote
     this.hideQuote();
+    
+    // Clear current quote
+    this.currentQuote = null;
   }
 
   setButtonLoading(buttonId, loading) {
     const button = document.getElementById(buttonId);
-    if (button) {
-      if (loading) {
-        button.disabled = true;
-        button.textContent = 'Processing...';
-      } else {
-        button.disabled = false;
-        button.textContent = 'Convert';
-      }
-    }
-  }
+    if (!button) return;
 
-  formatMoney(amount, decimals = 2) {
-    if (typeof amount !== 'number') return '0.00';
-    return amount.toFixed(decimals);
-  }
-
-  renderConversionHistory() {
-    const historyList = document.getElementById('history-list');
-    if (!historyList) return;
-
-    if (!this.lastConversions || this.lastConversions.length === 0) {
-      historyList.innerHTML = `
-        <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px; opacity: 0.5;">
-            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
-          </svg>
-          <p>No conversion history yet</p>
-        </div>
+    if (loading) {
+      button.disabled = true;
+      button.innerHTML = `
+        <div class="loading-spinner" style="display: inline-block; margin-right: 8px;"></div>
+        Processing...
       `;
-      return;
+    } else {
+      button.disabled = false;
+      button.textContent = 'Convert Now';
     }
-
-    historyList.innerHTML = this.lastConversions.map(conversion => `
-      <div class="history-item">
-        <div class="history-item-header">
-          <div class="history-item-amount">
-            <span class="from-amount">₮${this.formatMoney(conversion.from_amount, 6)}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14"></path>
-              <polyline points="12 19 19 12 12 5"></polyline>
-            </svg>
-            <span class="to-amount">$${this.formatMoney(conversion.to_amount, 2)}</span>
-          </div>
-          <div class="history-item-status ${conversion.status}">
-            ${conversion.status === 'completed' ? 'Completed' : 'Pending'}
-          </div>
-        </div>
-        <div class="history-item-details">
-          <div class="history-item-rate">Rate: ${this.formatMoney(conversion.rate, 6)}</div>
-          <div class="history-item-fees">Fees: $${this.formatMoney(conversion.fees, 2)}</div>
-          <div class="history-item-time">${this.getTimeAgo(new Date(conversion.created_at))}</div>
-        </div>
-      </div>
-    `).join('');
   }
 
-  getTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
+  formatMoney(amount, precision = 2) {
+    let n = Number(amount);
+    if (!Number.isFinite(n)) n = 0;
     
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    return `${Math.floor(seconds / 86400)} days ago`;
+    return n.toLocaleString('en-US', {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision
+    });
+  }
+
+  // Cleanup method
+  destroy() {
+    console.log('Convert page cleanup');
   }
 }
 
 // Initialize page controller
 window.convertPage = new ConvertPage();
+
+// Export for potential testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ConvertPage;
+}

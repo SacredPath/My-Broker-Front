@@ -131,12 +131,6 @@ class AppShell {
     // Setup core UI components that don't depend on data
     // Note: Theme toggle event listeners are already handled by bindCoreUIEvents()
     this.initializeTheme(); // Initialize theme state
-    
-    // Ensure sidebar starts closed on desktop
-    if (window.innerWidth > 1024) {
-      document.documentElement.classList.remove('sidebar-open');
-    }
-    
     this.setupResponsiveBehavior();
     
     console.log('Core UI setup complete');
@@ -191,7 +185,7 @@ class AppShell {
       } else if (event === 'SIGNED_OUT') {
         this.currentUser = null;
         // Redirect to login
-        window.location.href = '/login.html';
+        window.location.href = '/src/pages/login.html';
       }
     }, {
       id: 'appShell',
@@ -240,7 +234,7 @@ class AppShell {
       
       if (!user) {
         // Redirect to login if not authenticated
-        window.location.href = '/login.html';
+        window.location.href = '/src/pages/login.html';
         return false;
       }
       
@@ -249,7 +243,7 @@ class AppShell {
       return true;
     } catch (error) {
       console.error('Authentication check failed:', error);
-      window.location.href = '/login.html';
+      window.location.href = '/src/pages/login.html';
       return false;
     }
   }
@@ -336,7 +330,7 @@ class AppShell {
     fetch(href)
       .then(response => response.text())
       .then(html => {
-        // Create a temporary DOM element to parse HTML
+        // Create a temporary DOM element to parse the HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
         
@@ -477,7 +471,7 @@ class AppShell {
     try {
       await window.AuthService.logout();
       // Redirect to login page
-      window.location.href = '/login.html';
+      window.location.href = '/src/pages/login.html';
     } catch (error) {
       console.error('Logout error:', error);
       // Use new toast system
@@ -546,57 +540,24 @@ class AppShell {
 
   async loadNotifications() {
     try {
-      console.log('[AppShell] Loading notifications from database...');
-      
-      // Wait for API client to be available
-      let attempts = 0;
-      const maxAttempts = 30; // 3 seconds max wait
-      
-      while (!window.API?.getCurrentUserId && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
-      
-      // Get current user ID
-      const userId = await window.API?.getCurrentUserId();
-      if (!userId) {
-        console.warn('[AppShell] User not authenticated, skipping notifications');
-        this.notifications = [];
-        this.updateNotificationBadge();
-        this.renderNotifications();
-        return;
+      const API_BASE = '/api/v1';
+      const response = await fetch(`${API_BASE}/notifications`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Fetch notifications from database using service client
-      const { data, error } = await window.API.serviceClient
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('[AppShell] Database error loading notifications:', error);
-        throw error;
-      }
-
-      // Transform data to match expected format
-      this.notifications = (data || []).map(notification => ({
-        id: notification.id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type,
-        unread: notification.unread,
-        timestamp: notification.created_at,
-        readAt: notification.read_at
-      }));
-
-      console.log(`[AppShell] Loaded ${this.notifications.length} notifications`);
+      const data = await response.json();
+      this.notifications = data.notifications || [];
       this.updateNotificationBadge();
       this.renderNotifications();
-      
     } catch (error) {
-      console.error('[AppShell] Failed to load notifications:', error);
+      console.error('Failed to load notifications:', error);
       this.notifications = [];
       this.updateNotificationBadge();
       this.renderNotifications();
@@ -637,71 +598,16 @@ class AppShell {
     }
 
     notificationList.innerHTML = this.notifications.map(notification => `
-      <div class="notification-item ${notification.unread ? 'unread' : ''}" data-id="${notification.id}" onclick="window.AppShell.markNotificationAsRead('${notification.id}')">
+      <div class="notification-item ${notification.unread ? 'unread' : ''}" data-id="${notification.id}">
         <div class="notification-header-info">
           <div>
             <div class="notification-title">${notification.title}</div>
             <div class="notification-message">${notification.message}</div>
           </div>
-          <div class="notification-time">${this.formatNotificationTime(notification.timestamp)}</div>
+          <div class="notification-time">${notification.time}</div>
         </div>
       </div>
     `).join('');
-  }
-
-  async markNotificationAsRead(notificationId) {
-    try {
-      console.log(`[AppShell] Marking notification ${notificationId} as read`);
-      
-      // Update in database
-      const { error } = await window.API.serviceClient
-        .from('notifications')
-        .update({ 
-          unread: false, 
-          read_at: new Date().toISOString() 
-        })
-        .eq('id', notificationId);
-
-      if (error) {
-        console.error('[AppShell] Failed to mark notification as read:', error);
-        return;
-      }
-
-      // Update local state
-      const notification = this.notifications.find(n => n.id === notificationId);
-      if (notification) {
-        notification.unread = false;
-        notification.readAt = new Date().toISOString();
-      }
-
-      // Update UI
-      this.updateNotificationBadge();
-      this.renderNotifications();
-      
-      console.log('[AppShell] Notification marked as read successfully');
-      
-    } catch (error) {
-      console.error('[AppShell] Error marking notification as read:', error);
-    }
-  }
-
-  formatNotificationTime(timestamp) {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diff = now - time;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 60) {
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else if (days < 7) {
-      return `${days}d ago`;
-    } else {
-      return time.toLocaleDateString();
-    }
   }
 
   markNotificationsAsRead() {
@@ -730,8 +636,10 @@ class AppShell {
     // Get saved theme or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
     
-    // Apply theme immediately using data-attribute only
+    // Apply theme immediately
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.classList.toggle('theme-light', savedTheme === 'light');
+    document.documentElement.classList.toggle('theme-dark', savedTheme === 'dark');
     
     // Update theme toggle icon
     this.updateThemeToggleIcon(savedTheme);
@@ -745,6 +653,10 @@ class AppShell {
     
     // Update theme attribute
     document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Update CSS classes for compatibility
+    document.documentElement.classList.toggle('theme-light', newTheme === 'light');
+    document.documentElement.classList.toggle('theme-dark', newTheme === 'dark');
     
     // Save to localStorage
     localStorage.setItem('theme', newTheme);
@@ -814,25 +726,34 @@ class AppShell {
       time: 'Just now',
       unread: true
     });
+    
+    this.updateNotificationBadge();
+    this.renderNotifications();
   }
 
   showSuccessNotification(title, message) {
-    this.createNotification('success', title, message);
+    this.addNotification({
+      type: 'success',
+      title,
+      message
+    });
   }
 
   showErrorNotification(title, message) {
-    this.createNotification('error', title, message);
+    this.addNotification({
+      type: 'error',
+      title,
+      message
+    });
   }
 
   showInfoNotification(title, message) {
-    this.createNotification('info', title, message);
+    this.addNotification({
+      type: 'info',
+      title,
+      message
+    });
   }
-
-  showWarningNotification(title, message) {
-    this.createNotification('warning', title, message);
-  }
-
-  // ... (rest of the code remains the same)
 
   // Standardized initialization method for all pages
   initShell() {

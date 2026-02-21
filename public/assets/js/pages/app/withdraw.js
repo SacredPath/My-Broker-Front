@@ -1,7 +1,10 @@
 /**
- * Withdrawals Page Controller
- * Handles withdrawal requests with method capture and business rules
+ * Withdraw Page Controller
+ * Handles withdrawal requests, method management, and validation
  */
+
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
 
 class WithdrawPage {
   constructor() {
@@ -12,26 +15,7 @@ class WithdrawPage {
     this.selectedCurrency = null;
     this.selectedMethod = null;
     this.dailyLimits = null;
-    
-    // Get API client
-    this.api = window.API || null;
-
-    if (!this.api) {
-      console.warn("WithdrawPage: API client not found on load. Retrying in 500ms...");
-      setTimeout(() => this.retryInit(), 500);
-    } else {
-      this.init();
-    }
-  }
-
-  retryInit() {
-    this.api = window.API || null;
-    if (this.api) {
-      this.init();
-    } else {
-      // Retry again if API client still not available
-      setTimeout(() => this.retryInit(), 500);
-    }
+    this.init();
   }
 
   async init() {
@@ -46,497 +30,151 @@ class WithdrawPage {
 
   async setupPage() {
     try {
-      // Load data with error handling
-      await this.loadUserData().catch(() => {});
-      await this.loadUserBalances().catch(() => {});
-      await this.loadWithdrawalMethods().catch(() => {});
-      await this.loadWithdrawalSettings().catch(() => {});
-      await this.loadDailyLimits().catch(() => {});
-      await this.loadWithdrawalRequests().catch(() => {});
+      // Load app shell components
+      this.loadAppShell();
+      
+      // Load data
+      await this.loadUserData();
+      await this.loadWithdrawalSettings();
+      await this.loadUserBalances();
+      await this.loadUserMethods();
+      await this.loadDailyLimits();
+      await this.loadWithdrawalRequests();
       
       // Setup UI
+      this.setupKYCStatus();
+      this.updateBalanceDisplay();
       this.setupCurrencyOptions();
-      this.setupMethodCards();
-      this.setupForms();
-      this.setupURLParameters();
       
       console.log('Withdrawals page setup complete');
     } catch (error) {
       console.error('Error setting up withdrawals page:', error);
       if (window.Notify) {
-        window.Notify.error('Failed to load withdrawals page');
+        window.Notify.error('Failed to load withdrawal options');
       }
+    }
+  }
+
+  loadAppShell() {
+    const shellContainer = document.getElementById('app-shell-container');
+    if (shellContainer) {
+      fetch('/src/components/app-shell.html')
+        .then(response => response.text())
+        .then(html => {
+          shellContainer.innerHTML = html;
+          
+          if (window.AppShell) {
+            window.AppShell.setupShell();
+          }
+        })
+        .catch(error => {
+          console.error('Failed to load app shell:', error);
+        });
     }
   }
 
   async loadUserData() {
     try {
-      console.log('Loading user data via REST API...');
+      this.currentUser = await window.AuthService.getCurrentUserWithProfile();
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
+      if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
-
-      // Load user profile from database
-      const { data, error } = await window.API.supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        console.error('Database error loading user profile:', error);
-        
-        // Handle specific RLS permission errors
-        if (error.code === 'PGRST301' || error.message.includes('permission denied')) {
-          console.warn('RLS permission error, creating profile for user');
-          // Try to create a profile for this user
-          await this.createUserProfile(userId);
-        }
-        
-        // Use mock data as fallback
-        this.currentUser = this.getMockUser();
-        return;
-      }
-
-      // Load email verification status
-      await this.loadEmailVerificationStatus(userId);
-
-      this.currentUser = {
-        id: userId,
-        email: data.display_name || 'User',
-        profile: data
-      };
-      
-      console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
-      this.currentUser = this.getMockUser();
-    }
-  }
-
-  async createUserProfile(userId) {
-    try {
-      console.log('Creating user profile for withdrawal validation...');
-      
-      // Get user data from Supabase auth
-      const { data: userData, error: authError } = await window.API.supabase.auth.getUser();
-      
-      if (authError) {
-        console.error('Error getting user data from auth:', authError);
-        return null;
-      }
-      
-      const userEmail = userData?.email || 'user@example.com';
-      const userMetaData = userData?.user_metadata || userData?.raw_user_meta || {};
-      
-      // Create profile with Supabase-compatible data
-      const profileData = {
-        user_id: userId,
-        display_name: userEmail.split('@')[0] || userMetaData.display_name || 'User',
-        email_verified: false,
-        kyc_status: 'not_submitted',
-        // Add any additional metadata if present
-        ...(userMetaData.phone && { phone: userMetaData.phone }),
-        ...(userMetaData.avatar_url && { avatar_url: userMetaData.avatar_url })
-      };
-      
-      const { data, error } = await window.API.supabase
-        .from('profiles')
-        .insert(profileData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating user profile:', error);
-        return null;
-      }
-
-      console.log('User profile created successfully:', data);
-      return data;
-    } catch (error) {
-      console.error('Failed to create user profile:', error);
-      return null;
-    }
-  }
-
-  async loadEmailVerificationStatus(userId) {
-    try {
-      console.log('Loading email verification status for withdrawal validation...');
-      
-      const { data, error } = await window.API.supabase
-        .from('profiles')
-        .select('email_verified')
-        .eq('user_id', userId)
-        .limit(1);
-
-      if (error) {
-        console.error('Database error loading email verification status:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        console.log('Email verification status loaded:', data[0]);
-        // Update user profile with email verification status
-        if (this.currentUser) {
-          this.currentUser.profile = {
-            ...this.currentUser.profile,
-            ...data[0]
-          };
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load email verification status:', error);
+      throw error;
     }
   }
 
   async loadWithdrawalSettings() {
     try {
-      console.log('Loading withdrawal settings...');
-      
-      // For now, use mock data since we don't have a withdrawal settings API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getWithdrawalSettings();
-      
-      this.withdrawalSettings = this.getMockWithdrawalSettings();
-      console.log('Withdrawal settings loaded from mock data:', Object.keys(this.withdrawalSettings.methods || {}).length, 'methods');
+      const { data, error } = await window.API.fetchEdge('withdrawal_settings', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Use real settings or minimal fallback
+      this.withdrawalSettings = {
+        withdrawal_fee_pct: data.withdrawal_fee_pct || 0,
+        withdrawal_daily_cap_usd: data.withdrawal_daily_cap_usd || 10000,
+        withdrawal_daily_cap_usdt: data.withdrawal_daily_cap_usdt || 10000
+      };
     } catch (error) {
       console.error('Failed to load withdrawal settings:', error);
-      // Use mock data as fallback
-      this.withdrawalSettings = this.getMockWithdrawalSettings();
-      console.log('Using mock withdrawal settings as fallback');
+      // Minimal fallback
+      this.withdrawalSettings = {
+        withdrawal_fee_pct: 0,
+        withdrawal_daily_cap_usd: 10000,
+        withdrawal_daily_cap_usdt: 10000
+      };
     }
   }
 
-  getMockUser() {
-    return {
-      id: 'user_123',
-      email: 'user@example.com',
-      profile: {
-        display_name: 'John Doe',
-        kyc_status: 'approved',
-        email_verified: true
-      }
-    };
-  }
-
-  getMockWithdrawalSettings() {
-    return {
-      currencies: {
-        USD: {
-          min_amount: 500,
-          daily_limit: 10000,
-          fee_percentage: 2.5
-        },
-        USDT: {
-          min_amount: 500,
-          daily_limit: 50000,
-          fee_percentage: 1.5
-        }
-      },
-      methods: {
-        bank: {
-          name: 'Bank Transfer',
-          fields: [
-            { key: 'account_name', label: 'Account Name', type: 'text', required: true },
-            { key: 'account_number', label: 'Account Number', type: 'text', required: true },
-            { key: 'bank_name', label: 'Bank Name', type: 'text', required: true },
-            { key: 'routing_number', label: 'Routing Number', type: 'text', required: false },
-            { key: 'swift_code', label: 'SWIFT Code', type: 'text', required: false }
-          ]
-        },
-        paypal: {
-          name: 'PayPal',
-          fields: [
-            { key: 'paypal_email', label: 'PayPal Email', type: 'email', required: true }
-          ]
-        },
-        crypto_trc20: {
-          name: 'TRC20 Crypto',
-          fields: [
-            { key: 'wallet_address', label: 'TRC20 Wallet Address', type: 'text', required: true }
-          ]
-        }
-      },
-      kyc_required: true,
-      email_verification_required: true,
-      admin_approval_required: true
-    };
-  }
 
   async loadUserBalances() {
     try {
-      console.log('Loading user balances via REST API...');
-      
-      // For now, use null since we don't have a balances API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getWalletBalances(userId);
-      
-      this.userBalances = null;
-      console.log('User balances loaded: null (no API endpoint yet)');
+      // Use centralized balance fetch method
+      this.userBalances = await window.API.fetchBalances();
     } catch (error) {
       console.error('Failed to load user balances:', error);
-      // Show error to user instead of fallback mock data
-      if (window.Notify) {
-        window.Notify.error('Failed to load user balances. Please try again.');
-      }
+      // No fallback - show error state
       this.userBalances = null;
     }
   }
 
-  getMockBalances() {
-    return {
-      USD: {
-        available: 2500.00,
-        locked: 15000.00, // From active positions
-        total: 17500.00
-      },
-      USDT: {
-        available: 1200.000000,
-        locked: 800.000000,
-        total: 2000.000000
-      }
-    };
-  }
-
-  async loadWithdrawalMethods() {
+  async loadUserMethods() {
     try {
-      console.log('Loading user payout methods...');
-      
-      const userId = await this.api.getCurrentUserId();
-      
-      // Get user payout methods from database
-      const { data, error } = await window.API.supabase
-        .from('payout_methods')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false });
+      const { data, error } = await window.API.fetchEdge('user_withdrawal_methods', {
+        method: 'GET'
+      });
 
       if (error) {
-        console.error('Database error loading payout methods:', error);
-        
-        // Handle specific table not found error
-        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-          console.warn('payout_methods table does not exist yet. User must add payout methods in settings first.');
-          this.userMethods = [];
-          this.showNoMethodsMessage();
-          return;
-        }
-        
-        this.userMethods = [];
-        return;
+        throw error;
       }
 
-      this.userMethods = data || [];
-      console.log('User payout methods loaded:', this.userMethods);
-      
-      // Check if user has any methods
-      if (this.userMethods.length === 0) {
-        this.showNoMethodsMessage();
-      } else {
-        // Auto-populate method dropdown
-        this.populateMethodDropdown();
-      }
-      
+      this.userMethods = data.methods || {};
     } catch (error) {
-      console.error('Failed to load payout methods:', error);
-      this.userMethods = [];
-    }
-  }
-
-  getMockWithdrawalMethods() {
-    return [
-      {
-        id: 'mock_crypto_1',
-        method_name: 'USDT TRC20 Withdrawal',
-        method_type: 'crypto',
-        currency: 'USDT',
-        network: 'TRC20',
-        address: 'TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        is_default: true,
-        is_active: true,
-        min_amount: 10,
-        max_amount: 100000,
-        processing_fee_percent: 0.001,
-        processing_time_hours: 24
-      },
-      {
-        id: 'mock_bank_1',
-        method_name: 'Bank Transfer - Chase',
-        method_type: 'bank',
-        currency: 'USD',
-        bank_name: 'Chase Bank',
-        account_number: '123456789',
-        routing_number: '021000021',
-        account_holder_name: 'John Doe',
-        is_default: false,
-        is_active: true,
-        min_amount: 100,
-        max_amount: 50000,
-        processing_fee_percent: 0.005,
-        processing_time_hours: 48
-      },
-      {
-        id: 'mock_paypal_1',
-        method_name: 'PayPal Withdrawal',
-        method_type: 'paypal',
-        currency: 'USD',
-        paypal_email: 'john.doe@example.com',
-        paypal_business_name: 'John Doe Business',
-        is_default: false,
-        is_active: true,
-        min_amount: 10,
-        max_amount: 10000,
-        processing_fee_percent: 0.03,
-        processing_time_hours: 12
-      }
-    ];
-  }
-
-  populateMethodDropdown() {
-    const methodSelect = document.getElementById('method-select');
-    if (!methodSelect) return;
-
-    // Clear existing options except the first one
-    methodSelect.innerHTML = '<option value="">Select Method</option>';
-
-    // Group methods by currency
-    const methodsByCurrency = {};
-    this.userMethods.forEach(method => {
-      if (!methodsByCurrency[method.currency]) {
-        methodsByCurrency[method.currency] = [];
-      }
-      methodsByCurrency[method.currency].push(method);
-    });
-
-    // Populate dropdown with methods for selected currency
-    const selectedCurrency = document.getElementById('currency-select').value;
-    if (selectedCurrency && methodsByCurrency[selectedCurrency]) {
-      methodsByCurrency[selectedCurrency].forEach(method => {
-        const option = document.createElement('option');
-        option.value = method.id;
-        option.textContent = `${method.method_name} ${method.is_default ? '(Default)' : ''}`;
-        option.dataset.method = JSON.stringify(method);
-        methodSelect.appendChild(option);
-      });
-    }
-  }
-
-  showNoMethodsMessage() {
-    const methodSelect = document.getElementById('method-select');
-    const methodDetails = document.getElementById('method-details');
-    const amountInput = document.getElementById('amount-input');
-    
-    if (methodSelect) {
-      methodSelect.innerHTML = '<option value="">No saved methods</option>';
-      methodSelect.disabled = true;
-    }
-    
-    if (amountInput) {
-      amountInput.disabled = true;
-    }
-    
-    if (methodDetails) {
-      methodDetails.style.display = 'none';
-    }
-    
-    // Show message to user
-    if (window.Notify) {
-      window.Notify.error('No payout methods found. Please add payout methods in Settings first.');
+      console.error('Failed to load user methods:', error);
+      this.userMethods = {};
     }
   }
 
   async loadDailyLimits() {
     try {
-      console.log('Loading daily limits via REST API...');
-      
-      // For now, use null since we don't have a limits API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getDailyLimits(userId);
-      
-      this.dailyLimits = null;
-      console.log('Daily limits loaded: null (no API endpoint yet)');
+      const { data, error } = await window.API.fetchEdge('withdrawal_limits_check', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      this.dailyLimits = data.limits || null;
     } catch (error) {
       console.error('Failed to load daily limits:', error);
-      // Show error to user instead of fallback mock data
-      if (window.Notify) {
-        window.Notify.error('Failed to load daily limits. Please try again.');
-      }
       this.dailyLimits = null;
     }
   }
 
-  getMockDailyLimits() {
-    return {
-      USD: {
-        used: 0,
-        remaining: 10000,
-        limit: 10000
-      },
-      USDT: {
-        used: 0,
-        remaining: 50000,
-        limit: 50000
-      }
-    };
-  }
 
   async loadWithdrawalRequests() {
     try {
-      console.log('Loading withdrawal requests via REST API...');
-      
-      // For now, use mock data since we don't have a withdrawal requests API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getWithdrawalRequests(userId);
-      
-      this.renderWithdrawalRequests([]);
-      console.log('Withdrawal requests loaded: 0 requests');
+      const { data, error } = await window.API.fetchEdge('withdraw_list', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      this.renderWithdrawalRequests(data.requests || []);
     } catch (error) {
       console.error('Failed to load withdrawal requests:', error);
       this.renderWithdrawalRequests([]);
     }
-  }
-
-  setupCurrencySelector() {
-    this.setupCurrencyOptions();
-  }
-
-  setupMethodCards() {
-    // Method cards are handled by the HTML and form setup
-    console.log('Method cards setup complete');
-  }
-
-  setupForms() {
-    // Setup form event listeners
-    const currencySelect = document.getElementById('currency-select');
-    const methodSelect = document.getElementById('method-select');
-    const amountInput = document.getElementById('amount-input');
-
-    if (currencySelect) {
-      currencySelect.addEventListener('change', () => this.handleCurrencyChange());
-    }
-    if (methodSelect) {
-      methodSelect.addEventListener('change', () => this.handleMethodChange());
-    }
-    if (amountInput) {
-      amountInput.addEventListener('input', () => this.updateAmountDisplay());
-    }
-
-    console.log('Forms setup complete');
-  }
-
-  setupURLParameters() {
-    // Handle URL parameters if needed
-    console.log('URL parameters setup complete');
-  }
-
-  updateAmountDisplay() {
-    // Update amount display based on input
-    console.log('Amount display updated');
   }
 
   setupKYCStatus() {
@@ -591,10 +229,22 @@ class WithdrawPage {
     const usdtStatus = document.getElementById('usdt-status');
     const limitsStatus = document.getElementById('limits-status');
 
-    // Guard against missing balance data
-    if (!this.userBalances || !this.userBalances.USD || !this.userBalances.USDT) {
-      if (availableUSD) availableUSD.textContent = '$0';
-      if (availableUSDT) availableUSDT.textContent = '₮0';
+    // Handle missing balance data gracefully
+    if (!this.userBalances) {
+      if (availableUSD) availableUSD.textContent = 'Balance unavailable';
+      if (availableUSDT) availableUSDT.textContent = 'Balance unavailable';
+      if (usdStatus) {
+        usdStatus.textContent = 'Balance unavailable';
+        usdStatus.className = 'balance-status error';
+      }
+      if (usdtStatus) {
+        usdtStatus.textContent = 'Balance unavailable';
+        usdtStatus.className = 'balance-status error';
+      }
+      if (limitsStatus) {
+        limitsStatus.textContent = 'Limits unavailable';
+        limitsStatus.className = 'limits-status error';
+      }
       return;
     }
 
@@ -606,14 +256,18 @@ class WithdrawPage {
       availableUSDT.textContent = `₮${this.formatMoney(this.userBalances.USDT.available, 6)}`;
     }
 
-    if (dailyUsed && this.dailyLimits && this.dailyLimits.USD && this.dailyLimits.USDT) {
-      const totalUsed = (this.dailyLimits.USD.used || 0) + (this.dailyLimits.USDT.used || 0);
-      dailyUsed.textContent = `$${this.formatMoney(totalUsed)}`;
+    if (dailyUsed) {
+      if (!this.dailyLimits) {
+        dailyUsed.textContent = 'Limits unavailable';
+        dailyUsed.style.color = 'var(--error-color)';
+      } else {
+        const totalUsed = this.dailyLimits.USD.used + this.dailyLimits.USDT.used;
+        dailyUsed.textContent = `$${this.formatMoney(totalUsed)}`;
+      }
     }
 
     // Update status indicators
-    const hasActivePositions = (this.userBalances.USD && this.userBalances.USD.locked > 0) || 
-                              (this.userBalances.USDT && this.userBalances.USDT.locked > 0);
+    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
     
     if (usdStatus) {
       if (hasActivePositions) {
@@ -653,16 +307,8 @@ class WithdrawPage {
     const currencySelect = document.getElementById('currency-select');
     if (!currencySelect) return;
 
-    // Check if userBalances is null or undefined
-    if (!this.userBalances) {
-      console.warn('User balances not available, using default currency options');
-      // Enable all currencies by default when balances are not available
-      return;
-    }
-
     // Check if withdrawals are blocked due to active positions
-    const hasActivePositions = (this.userBalances.USD && this.userBalances.USD.locked > 0) || 
-                              (this.userBalances.USDT && this.userBalances.USDT.locked > 0);
+    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
     
     if (hasActivePositions) {
       // Disable all currencies if there are active positions
@@ -704,22 +350,16 @@ class WithdrawPage {
     // Update currency symbol
     amountCurrency.textContent = this.selectedCurrency === 'USD' ? '$' : '₮';
     
-    // Populate method dropdown with user's saved methods
-    this.populateMethodDropdown();
+    // Setup method options
+    this.setupMethodOptions();
     
     // Enable amount input
     amountInput.disabled = false;
     
-    // Set minimum amount from user methods or default
-    const methodsForCurrency = this.userMethods.filter(method => method.currency === this.selectedCurrency);
-    if (methodsForCurrency.length > 0) {
-      const minAmount = Math.min(...methodsForCurrency.map(m => m.min_amount || 0));
-      amountInput.min = minAmount;
-      amountInput.placeholder = `${minAmount.toFixed(2)} minimum`;
-    } else {
-      amountInput.min = 1;
-      amountInput.placeholder = '0.00 minimum';
-    }
+    // Set minimum amount
+    const settings = this.withdrawalSettings.currencies[this.selectedCurrency];
+    amountInput.min = settings.min_amount;
+    amountInput.placeholder = `${settings.min_amount.toFixed(2)} minimum`;
   }
 
   setupMethodOptions() {
@@ -728,26 +368,6 @@ class WithdrawPage {
 
     methodSelect.innerHTML = '<option value="">Select Method</option>';
     methodSelect.disabled = false;
-
-    // Check if withdrawalSettings exists and has methods
-    if (!this.withdrawalSettings || !this.withdrawalSettings.methods) {
-      console.warn('Withdrawal settings not loaded, using fallback methods');
-      // Add fallback methods
-      const fallbackMethods = {
-        'crypto': { name: 'Cryptocurrency', type: 'crypto' },
-        'bank': { name: 'Bank Transfer', type: 'bank' },
-        'paypal': { name: 'PayPal', type: 'paypal' }
-      };
-      
-      Object.keys(fallbackMethods).forEach(methodKey => {
-        const method = fallbackMethods[methodKey];
-        const option = document.createElement('option');
-        option.value = methodKey;
-        option.textContent = method.name;
-        methodSelect.appendChild(option);
-      });
-      return;
-    }
 
     Object.keys(this.withdrawalSettings.methods).forEach(methodKey => {
       const method = this.withdrawalSettings.methods[methodKey];
@@ -769,11 +389,6 @@ class WithdrawPage {
       return;
     }
 
-    // Get selected method data
-    const selectedOption = methodSelect.options[methodSelect.selectedIndex];
-    const methodData = JSON.parse(selectedOption.dataset.method || '{}');
-    
-    this.selectedMethodData = methodData;
     this.updateMethodDetails();
   }
 
@@ -781,107 +396,41 @@ class WithdrawPage {
     const methodDetails = document.getElementById('method-details');
     const methodDetailsContent = document.getElementById('method-details-content');
     
-    if (!this.selectedMethodData) {
+    if (!this.selectedMethod || !this.selectedCurrency) {
       methodDetails.style.display = 'none';
       return;
     }
 
-    // Extract details from JSONB field
-    const details = this.selectedMethodData.details || {};
+    const methodKey = `${this.selectedCurrency}_${this.selectedMethod}`;
+    const userMethod = this.userMethods[methodKey];
 
-    // Show method details based on method type
-    let detailsHTML = '';
-    
-    if (this.selectedMethodData.method_type === 'crypto_wallet') {
-      detailsHTML = `
+    if (userMethod) {
+      // Show existing method details
+      const method = this.withdrawalSettings.methods[this.selectedMethod];
+      methodDetailsContent.innerHTML = method.fields.map(field => `
         <div class="method-detail-item">
-          <span class="method-detail-label">Network:</span>
-          <span class="method-detail-value">${this.selectedMethodData.network || 'Not set'}</span>
+          <span class="method-detail-label">${field.label}:</span>
+          <span class="method-detail-value">${userMethod[field.key] || 'Not set'}</span>
         </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Address:</span>
-          <span class="method-detail-value" style="font-family: 'Courier New', monospace; word-break: break-all;">${this.selectedMethodData.address || details.address || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Processing Time:</span>
-          <span class="method-detail-value">${this.selectedMethodData.processing_time_hours || 24} hours</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
-        </div>
-      `;
-    } else if (this.selectedMethodData.method_type === 'bank_transfer') {
-      detailsHTML = `
-        <div class="method-detail-item">
-          <span class="method-detail-label">Bank Name:</span>
-          <span class="method-detail-value">${details.bank_name || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Account Number:</span>
-          <span class="method-detail-value">${details.account_number || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Routing Number:</span>
-          <span class="method-detail-value">${details.routing_number || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">SWIFT Code:</span>
-          <span class="method-detail-value">${details.swift_code || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Account Holder:</span>
-          <span class="method-detail-value">${details.account_name || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Processing Time:</span>
-          <span class="method-detail-value">${this.selectedMethodData.processing_time_hours || 72} hours</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
+      `).join('');
+      
+      methodDetails.style.display = 'block';
+    } else {
+      // Show prompt to add details
+      methodDetailsContent.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px; opacity: 0.5;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          <p>No withdrawal method details found</p>
+          <p style="font-size: 14px; margin-top: 8px;">Click "Edit Details" to add your withdrawal information</p>
         </div>
       `;
-    } else if (this.selectedMethodData.method_type === 'paypal') {
-      detailsHTML = `
-        <div class="method-detail-item">
-          <span class="method-detail-label">PayPal Email:</span>
-          <span class="method-detail-value">${details.email || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Account ID:</span>
-          <span class="method-detail-value">${details.account_id || 'Not set'}</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Processing Time:</span>
-          <span class="method-detail-value">${this.selectedMethodData.processing_time_hours || 12} hours</span>
-        </div>
-        <div class="method-detail-item">
-          <span class="method-detail-label">Fee:</span>
-          <span class="method-detail-value">${(this.selectedMethodData.fee_percentage || 0) * 100}%</span>
-        </div>
-      `;
+      
+      methodDetails.style.display = 'block';
     }
-
-    // Add min/max amounts
-    detailsHTML += `
-      <div class="method-detail-item">
-        <span class="method-detail-label">Minimum Amount:</span>
-        <span class="method-detail-value">${this.selectedMethodData.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.selectedMethodData.min_amount || 0, this.selectedMethodData.currency === 'USDT' ? 6 : 2)}</span>
-      </div>
-      ${this.selectedMethodData.max_amount ? `
-        <div class="method-detail-item">
-          <span class="method-detail-label">Maximum Amount:</span>
-          <span class="method-detail-value">${this.selectedMethodData.currency === 'USDT' ? '₮' : '$'}${this.formatMoney(this.selectedMethodData.max_amount, this.selectedMethodData.currency === 'USDT' ? 6 : 2)}</span>
-        </div>
-      ` : ''}
-    `;
-
-    methodDetailsContent.innerHTML = detailsHTML;
-    methodDetails.style.display = 'block';
-    
-    // Update fee preview
-    this.updateFeePreview();
   }
 
   updateFeePreview() {
@@ -989,19 +538,24 @@ class WithdrawPage {
     if (!this.validateWithdrawal()) return;
 
     const amount = parseFloat(document.getElementById('amount-input').value);
-    const methodKey = `${this.selectedCurrency}_${this.selectedMethod}`;
-    const methodDetails = this.userMethods[methodKey];
-
+    
+    // Hard guard: ensure method_id is a UUID string
+    const methodId = this.selectedMethod;
+    if (!methodId || !this.isValidUUID(methodId)) {
+      window.Notify.error('Invalid withdrawal method selected');
+      return;
+    }
+    
     try {
       this.setButtonLoading('submit-withdrawal', true);
 
+      // Use real withdraw_create_request endpoint with validated UUID
       const { data, error } = await window.API.fetchEdge('withdraw_create_request', {
         method: 'POST',
         body: {
           currency: this.selectedCurrency,
           amount: amount,
-          method: this.selectedMethod,
-          method_details: methodDetails
+          method_id: methodId
         }
       });
 
@@ -1014,15 +568,22 @@ class WithdrawPage {
       // Reset form
       this.resetForm();
 
-      // Reload requests
+      // Reload data
+      await this.loadUserBalances();
       await this.loadWithdrawalRequests();
 
     } catch (error) {
       console.error('Failed to submit withdrawal:', error);
-      window.Notify.error(error.message || 'Failed to submit withdrawal request');
+      window.Notify.error(error.detail || error.message || 'Failed to submit withdrawal request');
     } finally {
       this.setButtonLoading('submit-withdrawal', false);
     }
+  }
+
+  isValidUUID(uuid) {
+    // UUID v4 regex pattern
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   }
 
   validateWithdrawal() {
@@ -1039,11 +600,6 @@ class WithdrawPage {
     }
 
     // Check for active positions
-    if (!this.userBalances || !this.userBalances.USD || !this.userBalances.USDT) {
-      window.Notify.error('Balance information not available. Please refresh the page.');
-      return false;
-    }
-    
     const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
     if (hasActivePositions) {
       window.Notify.error('Withdrawals are blocked while you have active positions');
@@ -1087,13 +643,7 @@ class WithdrawPage {
     }
 
     // Check available balance
-    const currencyBalance = this.userBalances[this.selectedCurrency];
-    if (!currencyBalance || !currencyBalance.available) {
-      window.Notify.error('Balance information not available for selected currency');
-      return false;
-    }
-    
-    const availableBalance = currencyBalance.available;
+    const availableBalance = this.userBalances[this.selectedCurrency].available;
     if (amount > availableBalance) {
       window.Notify.error('Insufficient available balance');
       return false;
@@ -1204,14 +754,8 @@ class WithdrawPage {
   }
 
   formatMoney(amount, precision = 2) {
-    if (amount === undefined || amount === null || isNaN(amount)) {
-      return '0';
-    }
     if (typeof amount === 'string') {
       amount = parseFloat(amount);
-    }
-    if (isNaN(amount)) {
-      return '0';
     }
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: precision,

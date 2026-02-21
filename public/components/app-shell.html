@@ -1,12 +1,21 @@
 <!-- App Shell Components -->
 <!-- Include this in user pages for consistent layout -->
 
+<!-- UI Design System -->
+<link rel="stylesheet" href="/public/assets/css/ui.css">
+
+<!-- Shared UI Components -->
+<script src="/public/assets/js/_shared/theme.js"></script>
+<script src="/public/assets/js/_shared/modal.js"></script>
+<script src="/public/assets/js/_shared/toast.js"></script>
+<script src="/public/assets/js/_shared/skeleton.js"></script>
+
 <!-- Top Navigation Bar -->
 <header id="app-topbar" class="app-topbar">
     <div class="container">
         <div class="topbar-content">
             <div class="topbar-left">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                <button class="mobile-menu-toggle" data-action="sidebar-toggle">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="3" y1="12" x2="21" y2="12"></line>
                         <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -24,38 +33,11 @@
                         </svg>
                         Home
                     </a>
-                    <a href="/app/tiers.html" class="nav-link" data-page="tiers">
+                    <a href="/app/invest.html" class="nav-link" data-page="invest">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
                         </svg>
                         Invest
-                    </a>
-                    <a href="/app/deposits.html" class="nav-link" data-page="deposits">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Deposits
-                    </a>
-                    <a href="/app/withdraw.html" class="nav-link" data-page="withdraw">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 19 19 12 12 5"></polyline>
-                        </svg>
-                        Withdraw
-                    </a>
-                    <a href="/app/convert.html" class="nav-link" data-page="convert">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                        </svg>
-                        Convert
-                    </a>
-                    <a href="/app/signals.html" class="nav-link" data-page="signals">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        Signals
                     </a>
                     <a href="/app/portfolio.html" class="nav-link" data-page="portfolio">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -64,17 +46,11 @@
                         </svg>
                         Portfolio
                     </a>
-                    <a href="/app/history.html" class="nav-link" data-page="history">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
-                        </svg>
-                        History
-                    </a>
                 </nav>
             </div>
             
             <div class="topbar-right">
-                <button id="notification-bell" class="notification-bell">
+                <button id="notification-bell" class="notification-bell" data-action="notifications">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -82,7 +58,7 @@
                     <span class="notification-badge" id="notification-count" style="display: none;">0</span>
                 </button>
                 
-                <button id="theme-toggle" class="theme-toggle-btn">
+                <button id="theme-toggle" class="theme-toggle-btn" data-action="theme-toggle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -97,7 +73,7 @@
                 </button>
                 
                 <div class="user-menu">
-                    <button id="user-menu-btn" class="user-menu-btn">
+                    <button id="user-menu-btn" class="user-menu-btn" data-menu-trigger>
                         <div class="user-avatar" id="user-avatar">U</div>
                         <span id="user-name">User</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -105,7 +81,7 @@
                         </svg>
                     </button>
                     
-                    <div class="user-dropdown" id="user-dropdown">
+                    <div class="user-dropdown" id="user-dropdown" data-menu>
                         <div class="dropdown-header">
                             <div class="dropdown-user-info">
                                 <div class="dropdown-avatar" id="dropdown-avatar">U</div>
@@ -129,6 +105,20 @@
                             </svg>
                             Support
                         </a>
+                        <button class="dropdown-item" data-action="theme-toggle">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <span>Light mode</span>
+                        </button>
                         <div class="dropdown-divider"></div>
                         <button id="logout-btn" class="dropdown-item logout-btn" data-action="logout">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -136,7 +126,7 @@
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
                             </svg>
-                            Logout
+                            Sign Out
                         </button>
                     </div>
                 </div>
@@ -154,7 +144,7 @@
         </svg>
         <span>Home</span>
     </a>
-    <a href="/app/tiers.html" class="mobile-nav-link" data-page="tiers">
+    <a href="/app/invest.html" class="mobile-nav-link" data-page="invest">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
         </svg>
@@ -184,8 +174,8 @@
     </a>
 </nav>
 
-<!-- Side Navigation (Desktop) -->
-<aside id="side-nav" class="side-nav">
+<!-- Side Navigation -->
+<aside id="side-nav" class="side-nav" data-role="sidebar">
     <div class="side-nav-header">
         <div class="side-nav-logo">
             <h2>PALANTIR INVESTMENTS</h2>
@@ -202,7 +192,7 @@
                 </svg>
                 Home
             </a>
-            <a href="/app/tiers.html" class="side-nav-link" data-page="tiers">
+            <a href="/app/invest.html" class="side-nav-link" data-page="invest">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
                 </svg>
@@ -215,7 +205,7 @@
                 </svg>
                 Deposits
             </a>
-            <a href="/app/withdraw.html" class="side-nav-link" data-page="withdraw">
+            <a href="/app/withdrawals.html" class="side-nav-link" data-page="withdrawals">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                     <polyline points="12 19 19 12 12 5"></polyline>
@@ -228,27 +218,6 @@
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                 </svg>
                 Convert
-            </a>
-            <a href="/app/positions.html" class="side-nav-link" data-page="positions">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2H3a2 2 0 0 0 2 2v14m-2-2h14a2 2 0 0 0 2 2H5a2 2 0 0 0 2-2z"></path>
-                    <circle cx="8" cy="8" r="2"></circle>
-                    <path d="M12 12v8"></path>
-                </svg>
-                Positions
-            </a>
-            <a href="/app/kyc.html" class="side-nav-link" data-page="kyc">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 12h6m-6 0h6m-6 0h6m2 6v6m0-6V6a2 2 0 0 1 2 2h6a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
-                    <path d="M9 12l3 3m-3-3l-3 3"></path>
-                </svg>
-                KYC
-            </a>
-            <a href="/app/tiers.html" class="side-nav-link" data-page="tiers">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-                Tiers
             </a>
             <a href="/app/signals.html" class="side-nav-link" data-page="signals">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -292,7 +261,7 @@
 </aside>
 
 <!-- Mobile Menu Overlay -->
-<div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
+<div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
 
 <!-- Notification Panel -->
 <div id="notification-panel" class="notification-panel">

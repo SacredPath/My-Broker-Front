@@ -1,7 +1,10 @@
 /**
  * History Page Controller
- * Handles unified timeline with all transaction types, filtering, search, and CSV export
+ * Handles transaction history display and filtering
  */
+
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
 
 class HistoryPage {
   constructor() {
@@ -17,26 +20,7 @@ class HistoryPage {
       startDate: '',
       endDate: ''
     };
-    
-    // Get API client
-    this.api = window.API || null;
-
-    if (!this.api) {
-      console.warn("HistoryPage: API client not found on load. Retrying in 500ms...");
-      setTimeout(() => this.retryInit(), 500);
-    } else {
-      this.init();
-    }
-  }
-
-  retryInit() {
-    this.api = window.API || null;
-    if (this.api) {
-      this.init();
-    } else {
-      // Retry again if API client still not available
-      setTimeout(() => this.retryInit(), 500);
-    }
+    this.init();
   }
 
   async init() {
@@ -51,6 +35,8 @@ class HistoryPage {
 
   async setupPage() {
     try {
+      // Load app shell components
+      this.loadAppShell();
       
       // Load data
       await this.loadUserData();
@@ -70,55 +56,98 @@ class HistoryPage {
     }
   }
 
+  loadAppShell() {
+    const shellContainer = document.getElementById('app-shell-container');
+    if (shellContainer) {
+      fetch('/src/components/app-shell.html')
+        .then(response => response.text())
+        .then(html => {
+          shellContainer.innerHTML = html;
+          
+          if (window.AppShell) {
+            window.AppShell.setupShell();
+          }
+        })
+        .catch(error => {
+          console.error('Failed to load app shell:', error);
+        });
+    }
+  }
+
   async loadUserData() {
     try {
-      console.log('Loading user data via REST API...');
+      this.currentUser = await window.AuthService.getCurrentUserWithProfile();
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
+      if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
-
-      // Load user profile from database
-      const data = await this.api.getUserProfile(userId);
-      
-      this.currentUser = data;
-      console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load user profile. Please try again.');
-      }
       throw error;
     }
   }
 
   async loadHistoryData() {
     try {
-      console.log('Loading history data via REST API...');
-      
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
+      const { data, error } = await window.API.fetchEdge('history_feed', {
+        method: 'GET',
+        params: {
+          page: this.currentPage,
+          limit: this.pageSize
+        }
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Load unified history from database
-      const data = await this.api.getConversionHistory(userId);
+      this.historyData = data.events || [];
       
-      this.historyData = data;
-      console.log('History data loaded:', this.historyData.length, 'items');
+      if (!this.historyData.length) {
+        this.renderEmptyState('No history found');
+        return;
+      }
+      
+      this.applyFilters();
     } catch (error) {
       console.error('Failed to load history data:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load history data. Please try again.');
-      }
-      throw error;
+      this.renderErrorState('Failed to load history');
     }
   }
 
-  
+  renderEmptyState(message) {
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
+    
+    historyList.innerHTML = `
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+        </svg>
+        <h3>No history found</h3>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+
+  renderErrorState(message) {
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
+    
+    historyList.innerHTML = `
+      <div class="error-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <h3>Failed to load history</h3>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="window.location.reload()">Retry</button>
+      </div>
+    `;
+  }
+
   setupEventListeners() {
     // Search input
     const searchInput = document.getElementById('search-input');

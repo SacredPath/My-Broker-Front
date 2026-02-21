@@ -421,7 +421,7 @@ class SettingsPage {
 
       // Fetch preferences from database
       const { data, error } = await this.api.serviceClient
-        .from('notification_preferences')
+        .from('notification_settings')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -445,7 +445,7 @@ class SettingsPage {
   async createDefaultNotificationPreferences(userId) {
     try {
       const { data, error } = await this.api.serviceClient
-        .from('notification_preferences')
+        .from('notification_settings')
         .upsert({
           user_id: userId,
           // Email preferences
@@ -688,7 +688,7 @@ class SettingsPage {
 
       // Save to database using upsert
       const { data, error } = await this.api.serviceClient
-        .from('notification_preferences')
+        .from('notification_settings')
         .upsert(preferences, {
           onConflict: 'user_id'
         })
@@ -753,7 +753,7 @@ class SettingsPage {
       };
 
       const { data, error } = await this.api.serviceClient
-        .from('notification_preferences')
+        .from('notification_settings')
         .upsert(defaults, {
           onConflict: 'user_id'
         })

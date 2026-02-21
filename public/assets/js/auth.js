@@ -76,7 +76,7 @@ class AuthService {
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/app/auth/callback.html`,
+          redirectTo: `${window.location.origin}/src/pages/auth/callback.html`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -124,21 +124,24 @@ class AuthService {
 
       console.log('Supabase signup successful:', data);
 
-      // If user was created successfully, create/update profile
+      // If user was created successfully, wait a moment for trigger to complete, then update profile
       if (data.user && registrationData) {
-        console.log('Creating/updating user profile...');
+        console.log('Waiting for trigger to create initial profile...');
         
-        // Try to create profile first, then update if it exists
-        const profileResult = await this.createOrUpdateProfile(data.user.id, {
+        // Wait a moment for trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Updating user profile with comprehensive data...');
+        const profileResult = await this.updateUserProfile(data.user.id, {
           ...registrationData,
           email: email
         });
         
         if (!profileResult.success) {
-          console.warn('Profile creation/update failed but user was created:', profileResult.error);
+          console.warn('Profile update failed but user was created:', profileResult.error);
           // Don't throw error here - user was created successfully
         } else {
-          console.log('User profile created/updated successfully');
+          console.log('User profile updated successfully');
         }
       }
 
@@ -220,9 +223,9 @@ class AuthService {
         window.Notify.success('Signed out successfully');
       }
 
-      // Redirect to login page
+      // Redirect to home page
       setTimeout(() => {
-        window.location.href = '/login.html';
+        window.location.href = '/src/pages/index.html';
       }, 1000);
 
       return { success: true };
@@ -243,24 +246,35 @@ class AuthService {
       await this.ensureInitialized();
       const client = await this.supabaseClient.getClient();
 
-      // Prepare profile data with only existing columns
-      const displayName = profileData.firstName || profileData.displayName || profileData.display_name || '';
-      const nameParts = displayName.trim().split(' ');
-      
+      // Prepare comprehensive profile data
       const fullProfileData = {
         id: userId,
-        user_id: userId,
         email: profileData.email || '',
-        display_name: profileData.firstName || nameParts[0] || '', // Display name is first name only
-        first_name: profileData.firstName || nameParts[0] || '',
-        last_name: profileData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''),
+        display_name: profileData.displayName || '',
+        first_name: profileData.firstName || '',
+        last_name: profileData.lastName || '',
         phone: profileData.phone || '',
         country: profileData.country || '',
-        bio: profileData.bio || '',
         email_verified: false, // Default false, only set by Back Office
-        kyc_status: 'not_submitted', // Default KYC status
+        role: 'user',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        
+        // Address information
+        address_line1: profileData.address?.address_line1 || '',
+        address_line2: profileData.address?.address_line2 || '',
+        city: profileData.address?.city || '',
+        state: profileData.address?.state || '',
+        postal_code: profileData.address?.postal_code || '',
+        
+        // Compliance information
+        new_to_investing: profileData.compliance?.new_to_investing || '',
+        pep: profileData.compliance?.pep || '',
+        pep_details: profileData.compliance?.pep_details || '',
+        occupation: profileData.compliance?.occupation || '',
+        dob: profileData.compliance?.dob || '',
+        
+        // Additional metadata
+        referral_code: profileData.referralCode || ''
       };
 
       const { data, error } = await client
@@ -282,98 +296,6 @@ class AuthService {
     }
   }
 
-  // Helper method to extract first name from display name
-  extractFirstName(displayName) {
-    if (!displayName) return '';
-    const parts = displayName.trim().split(' ');
-    return parts[0] || '';
-  }
-
-  // Helper method to extract last name from display name
-  extractLastName(displayName) {
-    if (!displayName) return '';
-    const parts = displayName.trim().split(' ');
-    return parts.length > 1 ? parts.slice(1).join(' ') : '';
-  }
-
-  // Create or update user profile (handles both cases)
-  async createOrUpdateProfile(userId, profileData) {
-    try {
-      await this.ensureInitialized();
-      const client = await this.supabaseClient.getClient();
-
-      // Prepare profile data with proper field mapping
-      const fullProfileData = {
-        id: userId, // Use id as primary key
-        user_id: userId, // Also include user_id for foreign key
-        email: profileData.email || '',
-        display_name: profileData.displayName || '',
-        first_name: profileData.firstName || this.extractFirstName(profileData.displayName) || '',
-        last_name: profileData.lastName || this.extractLastName(profileData.displayName) || '',
-        phone: profileData.phone || '',
-        country: profileData.country || '',
-        email_verified: false, // Default false, only set by Back Office
-        created_at: new Date().toISOString(),
-        
-        // Address information
-        address_line1: profileData.address?.address_line1 || '',
-        address_line2: profileData.address?.address_line2 || '',
-        city: profileData.address?.city || '',
-        state: profileData.address?.state || '',
-        postal_code: profileData.address?.postal_code || '',
-        
-        // Compliance information
-        new_to_investing: profileData.compliance?.new_to_investing || '',
-        pep: profileData.compliance?.pep || '',
-        pep_details: profileData.compliance?.pep_details || '',
-        occupation: profileData.compliance?.occupation || '',
-        dob: profileData.compliance?.dob || '',
-        
-        // Additional metadata
-        referral_code: profileData.referralCode || ''
-      };
-
-      // Try to insert first (create)
-      const { data, error } = await client
-        .from('profiles')
-        .insert(fullProfileData)
-        .select()
-        .single();
-
-      if (error) {
-        // If insert fails due to duplicate, try update
-        if (error.code === '23505' || error.message?.includes('duplicate')) {
-          console.log('Profile already exists, updating instead...');
-          
-          // Remove fields that shouldn't be updated
-          const { id, user_id, created_at, ...updateData } = fullProfileData;
-          
-          const { data: updateResult, error: updateError } = await client
-            .from('profiles')
-            .update(updateData)
-            .eq('user_id', userId)
-            .select()
-            .single();
-
-          if (updateError) {
-            throw updateError;
-          }
-
-          console.log('Profile updated successfully:', updateResult);
-          return { success: true, data: updateResult };
-        } else {
-          throw error;
-        }
-      }
-
-      console.log('Profile created successfully:', data);
-      return { success: true, data };
-    } catch (error) {
-      console.error('Failed to create/update user profile:', error);
-      return { success: false, error };
-    }
-  }
-
   // Update user profile
   async updateUserProfile(userId, profileData) {
     try {
@@ -386,7 +308,7 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .update(safeProfileData)
-        .eq('user_id', userId)
+        .eq('id', userId)
         .select()
         .single();
 
@@ -419,7 +341,7 @@ class AuthService {
       const { data, error } = await client
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single();
 
       if (error) {
@@ -442,7 +364,7 @@ class AuthService {
       const { error } = await client
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) {
         console.error('Failed to update last login:', error);
@@ -557,22 +479,6 @@ class AuthService {
 
       const profileResult = await this.getUserProfile(user.id);
       
-      // If profile not found, create one automatically
-      if (!profileResult.success && profileResult.error?.code === 'PGRST116') {
-        console.log('Profile not found, creating automatically for user:', user.id);
-        const createResult = await this.createUserProfile(user.id, {
-          email: user.email,
-          display_name: user.email?.split('@')[0] || user.user_metadata?.display_name || 'User'
-        });
-        
-        if (createResult.success) {
-          return {
-            ...user,
-            profile: createResult.data
-          };
-        }
-      }
-      
       return {
         ...user,
         profile: profileResult.success ? profileResult.data : null
@@ -600,7 +506,7 @@ class AuthService {
         await this.updateLastLogin(data.session.user.id);
         
         // Redirect to intended destination or dashboard
-        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/app/home.html';
+        const intendedDestination = sessionStorage.getItem('intendedDestination') || '/src/pages/dashboard.html';
         sessionStorage.removeItem('intendedDestination');
         
         window.location.href = intendedDestination;

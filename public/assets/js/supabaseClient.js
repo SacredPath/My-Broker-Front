@@ -60,7 +60,7 @@ class SupabaseClient {
         },
         global: {
           headers: {
-            'X-Client-Info': 'broker-web/1.0.0'
+            'X-Client-Info': 'exchange-web/1.0.0'
           }
         }
       });
@@ -134,11 +134,6 @@ class SupabaseClient {
       const { data: { user }, error } = await client.auth.getUser();
       
       if (error) {
-        // Check if this is just "no user" error, not a real error
-        if (error.message?.includes('Invalid') || error.message?.includes('not found') || error.message?.includes('missing')) {
-          console.log('No authenticated user found - this is expected for public routes');
-          return null; // Don't throw error for missing user
-        }
         throw error;
       }
       
@@ -195,7 +190,7 @@ class SupabaseClient {
         
         // Redirect to appropriate page based on current role
         if (userRole === 'user') {
-          window.location.href = '/app/home.html';
+          window.location.href = '/src/pages/dashboard.html';
         } else {
           window.location.href = redirectTo;
         }

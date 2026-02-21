@@ -1,7 +1,10 @@
 /**
  * Signals Page Controller
- * Handles signals marketplace listing, filtering, and purchasing
+ * Handles signal listing, filtering, and purchase flows
  */
+
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
 
 class SignalsPage {
   constructor() {
@@ -16,26 +19,7 @@ class SignalsPage {
       sort: 'newest'
     };
     this.selectedSignal = null;
-    
-    // Get API client
-    this.api = window.API || null;
-
-    if (!this.api) {
-      console.warn("SignalsPage: API client not found on load. Retrying in 500ms...");
-      setTimeout(() => this.retryInit(), 500);
-    } else {
-      this.init();
-    }
-  }
-
-  retryInit() {
-    this.api = window.API || null;
-    if (this.api) {
-      this.init();
-    } else {
-      // Retry again if API client still not available
-      setTimeout(() => this.retryInit(), 500);
-    }
+    this.init();
   }
 
   async init() {
@@ -50,6 +34,8 @@ class SignalsPage {
 
   async setupPage() {
     try {
+      // Load app shell components
+      this.loadAppShell();
       
       // Load data
       await this.loadUserData();
@@ -59,7 +45,6 @@ class SignalsPage {
       
       // Setup UI
       this.setupFilters();
-      this.setupFilterOptions();
       this.renderSignals();
       this.checkPurchaseBlock();
       
@@ -72,38 +57,48 @@ class SignalsPage {
     }
   }
 
+  loadAppShell() {
+    const shellContainer = document.getElementById('app-shell-container');
+    if (shellContainer) {
+      fetch('/src/components/app-shell.html')
+        .then(response => response.text())
+        .then(html => {
+          shellContainer.innerHTML = html;
+          
+          if (window.AppShell) {
+            window.AppShell.setupShell();
+          }
+        })
+        .catch(error => {
+          console.error('Failed to load app shell:', error);
+        });
+    }
+  }
+
   async loadUserData() {
     try {
-      console.log('Loading user data via REST API...');
+      this.currentUser = await window.AuthService.getCurrentUserWithProfile();
       
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
+      if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
-
-      // For now, use mock data since we don't have a user profile API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getUserProfile(userId);
-      
-      this.currentUser = this.getMockUser();
-      console.log('User data loaded:', this.currentUser);
     } catch (error) {
       console.error('Failed to load user data:', error);
-      this.currentUser = this.getMockUser();
+      throw error;
     }
   }
 
   async loadUserPositions() {
     try {
-      console.log('Loading user positions via REST API...');
-      
-      // For now, use empty array since we don't have a positions API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getUserPositions(userId);
-      
-      this.userPositions = [];
-      console.log('User positions loaded:', this.userPositions.length, 'positions');
+      const { data, error } = await window.API.fetchEdge('user_positions', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      this.userPositions = data.positions || [];
     } catch (error) {
       console.error('Failed to load user positions:', error);
       this.userPositions = [];
@@ -112,30 +107,16 @@ class SignalsPage {
 
   async loadSignals() {
     try {
-      console.log('Loading signals from database...');
-      
-      // Load signals from signals table using shared client
-      const { data, error } = await window.API.supabase
-        .from('signals')
-        .select("id,category,risk_level,price,access_days,type,status,created_at")
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-      
+      const { data, error } = await window.API.fetchEdge('signals_list', {
+        method: 'GET'
+      });
+
       if (error) {
-        console.error('Database error loading signals:', error);
-        this.signals = [];
-        return;
+        throw error;
       }
-      
-      this.signals = (data || []).map(s => ({
-        ...s,
-        price: parseFloat(s.price) || 0,
-        risk_rating: s.risk_level,
-        access_days: s.access_days,
-        description: `${s.category} trading signal with ${s.risk_level?.toLowerCase() || 'medium'} risk level`
-      }));
-      
-      console.log('Signals loaded from database:', this.signals.length, 'signals');
+
+      this.signals = data.signals || [];
+      this.setupFilterOptions();
     } catch (error) {
       console.error('Failed to load signals:', error);
       this.signals = [];
@@ -144,91 +125,19 @@ class SignalsPage {
 
   async loadUserAccess() {
     try {
-      console.log('Loading user signal access from database...');
-      
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        console.log('No user ID found, skipping user access loading');
-        this.userAccess = [];
-        return;
+      const { data, error } = await window.API.fetchEdge('signal_access_check', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Load user signal access from signal_access table
-      const { data, error } = await window.API.supabase
-        .from('signal_access')
-        .select('*')
-        .eq('user_id', userId)
-        .gt('expires_at', new Date().toISOString());
-      
-      if (error) {
-        console.error('Database error loading user access:', error);
-        this.userAccess = [];
-        return;
-      }
-      
-      this.userAccess = data || [];
-      console.log('User signal access loaded:', this.userAccess.length, 'access records');
+      this.userAccess = data.access || [];
     } catch (error) {
-      console.error('Failed to load user signal access:', error);
+      console.error('Failed to load user access:', error);
       this.userAccess = [];
     }
-  }
-
-  getMockUser() {
-    return {
-      id: 'user_123',
-      email: 'user@example.com',
-      profile: {
-        display_name: 'John Doe',
-        kyc_status: 'approved',
-        email_verified: true
-      }
-    };
-  }
-
-  getMockSignals() {
-    return [
-      {
-        id: 'signal_1',
-        title: 'Gold Bullish Breakout',
-        description: 'Technical analysis indicating strong upward momentum for gold based on key resistance break',
-        category: 'Commodities',
-        risk_level: 'Medium',
-        type: 'one-time',
-        price: 50.000000,
-        access_duration: 30,
-        purchase_count: 127,
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        expires_at: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'signal_2',
-        title: 'EUR/USD Reversal Pattern',
-        description: 'Identified double bottom formation suggesting bullish reversal in EUR/USD pair',
-        category: 'Forex',
-        risk_level: 'Low',
-        type: 'subscription',
-        price: 100.000000,
-        access_duration: 30,
-        purchase_count: 89,
-        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        expires_at: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'signal_3',
-        title: 'Tech Sector Momentum',
-        description: 'Comprehensive analysis of major tech stocks showing strong buying opportunities',
-        category: 'Stocks',
-        risk_level: 'High',
-        type: 'one-time',
-        price: 75.000000,
-        access_duration: 7,
-        purchase_count: 203,
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        expires_at: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
   }
 
   setupFilterOptions() {
@@ -271,7 +180,7 @@ class SignalsPage {
 
     // Apply risk filter
     if (this.filters.risk) {
-      filtered = filtered.filter(signal => signal.risk_rating === this.filters.risk);
+      filtered = filtered.filter(signal => signal.risk_level === this.filters.risk);
     }
 
     // Apply type filter
@@ -288,7 +197,7 @@ class SignalsPage {
         filtered.sort((a, b) => b.price - a.price);
         break;
       case 'popular':
-        filtered.sort((a, b) => (b.purchase_count || 0) - (a.purchase_count || 0));
+        filtered.sort((a, b) => b.purchase_count - a.purchase_count);
         break;
       case 'newest':
       default:
@@ -338,7 +247,7 @@ class SignalsPage {
     signalsGrid.innerHTML = filteredSignals.map(signal => {
       const hasAccess = this.userAccess.some(access => 
         access.signal_id === signal.id && 
-        new Date(access.access_expires_at) > new Date()
+        new Date(access.expires_at) > new Date()
       );
 
       const hasActivePositions = this.userPositions.some(position => 
@@ -348,13 +257,13 @@ class SignalsPage {
       return `
         <div class="signal-card ${hasAccess ? 'purchased' : ''}" data-signal-id="${signal.id}">
           <div class="signal-header">
-            <h3 class="signal-title">${signal.category} Signal</h3>
-                <p class="signal-description">${signal.description || `${signal.category} trading signal with ${signal.risk_rating?.toLowerCase() || 'medium'} risk level`}</p>
+            <h3 class="signal-title">${signal.title}</h3>
+                <p class="signal-description">${signal.description}</p>
             </div>
             
             <div class="signal-meta">
                 <span class="signal-tag tag-category">${signal.category}</span>
-                <span class="signal-tag tag-risk ${signal.risk_rating?.toLowerCase()}">${signal.risk_rating} risk</span>
+                <span class="signal-tag tag-risk ${signal.risk_level}">${signal.risk_level} risk</span>
                 <span class="signal-tag">${signal.type === 'subscription' ? 'Subscription' : 'One-time'}</span>
             </div>
             
@@ -365,7 +274,7 @@ class SignalsPage {
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Duration</span>
-                    <span class="detail-value duration">${this.getDurationText(signal.access_days)}</span>
+                    <span class="detail-value duration">${this.getDurationText(signal.access_duration)}</span>
                 </div>
             </div>
             
@@ -391,15 +300,11 @@ class SignalsPage {
   }
 
   getDurationText(duration) {
-    if (!duration) return 'Unknown duration';
-    
-    const days = typeof duration === 'number' ? duration : parseInt(duration.toString().split('_')[0]) || duration;
-    
-    switch (days) {
+    switch (duration) {
       case 7: return '7 days';
       case 30: return '30 days';
       case 90: return '90 days';
-      default: return `${days} days`;
+      default: return `${duration} days`;
     }
   }
 
@@ -407,7 +312,7 @@ class SignalsPage {
     const signal = this.signals.find(s => s.id === signalId);
     if (!signal) return;
 
-    // Navigate to signal detail page using id
+    // Navigate to signal detail page
     window.location.href = `/app/signal_detail.html?id=${signalId}`;
   }
 
@@ -447,11 +352,11 @@ class SignalsPage {
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Access Duration:</span>
-        <span class="purchase-value">${this.getDurationText(signal.access_days)}</span>
+        <span class="purchase-value">${this.getDurationText(signal.access_duration)}</span>
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Risk Level:</span>
-        <span class="purchase-value">${signal.risk_rating}</span>
+        <span class="purchase-value">${signal.risk_level}</span>
       </div>
       <div class="purchase-row">
         <span class="purchase-label">Category:</span>
@@ -460,7 +365,7 @@ class SignalsPage {
       ${signal.type === 'subscription' ? `
         <div class="purchase-row">
           <span class="purchase-label">Billing Cycle:</span>
-          <span class="purchase-value">Every ${this.getDurationText(signal.access_days)}</span>
+          <span class="purchase-value">Every ${this.getDurationText(signal.access_duration)}</span>
         </div>
       ` : ''}
       <div class="purchase-row highlight">
@@ -491,46 +396,24 @@ class SignalsPage {
     try {
       this.setButtonLoading('confirm-purchase-btn', true);
 
-      // Get USDT deposit address from database
-      const { data: addressData, error: addressError } = await window.API.serviceClient
-        .from('deposit_addresses')
-        .select('address')
-        .eq('currency', 'USDT')
-        .eq('is_active', true)
-        .maybeSingle();
+      const { data, error } = await window.API.fetchEdge('signal_purchase_create', {
+        method: 'POST',
+        body: {
+          signal_id: this.selectedSignal.id,
+          price: this.selectedSignal.price,
+          currency: 'USDT'
+        }
+      });
 
-      if (addressError && addressError.code !== 'PGRST116') {
-        throw new Error(`Failed to get deposit address: ${addressError.message}`);
+      if (error) {
+        throw error;
       }
 
-      const depositAddress = addressData?.address || null;
+      // Show success message
+      window.Notify.success('Purchase initiated! Please complete the payment to access the signal.');
 
-      // Create signal purchase record
-      const userId = await window.API.getCurrentUserId();
-      const purchaseData = {
-        user_id: userId,
-        signal_id: this.selectedSignal.id,
-        signal_string_id: this.selectedSignal.id,
-        purchase_price: this.selectedSignal.price,
-        purchase_type: this.selectedSignal.type,
-        access_duration: this.selectedSignal.access_days,
-        access_expires_at: this.calculateExpiryDate(this.selectedSignal.access_days),
-        is_active: true,
-        auto_renew: false
-      };
-
-      const { data: purchase, error: purchaseError } = await window.API.serviceClient
-        .from('signal_purchases')
-        .insert(purchaseData)
-        .select()
-        .single();
-
-      if (purchaseError) {
-        throw new Error(`Failed to create purchase record: ${purchaseError.message}`);
-      }
-
-      // Show deposit instructions
-      this.showDepositInstructions(depositAddress, this.selectedSignal.price, purchase.id);
+      // Redirect to deposit page with signal context
+      window.location.href = `/app/deposits.html?amount=${this.selectedSignal.price}&currency=USDT&target=signal_purchase&signal_id=${this.selectedSignal.id}`;
 
     } catch (error) {
       console.error('Purchase failed:', error);
@@ -540,130 +423,12 @@ class SignalsPage {
     }
   }
 
-  showDepositInstructions(depositAddress, amount, purchaseId) {
-    // Close purchase modal
-    this.closePurchaseModal();
-
-    // Create deposit instructions modal
-    const modalHtml = `
-      <div class="modal-overlay" id="deposit-instructions-modal" style="display: flex;">
-        <div class="modal deposit-modal-content">
-          <div class="modal-header">
-            <h3>USDT Deposit Required</h3>
-            <button class="modal-close" onclick="window.signalsPage.closeDepositInstructions()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="deposit-summary">
-              <div class="deposit-row">
-                <span class="deposit-label">Signal:</span>
-                <span class="deposit-value">${this.selectedSignal.title}</span>
-              </div>
-              <div class="deposit-row">
-                <span class="deposit-label">Amount to Deposit:</span>
-                <span class="deposit-value highlight">₮${this.formatMoney(amount, 6)}</span>
-              </div>
-              <div class="deposit-row">
-                <span class="deposit-label">Currency:</span>
-                <span class="deposit-value">USDT</span>
-              </div>
-              <div class="deposit-row">
-                <span class="deposit-label">Purchase ID:</span>
-                <span class="deposit-value">${purchaseId}</span>
-              </div>
-            </div>
-            
-            ${depositAddress ? `
-              <div class="deposit-address-section">
-                <h4>Deposit Address</h4>
-                <div class="address-container">
-                  <input type="text" value="${depositAddress}" readonly id="deposit-address-input" />
-                  <button class="btn btn-small" onclick="window.signalsPage.copyAddress()">Copy</button>
-                </div>
-                <p class="address-warning">Send exactly ₮${this.formatMoney(amount, 6)} to this address. Your access will be activated automatically after confirmation.</p>
-              </div>
-            ` : `
-              <div class="no-address-section">
-                <div class="warning-icon">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                </div>
-                <h4>Deposit Address Not Available</h4>
-                <p>The USDT deposit address is currently not set by the administrator. Please contact support or try again later.</p>
-                <div class="deposit-actions">
-                  <button class="btn btn-secondary" onclick="window.signalsPage.closeDepositInstructions()">Close</button>
-                  <button class="btn btn-primary" onclick="window.signalsPage.checkForAddress()">Check Again</button>
-                </div>
-              </div>
-            `}
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Add modal to page
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHtml;
-    document.body.appendChild(modalContainer.firstElementChild);
-  }
-
-  closeDepositInstructions() {
-    const modal = document.getElementById('deposit-instructions-modal');
-    if (modal) {
-      modal.remove();
-    }
-  }
-
-  copyAddress() {
-    const input = document.getElementById('deposit-address-input');
-    if (input) {
-      input.select();
-      document.execCommand('copy');
-      window.Notify.success('Address copied to clipboard!');
-    }
-  }
-
-  async checkForAddress() {
-    // Refresh and check for address again
-    const { data: addressData, error: addressError } = await window.API.serviceClient
-      .from('deposit_addresses')
-      .select('address')
-      .eq('currency', 'USDT')
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (!addressError && addressData?.address) {
-      window.Notify.success('Deposit address is now available!');
-      this.showDepositInstructions(addressData.address, this.selectedSignal.price, this.selectedSignal.id);
-    } else {
-      window.Notify.error('Deposit address still not available');
-    }
-  }
-
-  calculateExpiryDate(accessDuration) {
-    const now = new Date();
-    let expiryDate = new Date(now);
-
-    // Parse access duration (could be number like 30 or string like "30_days")
-    const days = typeof accessDuration === 'number' ? accessDuration : parseInt(accessDuration.toString().split('_')[0]) || 30;
-    expiryDate.setDate(expiryDate.getDate() + days);
-
-    return expiryDate.toISOString();
-  }
-
   async downloadSignal(signalId) {
     try {
       // Check if user has access
       const access = this.userAccess.find(a => 
         a.signal_id === signalId && 
-        new Date(a.access_expires_at) > new Date()
+        new Date(a.expires_at) > new Date()
       );
 
       if (!access) {

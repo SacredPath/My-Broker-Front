@@ -89,37 +89,15 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
-      console.log('Loading deposit methods from database...');
-      
-      // Load deposit methods from database
-      const { data, error } = await window.API.serviceClient
-        .from('deposit_methods')
-        .select('*')
-        .eq('is_active', true)
-        .order('method_type', { ascending: true });
-
-      if (error) {
-        console.error('Database error loading deposit methods:', error);
-        throw new Error(`Failed to load deposit methods: ${error.message}`);
+      const response = await this.api.getDepositMethods();
+      if (response.success) {
+        this.depositSettings = response.data;
+        console.log('Deposit settings loaded:', response.data);
+      } else {
+        console.error('Failed to load deposit settings:', response.error);
       }
-      
-      this.depositSettings = {
-        methods: data || [],
-        currencies: [...new Set((data || []).map(method => method.currency))],
-        methodTypes: [...new Set((data || []).map(method => method.method_type))]
-      };
-      
-      console.log('Deposit methods loaded from database:', this.depositSettings.methods.length, 'methods');
     } catch (error) {
-      console.error('Failed to load deposit methods:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load deposit methods. Please try again.');
-      }
-      this.depositSettings = {
-        methods: [],
-        currencies: [],
-        methodTypes: []
-      };
+      console.error('Error loading deposit settings:', error);
     }
   }
 
@@ -157,103 +135,28 @@ class DepositsPage {
         <p class="deposits-subtitle">Choose your preferred deposit method to fund your account</p>
       </div>
       
-      <div class="deposit-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0;">
+      <div class="methods-grid">
         ${activeMethods.map(method => this.renderMethodCard(method)).join('')}
       </div>
     `;
   }
 
   renderMethodCard(method) {
-    // Unique colors for each specific method
-    const methodSpecificColors = {
-      'USDT TRC20': { bg: '#10B981', border: '#059669', hover: '#047857' },
-      'USDT ERC20': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' },
-      'ACH Bank Transfer': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' },
-      'PayPal Payment': { bg: '#F59E0B', border: '#D97706', hover: '#B45309' }
-    };
-
-    // Fallback colors for method types
-    const methodTypeColors = {
-      'crypto': { bg: '#10B981', border: '#059669', hover: '#047857' },
-      'ach': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' }, 
-      'paypal': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' }
-    };
-
-    const colors = methodSpecificColors[method.method_name] || methodTypeColors[method.method_type] || { bg: '#6B7280', border: '#4B5563', hover: '#374151' };
+    const colors = this.getMethodColors()[method.method_name] || this.getMethodColors()[method.method_type];
+    const icon = this.getMethodIcon(method.method_type);
     
-    // Method icons
-    const methodIcons = {
-      'crypto': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>',
-      'ach': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="7" y1="21" x2="17" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-      'paypal': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"></path><path d="M12 14H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"></path></svg>'
-    };
-    
-    // Create key features (compact)
-    let keyFeatures = [];
-    if (method.method_type === 'crypto') {
-      let displayTime;
-      if (method.currency === 'USDT') {
-        displayTime = '60 minutes';
-      } else if (method.currency === 'BTC') {
-        displayTime = '60 minutes';
-      } else {
-        displayTime = `${(method.processing_time_hours || 0) * 60} minutes`;
-      }
-      
-      keyFeatures = [
-        `Network: ${method.network || 'Not set'}`,
-        `Currency: ${method.currency}`,
-        `Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`,
-        `Processing: ${displayTime}`
-      ];
-    } else if (method.method_type === 'ach') {
-      keyFeatures = [
-        `Bank: ${method.bank_name || 'Not set'}`,
-        `Account: ${method.account_number || '****1234'}`,
-        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
-        `Processing: ${method.processing_time_hours || 72} hours`
-      ];
-    } else if (method.method_type === 'paypal') {
-      keyFeatures = [
-        `Email: ${method.paypal_email || 'Not set'}`,
-        `Business: ${method.paypal_business_name || 'Not set'}`,
-        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
-        `Processing: ${method.processing_time_hours || 24} hours`
-      ];
-    }
-
     return `
-      <div class="deposit-method-card" data-method="${method.id}" onclick="window.depositsPage.selectMethod('${method.id}')" style="background: linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%); border: 2px solid ${colors.border}; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; min-height: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" onmouseover="this.style.transform='translateY(-3px) scale(1.02)'; this.style.boxShadow='0 8px 25px ${colors.bg}60'; this.style.borderColor='${colors.hover}'; this.style.background='linear-gradient(135deg, ${colors.bg}50 0%, ${colors.bg}70 100%)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'; this.style.borderColor='${colors.border}'; this.style.background='linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%)';">
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${colors.bg}, ${colors.hover});"></div>
-        
-        <div style="display: flex; align-items: center; margin-bottom: 8px;">
-          <div style="background: ${colors.bg}20; color: ${colors.bg}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px; transition: all 0.3s ease; border: 1px solid ${colors.bg}30;" onmouseover="this.style.background='${colors.bg}30'; this.style.transform='scale(1.1)'; this.style.borderColor='${colors.bg}50';" onmouseout="this.style.background='${colors.bg}20'; this.style.transform='scale(1)'; this.style.borderColor='${colors.bg}30';">
-            ${methodIcons[method.method_type] || methodIcons['crypto']}
+      <div class="method-card" data-method-id="${method.id}" onclick="depositsPage.selectMethod('${method.id}')">
+        <div class="method-header">
+          <div class="method-icon" style="background: ${colors.primary}; color: white;">
+            ${icon}
           </div>
-          <div style="flex: 1;">
-            <h3 style="color: #000000; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${method.method_name}</h3>
-            <p style="color: #1F2937; margin: 0; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.3);">${method.method_type.toUpperCase()}</p>
+          <div class="method-info">
+            <h3>${method.method_name}</h3>
+            <p class="method-type">${this.getMethodTypeLabel(method.method_type)}</p>
+            ${method.processing_time_hours ? `<p class="processing-time">Processing time: ${method.processing_time_hours} hours</p>` : ''}
           </div>
         </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
-          ${keyFeatures.map((feature, index) => `
-            <div style="color: #000000; display: flex; align-items: center; padding: 3px 0; font-weight: 600;">
-              <span style="color: ${colors.bg}; margin-right: 4px; font-size: 9px; font-weight: 700;">●</span>
-              <span style="line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${feature}</span>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3);">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="color: #000000; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">
-              Click for details
-            </span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: ${colors.bg}; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(2px)';" onmouseout="this.style.transform='translateX(0)';">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </div>
         </div>
       </div>
     `;
@@ -278,266 +181,17 @@ class DepositsPage {
   }
 
   selectMethod(methodId) {
-    console.log('selectMethod called with methodId:', methodId);
-    console.log('Available methods:', this.depositSettings?.methods);
-    
-    // Find method data
-    const method = this.depositSettings.methods.find(m => m.id === methodId);
-    if (!method) {
-      console.error('Method not found for ID:', methodId);
-      return;
+    this.selectedMethod = this.depositSettings.methods.find(m => m.id === methodId);
+    if (this.selectedMethod) {
+      this.renderDepositForm();
     }
-
-    console.log('Found method:', method);
-    console.log('About to call openDepositModal');
-
-    // Open deposit modal with method details
-    this.openDepositModal(method);
-  }
-
-  openDepositModal(method) {
-    console.log('openDepositModal called with method:', method);
-    
-    // Create modal if it doesn't exist
-    let modal = document.getElementById('deposit-modal');
-    if (!modal) {
-      console.log('Creating new modal element');
-      modal = document.createElement('div');
-      modal.id = 'deposit-modal';
-      modal.className = 'modal';
-      document.body.appendChild(modal);
-      console.log('Modal element created and appended to body');
-    } else {
-      console.log('Using existing modal element');
-    }
-
-    // Generate modal content
-    modal.innerHTML = `
-      <div class="modal-content">
-        ${this.generateModalContent(method)}
-      </div>
-    `;
-    
-    console.log('Modal content set, about to show modal');
-    // Show modal
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Debug: Check modal visibility and positioning
-    setTimeout(() => {
-      console.log('=== MODAL DEBUG ===');
-      console.log('Modal element:', modal);
-      console.log('Modal classes:', modal.className);
-      console.log('Modal display:', window.getComputedStyle(modal).display);
-      console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
-      console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
-      console.log('Modal position:', window.getComputedStyle(modal).position);
-      console.log('Modal in DOM:', document.body.contains(modal));
-      console.log('Modal offsetWidth:', modal.offsetWidth);
-      console.log('Modal offsetHeight:', modal.offsetHeight);
-      console.log('Modal computed style display:', window.getComputedStyle(modal).display);
-      console.log('Modal has active class:', modal.classList.contains('active'));
-    }, 100);
-    
-    console.log('Modal should now be visible');
-    
-    // Add click outside to close
-    modal.onclick = (e) => {
-      if (e.target === modal) {
-        console.log('Clicked outside modal, closing');
-        this.closeModal();
-      }
-    };
-  }
-
-  generateModalContent(method) {
-    const methodColors = {
-      'crypto': '#10B981',
-      'ach': '#3B82F6', 
-      'paypal': '#8B5CF6'
-    };
-
-    const color = methodColors[method.method_type] || '#6B7280';
-    
-    let paymentInfoHTML = '';
-    if (method.method_type === 'crypto') {
-      paymentInfoHTML = `
-        <div class="payment-info">
-          <strong>Network:</strong> ${method.network || 'N/A'}<br>
-          <strong>Address:</strong> <code>${method.address || 'N/A'}</code>
-        </div>
-      `;
-    } else if (method.method_type === 'ach') {
-      paymentInfoHTML = `
-        <div class="payment-info">
-          <strong>Bank:</strong> ${method.bank_name || 'N/A'}<br>
-          <strong>Account:</strong> ${method.account_number || 'N/A'}<br>
-          <strong>Routing:</strong> ${method.routing_number || 'N/A'}
-        </div>
-      `;
-    } else if (method.method_type === 'paypal') {
-      paymentInfoHTML = `
-        <div class="payment-info">
-          <strong>Email:</strong> ${method.paypal_email || 'N/A'}<br>
-          <strong>Business:</strong> ${method.paypal_business_name || 'N/A'}
-        </div>
-      `;
-    }
-
-    return `
-      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 500px; margin: 0 auto;">
-        <div style="padding: 12px; border-bottom: 1px solid #333;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <h2 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">${method.method_name}</h2>
-            <button onclick="window.depositsPage.closeModal()" style="background: transparent; border: 1px solid #666; color: #fff; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 18px;">×</button>
-          </div>
-        </div>
-        
-        <div style="padding: 12px;">
-          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px; margin-bottom: 12px;">
-            <p style="color: rgba(255,255,255,0.8); line-height: 1.3; margin: 0; font-size: 13px;">${method.instructions || 'Follow instructions below to complete your deposit.'}</p>
-          </div>
-          
-          <!-- Amount Input Section -->
-          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px; margin-bottom: 12px;">
-            <h4 style="color: white; font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">💰 Amount</h4>
-            <div style="display: grid; gap: 6px;">
-              <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 11px; display: block; margin-bottom: 4px;">Amount (${method.currency})</label>
-                <input type="number" 
-                       id="deposit-amount" 
-                       min="${method.min_amount || (method.currency === 'BTC' ? 100 : 1)}" 
-                       max="${method.max_amount || (method.currency === 'BTC' ? 1000000 : 999999)}" 
-                       step="0.01" 
-                       placeholder="0.00"
-                       style="width: 100%; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 14px; font-weight: 500;"
-                       oninput="window.depositsPage.updateDepositAmount(this.value)">
-                <div style="margin-top: 4px; font-size: 10px; color: rgba(255,255,255,0.6);">
-                  Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}
-                  ${method.max_amount ? ` | Max: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div style="background: ${color}10; border: 1px solid ${color}30; border-radius: 8px; padding: 8px; margin: 12px 0;">
-            <h4 style="color: white; font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">📱 ${method.method_type === 'crypto' ? 'Crypto' : method.method_type === 'ach' ? 'Bank' : 'PayPal'} Info</h4>
-            <div style="display: grid; gap: 8px;">
-              <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 10px; display: block; margin-bottom: 3px;">${method.method_type === 'crypto' ? 'Network' : method.method_type === 'ach' ? 'Bank' : 'Email'}</label>
-                <div style="color: white; font-size: 13px; font-weight: 500;">${method.method_type === 'crypto' ? method.network || 'NULL' : method.method_type === 'ach' ? method.bank_name || 'NULL' : method.paypal_email || 'NULL'}</div>
-              </div>
-              <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 10px; display: block; margin-bottom: 3px;">${method.method_type === 'crypto' ? 'Wallet Address' : method.method_type === 'ach' ? 'Account Number' : 'Business Name'}</label>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <div style="flex: 1; color: white; font-size: 11px; font-weight: 500; font-family: 'Courier New', monospace; word-break: break-all;">${method.method_type === 'crypto' ? method.address || 'NULL' : method.method_type === 'ach' ? method.account_number || 'NULL' : method.paypal_business_name || 'NULL'}</div>
-                  <button onclick="window.depositsPage.copyAddress('${method.method_type === 'crypto' ? method.address : method.method_type === 'ach' ? method.account_number : method.paypal_email}')" style="background: ${color}; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 11px;">📋 Copy</button>
-                </div>
-              </div>
-              ${method.method_type === 'ach' ? `
-                <div>
-                  <label style="color: rgba(255,255,255,0.7); font-size: 10px; display: block; margin-bottom: 3px;">Routing Number</label>
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <div style="flex: 1; color: white; font-size: 11px; font-weight: 500; font-family: 'Courier New', monospace;">${method.routing_number || 'NULL'}</div>
-                    <button onclick="window.depositsPage.copyAddress('${method.routing_number}')" style="background: ${color}; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 11px;">📋 Copy</button>
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        </div>
-        
-        <div style="padding: 12px; border-top: 1px solid #333; display: flex; gap: 6px; justify-content: flex-end;">
-          <button onclick="window.depositsPage.closeModal()" style="background: #666; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">Close</button>
-          <button onclick="window.depositsPage.initiateDeposit('${method.id}')" style="background: ${color}; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;" id="deposit-submit-btn">💰 I've Sent Payment</button>
-        </div>
-      </div>
-    `;
-  }
-
-  copyAddress(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(() => {
-        if (window.Notify) {
-          window.Notify.success('Address copied to clipboard!');
-        } else {
-          alert('Address copied to clipboard!');
-        }
-      }).catch(err => {
-        console.error('Failed to copy address:', err);
-        this.fallbackCopyToClipboard(text);
-      });
-    } else {
-      this.fallbackCopyToClipboard(text);
-    }
-  }
-
-  fallbackCopyToClipboard(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-      document.execCommand('copy');
-      if (window.Notify) {
-        window.Notify.success('Address copied to clipboard!');
-      } else {
-        alert('Address copied to clipboard!');
-      }
-    } catch (err) {
-      console.error('Fallback: Oops, unable to copy', err);
-      alert('Failed to copy address. Please copy manually.');
-    }
-    
-    document.body.removeChild(textArea);
-  }
-
-  updateDepositAmount(amount) {
-    this.currentDepositAmount = parseFloat(amount) || 0;
-    const submitBtn = document.getElementById('deposit-submit-btn');
-    if (submitBtn) {
-      submitBtn.textContent = `💰 I've Sent Payment (${this.formatMoney(this.currentDepositAmount, 2)})`;
-    }
-  }
-
-  initiateDeposit(methodId) {
-    const method = this.depositSettings.methods.find(m => m.id === methodId);
-    if (!method) return;
-
-    const amount = this.currentDepositAmount || 0;
-    const minAmount = method.min_amount || (method.currency === 'BTC' ? 100 : 1);
-    
-    if (amount < minAmount) {
-      if (window.Notify) {
-        window.Notify.error(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(minAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
-      } else {
-        alert(`Minimum deposit amount is ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(minAmount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`);
-      }
-      return;
-    }
-
-    // Show success message for now
-    if (window.Notify) {
-      window.Notify.success('Deposit request submitted successfully!');
-    } else {
-      alert('Deposit request submitted successfully!');
-    }
-    
-    this.closeModal();
   }
 
   renderDepositForm() {
     const container = document.getElementById('deposit-form');
     if (!container || !this.selectedMethod) return;
 
-    const colors = this.getMethodColors()[this.selectedMethod.method_name] || 
-                   this.getMethodColors()[this.selectedMethod.method_type] || 
-                   { primary: '#6B7280', secondary: '#4B5563', accent: '#9CA3AF' }; // fallback colors
+    const colors = this.getMethodColors()[this.selectedMethod.method_name] || this.getMethodColors()[this.selectedMethod.method_type];
     
     container.innerHTML = `
       <div class="deposit-form-container">
@@ -692,7 +346,7 @@ class DepositsPage {
     });
 
     // Remove any existing modals
-    this.closeModal();
+    this.closeDepositModal();
   }
 
   updateDepositAmount(amount) {
@@ -759,6 +413,9 @@ class DepositsPage {
       
       if (response.success) {
         this.showSuccessModal();
+        // Reset form
+        document.getElementById('deposit-form-element').reset();
+        this.selectedMethod = null;
       } else {
         this.showErrorModal(response.error || 'Failed to submit deposit request');
       }
@@ -838,8 +495,7 @@ class DepositsPage {
   closeModal() {
     const modal = document.getElementById('deposit-modal');
     if (modal) {
-      modal.classList.remove('active');
-      document.body.style.overflow = 'auto';
+      modal.classList.remove();
     }
   }
 

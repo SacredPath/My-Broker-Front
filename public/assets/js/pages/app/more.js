@@ -3,6 +3,9 @@
  * Handles additional features and settings
  */
 
+// Import shared app initializer
+import '/public/assets/js/_shared/app_init.js';
+
 class MorePage {
   constructor() {
     this.init();
@@ -51,7 +54,7 @@ class MorePage {
             // Re-initialize app shell with new DOM
             window.AppShell.setupShell();
             
-            // Re-bind core UI events since DOM was updated
+            // Re-bind core UI events since the DOM was updated
             window.AppShell.bindCoreUIEvents();
           }
         })

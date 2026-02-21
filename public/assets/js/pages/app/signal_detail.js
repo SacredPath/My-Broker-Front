@@ -4,9 +4,7 @@
  */
 
 // Import shared app initializer
-import '/assets/js/_shared/app_init.js';
-// Import USDT purchase modal
-import '/assets/js/components/usdt-purchase-modal.js';
+import '/public/assets/js/_shared/app_init.js';
 
 class SignalDetailPage {
   constructor() {
@@ -15,7 +13,6 @@ class SignalDetailPage {
     this.userAccess = null;
     this.userPositions = [];
     this.signalId = null;
-    this.api = window.API; // Initialize API client
     this.init();
   }
 
@@ -39,8 +36,8 @@ class SignalDetailPage {
         throw new Error('Signal ID not provided');
       }
 
-      // Use main app shell - don't load separate component
-      // this.loadAppShell();
+      // Load app shell components
+      this.loadAppShell();
       
       // Load data
       await this.loadUserData();
@@ -63,7 +60,7 @@ class SignalDetailPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/components/app-shell.html')
+      fetch('/src/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
@@ -93,10 +90,17 @@ class SignalDetailPage {
 
   async loadUserPositions() {
     try {
-      // For now, use empty array to avoid API errors
-      // TODO: Fix user_positions table and API call
-      this.userPositions = [];
-      console.log('User positions loaded: 0 positions (mocked)');
+      const { data, error } = await window.API.serviceClient
+        .from('user_positions')
+        .select('*')
+        .eq('user_id', window.API.getCurrentUserId())
+        .eq('status', 'active');
+
+      if (error) {
+        throw error;
+      }
+
+      this.userPositions = data || [];
     } catch (error) {
       console.error('Failed to load user positions:', error);
       this.userPositions = [];
@@ -105,30 +109,21 @@ class SignalDetailPage {
 
   async loadSignal() {
     try {
-      // Get signal from database using shared client
-      const { data, error } = await window.API.supabase
-        .from('signals')
-        .select('*')
-        .eq('id', this.signalId)
-        .single();
+      const { data, error } = await window.API.serviceClient
+        .rpc('signal_detail_rest', {
+          p_signal_id: this.signalId,
+          p_user_id: window.API.getCurrentUserId()
+        });
 
       if (error) {
-        throw new Error(`Database error: ${error.message}`);
+        throw error;
       }
-      
-      // Set the signal directly since we get single signal
-      this.signal = data;
+
+      this.signal = data.signal;
       
       if (!this.signal) {
         throw new Error('Signal not found');
       }
-
-      // Set signal ID for purchase/download functions
-      this.signalUUID = this.signal.id;
-
-      // For now, set userAccess to null until we fix signal_purchases table
-      this.userAccess = null;
-      
     } catch (error) {
       console.error('Failed to load signal:', error);
       throw error;
@@ -137,49 +132,20 @@ class SignalDetailPage {
 
   async loadUserAccess() {
     try {
-      // Get current user ID
-      const userId = await this.api.getCurrentUserId();
-      if (!userId) {
-        console.log('No user ID found, skipping user access loading');
-        this.userAccess = null;
-        return;
-      }
-
-      // Load user signal access from signal_usdt_purchases table
-      const { data, error } = await window.API.supabase
-        .from('signal_usdt_purchases')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('signal_id', this.signalId)
-        .eq('confirmed', true)
-        .gt('pdf_access_until', new Date().toISOString())
-        .limit(1);
+      const { data, error } = await window.API.serviceClient
+        .rpc('signal_access_check_rest', {
+          p_signal_id: this.signalId,
+          p_user_id: window.API.getCurrentUserId()
+        });
 
       if (error) {
-        console.error('Database error loading user access:', error);
-        this.userAccess = null;
-        return;
+        throw error;
       }
 
-      this.userAccess = data && data.length > 0 ? data[0] : null;
-      console.log('User access loaded:', this.userAccess ? 'found' : 'not found');
+      this.userAccess = data.access;
     } catch (error) {
       console.error('Failed to load user access:', error);
       this.userAccess = null;
-    }
-  }
-
-  async getAuthToken() {
-    try {
-      // Get auth token from Supabase client
-      if (window.API && window.API.supabase) {
-        const { data: { session } } = await window.API.supabase.auth.getSession();
-        return session?.access_token || null;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error getting auth token:', error);
-      return null;
     }
   }
 
@@ -187,7 +153,7 @@ class SignalDetailPage {
     const signalContent = document.getElementById('signal-content');
     if (!signalContent || !this.signal) return;
 
-    const hasAccess = this.userAccess && new Date(this.userAccess.pdf_access_until) > new Date();
+    const hasAccess = this.userAccess && new Date(this.userAccess.expires_at) > new Date();
     const hasActivePositions = this.userPositions.some(position => 
       position.status === 'active' && new Date(position.matures_at) > new Date()
     );
@@ -198,7 +164,7 @@ class SignalDetailPage {
         
         <div class="signal-meta">
             <span class="signal-tag tag-category">${this.signal.category}</span>
-            <span class="signal-tag tag-risk ${this.getRiskLevel(this.signal.risk_rating || this.signal.risk_level)}">${this.getRiskLevel(this.signal.risk_rating || this.signal.risk_level)} risk</span>
+            <span class="signal-tag tag-risk ${this.signal.risk_level}">${this.signal.risk_level} risk</span>
             <span class="signal-tag">${this.signal.type === 'subscription' ? 'Subscription' : 'One-time'}</span>
         </div>
         
@@ -250,11 +216,11 @@ class SignalDetailPage {
             </div>
             <div class="stat-row">
                 <span class="stat-label">Created:</span>
-                <span class="stat-value">${this.formatDate(this.signal.created_at)}</span>
+                <span class="stat-value">${new Date(this.signal.created_at).toLocaleDateString()}</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Last Updated:</span>
-                <span class="stat-value">${this.formatDate(this.signal.updated_at)}</span>
+                <span class="stat-value">${new Date(this.signal.updated_at).toLocaleDateString()}</span>
             </div>
         </div>
       </div>
@@ -262,7 +228,7 @@ class SignalDetailPage {
   }
 
   renderAccessStatus() {
-    const isExpired = new Date(this.userAccess.pdf_access_until) <= new Date();
+    const isExpired = new Date(this.userAccess.expires_at) <= new Date();
     
     return `
       <div class="access-status">
@@ -311,8 +277,8 @@ class SignalDetailPage {
     return `
       <div class="purchase-card">
         <div class="purchase-header">
-            <div class="purchase-price">₮${this.formatMoney(this.signal.price_usdt || this.signal.price, 6)}</div>
-            <div class="purchase-duration">${this.getDurationText(this.signal.access_days)}</div>
+            <div class="purchase-price">₮${this.formatMoney(this.signal.price, 6)}</div>
+            <div class="purchase-duration">${this.getDurationText(this.signal.access_duration)}</div>
         </div>
         
         <div class="purchase-features">
@@ -332,7 +298,7 @@ class SignalDetailPage {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span>${this.getDurationText(this.signal.access_days)} access</span>
+                <span>${this.getDurationText(this.signal.access_duration)} access</span>
             </div>
             <div class="feature-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -352,7 +318,7 @@ class SignalDetailPage {
       ${this.signal.type === 'subscription' ? `
         <div class="subscription-info">
             <h4>Subscription Information</h4>
-            <p>This is a subscription signal. You will be billed every ${this.getDurationText(this.signal.access_days)}. Cancel anytime from settings.</p>
+            <p>This is a subscription signal. You will be billed every ${this.getDurationText(this.signal.access_duration)}. Cancel anytime from settings.</p>
         </div>
       ` : ''}
     `;
@@ -368,118 +334,74 @@ class SignalDetailPage {
   }
 
   async purchaseSignal() {
+    // Check if user has active positions
+    const hasActivePositions = this.userPositions.some(position => 
+      position.status === 'active' && new Date(position.matures_at) > new Date()
+    );
+
+    if (hasActivePositions) {
+      window.Notify.error('Signal purchases are blocked while you have active positions');
+      return;
+    }
+
     try {
-      // Check if user has active positions
-      const hasActivePositions = this.userPositions.some(position => 
-        position.status === 'active' && new Date(position.matures_at) > new Date()
-      );
+      const { data, error } = await window.API.serviceClient
+        .rpc('signal_purchase_create_rest', {
+          p_signal_id: this.signal.id,
+          p_price: this.signal.price,
+          p_currency: 'USDT'
+        });
 
-      if (hasActivePositions) {
-        window.Notify.error('Signal purchases are blocked while you have active positions');
-        return;
+      if (error) {
+        throw error;
       }
 
-      // Show USDT purchase modal
-      if (window.usdtPurchaseModal && this.signal) {
-        const signalData = {
-          id: this.signal.id,
-          title: this.signal.title,
-          description: this.signal.description,
-          price: this.signal.price_usdt || this.signal.price,
-          access_days: this.signal.access_days
-        };
-        
-        window.usdtPurchaseModal.show(signalData);
-      } else {
-        window.Notify.error('USDT purchase modal not available. Please refresh the page and try again.');
-      }
+      // Show success message
+      window.Notify.success('Purchase initiated! Please complete the payment to access the signal.');
+
+      // Redirect to deposit page with signal context
+      window.location.href = `/app/deposits.html?amount=${this.signal.price}&currency=USDT&target=signal_purchase&signal_id=${this.signal.id}`;
 
     } catch (error) {
       console.error('Purchase failed:', error);
-      window.Notify.error(error.message || 'Failed to open purchase modal');
+      window.Notify.error(error.message || 'Failed to initiate purchase');
     }
   }
 
   async downloadSignal() {
     try {
       // Check if user has access
-      if (!this.userAccess) {
-        window.Notify.error('No access to download this signal. Please purchase access first.');
+      if (!this.userAccess || new Date(this.userAccess.expires_at) <= new Date()) {
+        // If expired, initiate renewal
+        await this.purchaseSignal();
         return;
       }
 
-      // Use PDF download service
-      if (window.pdfDownloadService && this.signal) {
-        // Show PDF list in a modal or expand section
-        const pdfContainer = document.getElementById('pdf-downloads-container');
-        if (pdfContainer) {
-          pdfContainer.style.display = 'block';
-          window.pdfDownloadService.renderPDFList(this.signal.id, 'pdf-downloads-container');
-        } else {
-          // Create container if it doesn't exist
-          const container = document.createElement('div');
-          container.id = 'pdf-downloads-container';
-          container.className = 'pdf-downloads-modal';
-          container.innerHTML = `
-            <div class="pdf-modal-header">
-              <h4>📄 Signal PDFs</h4>
-              <button class="modal-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</button>
-            </div>
-            <div id="pdf-list-container"></div>
-          `;
-          
-          document.body.appendChild(container);
-          window.pdfDownloadService.renderPDFList(this.signal.id, 'pdf-list-container');
-        }
-      } else {
-        window.Notify.error('PDF download service not available');
+      // Get secure download URL
+      const { data, error } = await window.API.serviceClient
+        .rpc('signal_download_url_rest', {
+          p_signal_id: this.signal.id,
+          p_user_id: window.API.getCurrentUserId(),
+          p_access_id: this.userAccess.id
+        });
+
+      if (error) {
+        throw error;
       }
-      
+
+      // Create download link
+      const link = document.createElement('a');
+      link.href = data.download_url;
+      link.download = `signal_${this.signal.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.Notify.success('Signal PDF downloaded successfully!');
+
     } catch (error) {
       console.error('Download failed:', error);
-      window.Notify.error(error.message || 'Failed to open PDF downloads');
-    }
-  }
-
-  getRiskLevel(risk) {
-    // Normalize risk level for CSS classes
-    const riskLevel = (risk || '').toLowerCase();
-    switch (riskLevel) {
-      case 'low':
-        return 'low';
-      case 'medium':
-        return 'medium';
-      case 'high':
-        return 'high';
-      default:
-        return 'medium'; // Default fallback
-    }
-  }
-
-  formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    
-    try {
-      const date = new Date(dateString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        // Return current date if signal date is invalid
-        return new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-      }
-      
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Date parsing error:', error);
-      return 'N/A';
+      window.Notify.error(error.message || 'Failed to download signal');
     }
   }
 
