@@ -385,61 +385,61 @@ class DepositsPage {
     }
 
     return `
-      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 600px; margin: 0 auto; max-height: 90vh; overflow-y: auto;">
-        <div style="padding: 24px; border-bottom: 1px solid #333;">
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; max-width: 500px; margin: 0 auto;">
+        <div style="padding: 16px; border-bottom: 1px solid #333;">
           <div style="display: flex; align-items: center; justify-content: space-between;">
-            <h2 style="color: white; font-size: 24px; font-weight: 600;">${method.method_name}</h2>
-            <button onclick="window.depositsPage.closeModal()" style="background: transparent; border: 1px solid #666; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer;">×</button>
+            <h2 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">${method.method_name}</h2>
+            <button onclick="window.depositsPage.closeModal()" style="background: transparent; border: 1px solid #666; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 18px;">×</button>
           </div>
         </div>
         
-        <div style="padding: 24px;">
-          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-            <p style="color: rgba(255,255,255,0.8); line-height: 1.5;">${method.instructions || 'Follow the instructions below to complete your deposit.'}</p>
+        <div style="padding: 16px;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.4; margin: 0; font-size: 14px;">${method.instructions || 'Follow the instructions below to complete your deposit.'}</p>
           </div>
           
           <!-- Amount Input Section -->
-          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-            <h4 style="color: white; font-size: 18px; font-weight: 600; margin-bottom: 16px;">💰 Enter Deposit Amount</h4>
-            <div style="display: grid; gap: 12px;">
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <h4 style="color: white; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">💰 Amount</h4>
+            <div style="display: grid; gap: 8px;">
               <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 8px;">Amount (${method.currency})</label>
+                <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 6px;">Amount (${method.currency})</label>
                 <input type="number" 
                        id="deposit-amount" 
                        min="${method.min_amount || (method.currency === 'BTC' ? 100 : 1)}" 
                        max="${method.max_amount || (method.currency === 'BTC' ? 1000000 : 999999)}" 
                        step="0.01" 
                        placeholder="0.00"
-                       style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 16px; font-weight: 500;"
+                       style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 14px; font-weight: 500;"
                        oninput="window.depositsPage.updateDepositAmount(this.value)">
-                <div style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.6);">
-                  Minimum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}
-                  ${method.max_amount ? ` | Maximum: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : ''}
+                <div style="margin-top: 6px; font-size: 11px; color: rgba(255,255,255,0.6);">
+                  Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}
+                  ${method.max_amount ? ` | Max: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.max_amount, method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}` : ''}
                 </div>
               </div>
             </div>
           </div>
           
-          <div style="background: ${color}10; border: 1px solid ${color}30; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h4 style="color: white; font-size: 18px; font-weight: 600;">📱 ${method.method_type === 'crypto' ? 'Crypto' : method.method_type === 'ach' ? 'Bank' : 'PayPal'} Deposit Information</h4>
-            <div style="display: grid; gap: 16px;">
+          <div style="background: ${color}10; border: 1px solid ${color}30; border-radius: 8px; padding: 12px; margin: 16px 0;">
+            <h4 style="color: white; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">📱 ${method.method_type === 'crypto' ? 'Crypto' : method.method_type === 'ach' ? 'Bank' : 'PayPal'} Info</h4>
+            <div style="display: grid; gap: 12px;">
               <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Network' : method.method_type === 'ach' ? 'Bank' : 'Email'}</label>
-                <div style="color: white; font-size: 16px; font-weight: 500;">${method.method_type === 'crypto' ? method.network || 'NULL' : method.method_type === 'ach' ? method.bank_name || 'NULL' : method.paypal_email || 'NULL'}</div>
+                <label style="color: rgba(255,255,255,0.7); font-size: 11px; display: block; margin-bottom: 4px;">${method.method_type === 'crypto' ? 'Network' : method.method_type === 'ach' ? 'Bank' : 'Email'}</label>
+                <div style="color: white; font-size: 14px; font-weight: 500;">${method.method_type === 'crypto' ? method.network || 'NULL' : method.method_type === 'ach' ? method.bank_name || 'NULL' : method.paypal_email || 'NULL'}</div>
               </div>
               <div>
-                <label style="color: rgba(255,255,255,0.7); font-size: 12px;">${method.method_type === 'crypto' ? 'Wallet Address' : method.method_type === 'ach' ? 'Account Number' : 'Business Name'}</label>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace; word-break: break-all;">${method.method_type === 'crypto' ? method.address || 'NULL' : method.method_type === 'ach' ? method.account_number || 'NULL' : method.paypal_business_name || 'NULL'}</div>
-                  <button onclick="window.depositsPage.copyAddress('${method.method_type === 'crypto' ? method.address : method.method_type === 'ach' ? method.account_number : method.paypal_email}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                <label style="color: rgba(255,255,255,0.7); font-size: 11px; display: block; margin-bottom: 4px;">${method.method_type === 'crypto' ? 'Wallet Address' : method.method_type === 'ach' ? 'Account Number' : 'Business Name'}</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="flex: 1; color: white; font-size: 12px; font-weight: 500; font-family: 'Courier New', monospace; word-break: break-all;">${method.method_type === 'crypto' ? method.address || 'NULL' : method.method_type === 'ach' ? method.account_number || 'NULL' : method.paypal_business_name || 'NULL'}</div>
+                  <button onclick="window.depositsPage.copyAddress('${method.method_type === 'crypto' ? method.address : method.method_type === 'ach' ? method.account_number : method.paypal_email}')" style="background: ${color}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copy</button>
                 </div>
               </div>
               ${method.method_type === 'ach' ? `
                 <div>
-                  <label style="color: rgba(255,255,255,0.7); font-size: 12px;">Routing Number</label>
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="flex: 1; color: white; font-size: 16px; font-weight: 500; font-family: 'Courier New', monospace;">${method.routing_number || 'NULL'}</div>
-                    <button onclick="window.depositsPage.copyAddress('${method.routing_number}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Copy</button>
+                  <label style="color: rgba(255,255,255,0.7); font-size: 11px; display: block; margin-bottom: 4px;">Routing Number</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; color: white; font-size: 12px; font-weight: 500; font-family: 'Courier New', monospace;">${method.routing_number || 'NULL'}</div>
+                    <button onclick="window.depositsPage.copyAddress('${method.routing_number}')" style="background: ${color}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copy</button>
                   </div>
                 </div>
               ` : ''}
@@ -447,9 +447,9 @@ class DepositsPage {
           </div>
         </div>
         
-        <div style="padding: 24px; border-top: 1px solid #333; display: flex; gap: 12px; justify-content: flex-end;">
-          <button onclick="window.depositsPage.closeModal()" style="background: #666; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">Close</button>
-          <button onclick="window.depositsPage.initiateDeposit('${method.id}')" style="background: ${color}; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;" id="deposit-submit-btn">💰 I've Sent Payment</button>
+        <div style="padding: 16px; border-top: 1px solid #333; display: flex; gap: 8px; justify-content: flex-end;">
+          <button onclick="window.depositsPage.closeModal()" style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
+          <button onclick="window.depositsPage.initiateDeposit('${method.id}')" style="background: ${color}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;" id="deposit-submit-btn">💰 I've Sent Payment</button>
         </div>
       </div>
     `;
