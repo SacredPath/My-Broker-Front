@@ -51,7 +51,7 @@ class SettingsPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/src/components/app-shell.html')
+      fetch('/public/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
@@ -180,13 +180,26 @@ class SettingsPage {
     };
 
     // Populate form fields with database data
-    document.getElementById('display-name').value = profile.display_name || '';
-    document.getElementById('first-name').value = profile.first_name || '';
-    document.getElementById('last-name').value = profile.last_name || '';
-    document.getElementById('email').value = this.currentUser.email || '';
-    document.getElementById('phone').value = profile.phone || '';
-    document.getElementById('country').value = profile.country || '';
-    document.getElementById('bio').value = profile.bio || '';
+    const displayNameEl = document.getElementById('display-name');
+    if (displayNameEl) displayNameEl.value = profile.display_name || '';
+    
+    const firstNameEl = document.getElementById('first-name');
+    if (firstNameEl) firstNameEl.value = profile.first_name || '';
+    
+    const lastNameEl = document.getElementById('last-name');
+    if (lastNameEl) lastNameEl.value = profile.last_name || '';
+    
+    const emailEl = document.getElementById('email');
+    if (emailEl) emailEl.value = this.currentUser.email || '';
+    
+    const phoneEl = document.getElementById('phone');
+    if (phoneEl) phoneEl.value = profile.phone || '';
+    
+    const countryEl = document.getElementById('country');
+    if (countryEl) countryEl.value = profile.country || '';
+    
+    const bioEl = document.getElementById('bio');
+    if (bioEl) bioEl.value = profile.bio || '';
     
     // Log the loaded data for debugging
     console.log('Settings page loaded profile data:', profile);
@@ -401,12 +414,23 @@ class SettingsPage {
 
   resetProfile() {
     // Reset form to original values
-    document.getElementById('display-name').value = this.originalProfileData.displayName;
-    document.getElementById('first-name').value = this.originalProfileData.firstName;
-    document.getElementById('last-name').value = this.originalProfileData.lastName;
-    document.getElementById('phone').value = this.originalProfileData.phone;
-    document.getElementById('country').value = this.originalProfileData.country;
-    document.getElementById('bio').value = this.originalProfileData.bio;
+    const displayNameEl = document.getElementById('display-name');
+    if (displayNameEl) displayNameEl.value = this.originalProfileData.displayName;
+    
+    const firstNameEl = document.getElementById('first-name');
+    if (firstNameEl) firstNameEl.value = this.originalProfileData.firstName;
+    
+    const lastNameEl = document.getElementById('last-name');
+    if (lastNameEl) lastNameEl.value = this.originalProfileData.lastName;
+    
+    const phoneEl = document.getElementById('phone');
+    if (phoneEl) phoneEl.value = this.originalProfileData.phone;
+    
+    const countryEl = document.getElementById('country');
+    if (countryEl) countryEl.value = this.originalProfileData.country;
+    
+    const bioEl = document.getElementById('bio');
+    if (bioEl) bioEl.value = this.originalProfileData.bio;
 
     window.Notify.info('Profile reset to original values');
   }

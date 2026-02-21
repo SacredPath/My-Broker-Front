@@ -384,8 +384,10 @@ class APIClient {
   }
 }
 
-// Initialize global API client
-window.API = new APIClient();
+// Initialize global API client (singleton)
+if (!window.API) {
+  window.API = new APIClient();
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
