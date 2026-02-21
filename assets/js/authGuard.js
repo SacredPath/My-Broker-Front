@@ -233,9 +233,12 @@ class AuthGuard {
   // Handle sign in
   handleSignIn() {
     console.log('AuthGuard: User signed in');
+    console.log('AuthGuard: Current pathname:', window.location.pathname);
     
     // Check if there's an intended destination
     const intendedDestination = sessionStorage.getItem('intendedDestination');
+    console.log('AuthGuard: Intended destination:', intendedDestination);
+    
     if (intendedDestination && intendedDestination !== window.location.pathname) {
       console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
       sessionStorage.removeItem('intendedDestination');

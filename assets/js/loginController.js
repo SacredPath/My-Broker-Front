@@ -139,9 +139,8 @@ class LoginController {
         const result = await window.AuthService.loginWithEmailPassword(email, password);
         
         if (result.success) {
-          console.log('Login successful, redirecting to dashboard...');
-          // Redirect to home page
-          window.location.href = '/app/home.html';
+          console.log('Login successful, AuthGuard will handle redirect...');
+          // Redirect is handled by AuthGuard via AuthStateManager
         } else {
           console.error('Login failed:', result.error);
           this.handleLoginError(result.error);

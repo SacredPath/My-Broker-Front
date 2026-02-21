@@ -1,16 +1,14 @@
 /**
- * Authentication Guard
- * Protects routes and manages authentication state
+ * Central Auth Guard
+ * User pages requireAuth; backoffice pages requireRole('support'|'superadmin') via Edge Function 'rbac_me'
  */
 
-import { SupabaseClient } from './supabaseClient.js';
 import { AuthStateManager } from './authStateManager.js';
 
 class AuthGuard {
   constructor() {
     this.supabaseClient = window.SupabaseClient;
     this.authService = window.AuthService;
-    this.authStateManager = new AuthStateManager();
     this.protectedRoutes = new Map();
     this.init();
   }
@@ -23,24 +21,24 @@ class AuthGuard {
   // Define protected routes and their requirements
   setupProtectedRoutes() {
     // User-protected routes
-    this.protectedRoutes.set('/src/pages/dashboard.html', {
+    this.protectedRoutes.set('/app/home.html', {
       requireAuth: true,
       roles: []
     });
 
     // Backoffice routes (support role)
-    this.protectedRoutes.set('/src/pages/admin/support.html', {
+    this.protectedRoutes.set('/admin/support.html', {
       requireAuth: true,
       roles: ['support', 'superadmin']
     });
 
     // Superadmin routes
-    this.protectedRoutes.set('/src/pages/admin/settings.html', {
+    this.protectedRoutes.set('/admin/settings.html', {
       requireAuth: true,
       roles: ['superadmin']
     });
 
-    this.protectedRoutes.set('/src/pages/admin/users.html', {
+    this.protectedRoutes.set('/admin/users.html', {
       requireAuth: true,
       roles: ['superadmin']
     });
@@ -175,11 +173,11 @@ class AuthGuard {
 
   // Handle insufficient role
   handleInsufficientRole(userRole) {
-    let redirectUrl = '/src/pages/dashboard.html';
+    let redirectUrl = '/app/home.html';
     
     // Redirect based on current role
     if (userRole === 'user') {
-      redirectUrl = '/src/pages/dashboard.html';
+      redirectUrl = '/app/home.html';
       if (window.Notify) {
         window.Notify.warning('Access denied. Redirecting to dashboard.');
       }
@@ -228,20 +226,27 @@ class AuthGuard {
     // If currently on a protected route, redirect to home
     const requirements = this.getCurrentRouteRequirements();
     if (requirements.requireAuth) {
-      window.location.href = '/src/pages/index.html';
+      window.location.href = '/index.html';
     }
   }
 
   // Handle sign in
   handleSignIn() {
     console.log('AuthGuard: User signed in');
+    console.log('AuthGuard: Current pathname:', window.location.pathname);
     
     // Check if there's an intended destination
     const intendedDestination = sessionStorage.getItem('intendedDestination');
+    console.log('AuthGuard: Intended destination:', intendedDestination);
+    
     if (intendedDestination && intendedDestination !== window.location.pathname) {
       console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
       sessionStorage.removeItem('intendedDestination');
       window.location.href = intendedDestination;
+    } else {
+      // Default redirect to home page
+      console.log('AuthGuard: Redirecting to home page');
+      window.location.href = '/app/home.html';
     }
   }
 
