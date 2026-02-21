@@ -430,12 +430,12 @@ class KYCPage {
 
   async submitKYC() {
     try {
-      // Validate required fields
+      // Validate form
       if (!this.validateForm()) {
         return;
       }
 
-      // Validate all required files are uploaded
+      // Validate required files
       const requiredFiles = ['idFront', 'idBack', 'selfie', 'address'];
       const missingFiles = requiredFiles.filter(key => !this.uploadedFiles[key]);
       
@@ -446,6 +446,8 @@ class KYCPage {
 
       // Disable submit button
       const submitBtn = document.getElementById('submit-btn');
+      if (!submitBtn) return;
+      
       const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
@@ -460,17 +462,21 @@ class KYCPage {
         documents: this.uploadedFiles
       };
 
-      // Submit KYC
-      const { data, error } = await window.API.fetchEdge('kyc_submit', {
-        method: 'POST',
-        body: JSON.stringify(kycData)
-      });
+      // Update profile with KYC data
+      const { data, error } = await window.API.supabase
+        .from('profiles')
+        .update({
+          kyc_status: 'pending',
+          kyc_submitted_at: new Date().toISOString(),
+          kyc_documents: kycData.documents
+        })
+        .eq('user_id', this.currentUser.id);
 
       if (error) {
         throw error;
       }
 
-      // Update status
+      // Update local status
       this.kycStatus = {
         status: 'pending',
         submitted_at: new Date().toISOString(),
@@ -493,7 +499,7 @@ class KYCPage {
       const submitBtn = document.getElementById('submit-btn');
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.textContent = 'Submit KYC';
       }
     }
   }
