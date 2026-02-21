@@ -103,12 +103,24 @@ class DepositsPage {
     }
   }
 
-  async loadDepositSettings() {
+  async loadDepositSettings(retryCount = 0) {
     try {
       console.log('Loading deposit methods from database...');
       
+      // Check if serviceClient is available
+      if (!this.api || !this.api.serviceClient) {
+        if (retryCount < 5) {
+          console.warn(`API serviceClient not available, retrying in 1s... (${retryCount + 1}/5)`);
+          setTimeout(() => this.loadDepositSettings(retryCount + 1), 1000);
+          return;
+        } else {
+          console.error('API serviceClient not available after 5 retries');
+          throw new Error('API serviceClient not initialized');
+        }
+      }
+      
       // Load deposit methods from database
-      const { data, error } = await window.API.serviceClient
+      const { data, error } = await this.api.serviceClient
         .from('deposit_methods')
         .select('*')
         .eq('is_active', true)
