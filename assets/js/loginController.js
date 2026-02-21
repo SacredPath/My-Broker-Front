@@ -140,7 +140,8 @@ class LoginController {
         
         if (result.success) {
           console.log('Login successful, redirecting to dashboard...');
-          // Redirect is handled in auth.js
+          // Redirect to home page
+          window.location.href = '/app/home.html';
         } else {
           console.error('Login failed:', result.error);
           this.handleLoginError(result.error);
