@@ -713,13 +713,6 @@ class DepositsPage {
         method_type: method.method_type,
         currency: method.currency,
         amount: this.currentDepositAmount,
-        network: method.network,
-        address: method.address,
-        bank_name: method.bank_name,
-        account_number: method.account_number,
-        routing_number: method.routing_number,
-        paypal_email: method.paypal_email,
-        paypal_business_name: method.paypal_business_name,
         status: 'pending',
         created_at: new Date().toISOString()
       };
