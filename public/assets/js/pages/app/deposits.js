@@ -157,30 +157,103 @@ class DepositsPage {
         <p class="deposits-subtitle">Choose your preferred deposit method to fund your account</p>
       </div>
       
-      <div class="methods-grid">
+      <div class="deposit-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0;">
         ${activeMethods.map(method => this.renderMethodCard(method)).join('')}
       </div>
     `;
   }
 
   renderMethodCard(method) {
-    const colors = this.getMethodColors()[method.method_name] || 
-                   this.getMethodColors()[method.method_type] || 
-                   { primary: '#6B7280', secondary: '#4B5563', accent: '#9CA3AF' }; // fallback colors
-    const icon = this.getMethodIcon(method.method_type);
+    // Unique colors for each specific method
+    const methodSpecificColors = {
+      'USDT TRC20': { bg: '#10B981', border: '#059669', hover: '#047857' },
+      'USDT ERC20': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' },
+      'ACH Bank Transfer': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' },
+      'PayPal Payment': { bg: '#F59E0B', border: '#D97706', hover: '#B45309' }
+    };
+
+    // Fallback colors for method types
+    const methodTypeColors = {
+      'crypto': { bg: '#10B981', border: '#059669', hover: '#047857' },
+      'ach': { bg: '#3B82F6', border: '#2563EB', hover: '#1D4ED8' }, 
+      'paypal': { bg: '#8B5CF6', border: '#7C3AED', hover: '#6D28D9' }
+    };
+
+    const colors = methodSpecificColors[method.method_name] || methodTypeColors[method.method_type] || { bg: '#6B7280', border: '#4B5563', hover: '#374151' };
     
+    // Method icons
+    const methodIcons = {
+      'crypto': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>',
+      'ach': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="7" y1="21" x2="17" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+      'paypal': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"></path><path d="M12 14H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"></path></svg>'
+    };
+    
+    // Create key features (compact)
+    let keyFeatures = [];
+    if (method.method_type === 'crypto') {
+      let displayTime;
+      if (method.currency === 'USDT') {
+        displayTime = '60 minutes';
+      } else if (method.currency === 'BTC') {
+        displayTime = '60 minutes';
+      } else {
+        displayTime = `${(method.processing_time_hours || 0) * 60} minutes`;
+      }
+      
+      keyFeatures = [
+        `Network: ${method.network || 'Not set'}`,
+        `Currency: ${method.currency}`,
+        `Min: ${method.currency === 'USDT' ? '₮' : method.currency === 'BTC' ? '₿' : '$'}${this.formatMoney(method.min_amount || (method.currency === 'BTC' ? 100 : 0), method.currency === 'USDT' ? 6 : method.currency === 'BTC' ? 8 : 2)}`,
+        `Processing: ${displayTime}`
+      ];
+    } else if (method.method_type === 'ach') {
+      keyFeatures = [
+        `Bank: ${method.bank_name || 'Not set'}`,
+        `Account: ${method.account_number || '****1234'}`,
+        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
+        `Processing: ${method.processing_time_hours || 72} hours`
+      ];
+    } else if (method.method_type === 'paypal') {
+      keyFeatures = [
+        `Email: ${method.paypal_email || 'Not set'}`,
+        `Business: ${method.paypal_business_name || 'Not set'}`,
+        `Min: $${this.formatMoney(method.min_amount || 0, 2)}`,
+        `Processing: ${method.processing_time_hours || 24} hours`
+      ];
+    }
+
     return `
-      <div class="method-card" data-method-id="${method.id}" onclick="depositsPage.selectMethod('${method.id}')">
-        <div class="method-header">
-          <div class="method-icon" style="background: ${colors.primary}; color: white;">
-            ${icon}
+      <div class="deposit-method-card" data-method="${method.id}" onclick="window.depositsPage.selectMethod('${method.id}')" style="background: linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%); border: 2px solid ${colors.border}; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; min-height: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" onmouseover="this.style.transform='translateY(-3px) scale(1.02)'; this.style.boxShadow='0 8px 25px ${colors.bg}60'; this.style.borderColor='${colors.hover}'; this.style.background='linear-gradient(135deg, ${colors.bg}50 0%, ${colors.bg}70 100%)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'; this.style.borderColor='${colors.border}'; this.style.background='linear-gradient(135deg, ${colors.bg}40 0%, ${colors.bg}60 100%)';">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${colors.bg}, ${colors.hover});"></div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <div style="background: ${colors.bg}20; color: ${colors.bg}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px; transition: all 0.3s ease; border: 1px solid ${colors.bg}30;" onmouseover="this.style.background='${colors.bg}30'; this.style.transform='scale(1.1)'; this.style.borderColor='${colors.bg}50';" onmouseout="this.style.background='${colors.bg}20'; this.style.transform='scale(1)'; this.style.borderColor='${colors.bg}30';">
+            ${methodIcons[method.method_type] || methodIcons['crypto']}
           </div>
-          <div class="method-info">
-            <h3>${method.method_name}</h3>
-            <p class="method-type">${this.getMethodTypeLabel(method.method_type)}</p>
-            ${method.processing_time_hours ? `<p class="processing-time">Processing time: ${method.processing_time_hours} hours</p>` : ''}
+          <div style="flex: 1;">
+            <h3 style="color: #000000; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${method.method_name}</h3>
+            <p style="color: #1F2937; margin: 0; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.3);">${method.method_type.toUpperCase()}</p>
           </div>
         </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+          ${keyFeatures.map((feature, index) => `
+            <div style="color: #000000; display: flex; align-items: center; padding: 3px 0; font-weight: 600;">
+              <span style="color: ${colors.bg}; margin-right: 4px; font-size: 9px; font-weight: 700;">●</span>
+              <span style="line-height: 1.3; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">${feature}</span>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: #000000; font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">
+              Click for details
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: ${colors.bg}; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(2px)';" onmouseout="this.style.transform='translateX(0)';">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
         </div>
       </div>
     `;
