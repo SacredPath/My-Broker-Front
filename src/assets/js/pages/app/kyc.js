@@ -4,7 +4,7 @@
  */
 
 // Import shared app initializer
-import '/assets/js/_shared/app_init.js';
+import '/public/assets/js/_shared/app_init.js';
 
 class KYCPage {
   constructor() {
@@ -56,13 +56,10 @@ class KYCPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/components/app-shell.html')
+      fetch('/src/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
-          
-          // Ensure sidebar starts closed on desktop
-          document.documentElement.classList.remove('sidebar-open');
           
           if (window.AppShell) {
             window.AppShell.setupShell();
@@ -76,20 +73,11 @@ class KYCPage {
 
   async loadUserData() {
     try {
-      console.log('KYC: Loading user data with auto-profile creation...');
       this.currentUser = await window.AuthService.getCurrentUserWithProfile();
       
       if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
-      
-      console.log('KYC: User data loaded successfully:', this.currentUser);
-      console.log('KYC: Profile data:', this.currentUser.profile);
-      
-      if (!this.currentUser.profile) {
-        console.warn('KYC: Profile is null - this should not happen with auto-creation');
-      }
-      
     } catch (error) {
       console.error('Failed to load user data:', error);
       throw error;
@@ -98,20 +86,17 @@ class KYCPage {
 
   async loadKYCStatus() {
     try {
-      console.log('KYC: Loading KYC status via REST API...');
-      
-      if (!this.currentUser || !this.currentUser.id) {
-        throw new Error('User not available');
+      const { data, error } = await window.API.fetchEdge('kyc_status', {
+        method: 'GET'
+      });
+
+      if (error) {
+        throw error;
       }
 
-      const kycData = await window.API.getKYCStatus(this.currentUser.id);
-      console.log('KYC: Status response:', kycData);
-
-      this.kycStatus = kycData;
-      console.log('KYC: Status loaded:', this.kycStatus);
+      this.kycStatus = data.status || { status: 'not_submitted' };
     } catch (error) {
-      console.error('KYC: Failed to load KYC status:', error);
-      // Don't throw error - allow page to load even if status fails
+      console.error('Failed to load KYC status:', error);
       this.kycStatus = { status: 'not_submitted' };
     }
   }
@@ -161,7 +146,7 @@ class KYCPage {
               <div class="status-title">Verification Under Review</div>
               <div class="status-description">
                 Your identity verification is currently under review. This typically takes 1-2 business days. 
-                We'll notify you once review is complete.
+                We'll notify you once the review is complete.
               </div>
             </div>
           </div>
@@ -206,7 +191,7 @@ class KYCPage {
             <div class="status-content">
               <div class="status-title">Verification Rejected</div>
               <div class="status-description">
-                ${this.kycStatus.rejection_reason || 'Your identity verification was rejected. Please review requirements and resubmit your documents.'}
+                ${this.kycStatus.rejection_reason || 'Your identity verification was rejected. Please review the requirements and resubmit your documents.'}
               </div>
             </div>
           </div>
@@ -308,7 +293,7 @@ class KYCPage {
       const fileName = `${fileKey}_${Date.now()}_${file.name}`;
       const filePath = `kyc/${this.currentUser.id}/${fileName}`;
 
-      const { data, error } = await window.SupabaseClient.supabase.storage
+      const { data, error } = await window.supabaseClient.storage
         .from('KYC_KEEP')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -320,7 +305,7 @@ class KYCPage {
       }
 
       // Get public URL
-      const { data: { publicUrl } } = window.SupabaseClient.supabase.storage
+      const { data: { publicUrl } } = window.supabaseClient.storage
         .from('KYC_KEEP')
         .getPublicUrl(filePath);
 
@@ -429,8 +414,6 @@ class KYCPage {
   }
 
   async submitKYC() {
-    let originalText = '';
-    
     try {
       // Validate required fields
       if (!this.validateForm()) {
@@ -448,7 +431,7 @@ class KYCPage {
 
       // Disable submit button
       const submitBtn = document.getElementById('submit-btn');
-      originalText = submitBtn.textContent;
+      const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
@@ -463,20 +446,21 @@ class KYCPage {
       };
 
       // Submit KYC
-      console.log('KYC: Submitting via REST API...');
-      const result = await window.API.submitKYC(this.currentUser.id, kycData);
-      console.log('KYC: Submission result:', result);
+      const { data, error } = await window.API.fetchEdge('kyc_submit', {
+        method: 'POST',
+        body: JSON.stringify(kycData)
+      });
 
-      if (!result.ok) {
-        throw new Error(result.error || 'Failed to submit KYC');
+      if (error) {
+        throw error;
       }
 
       // Update status
       this.kycStatus = {
-        status: result.status,
-        submitted_at: result.profile?.kyc_submitted_at || new Date().toISOString(),
-        reviewed_at: result.profile?.kyc_reviewed_at || null,
-        rejection_reason: result.profile?.kyc_rejection_reason || null
+        status: 'pending',
+        submitted_at: new Date().toISOString(),
+        reviewed_at: null,
+        rejection_reason: null
       };
 
       // Re-render status
