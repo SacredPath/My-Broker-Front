@@ -89,15 +89,37 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
-      const response = await this.api.getDepositMethods();
-      if (response.success) {
-        this.depositSettings = response.data;
-        console.log('Deposit settings loaded:', response.data);
-      } else {
-        console.error('Failed to load deposit settings:', response.error);
+      console.log('Loading deposit methods from database...');
+      
+      // Load deposit methods from database
+      const { data, error } = await window.API.serviceClient
+        .from('deposit_methods')
+        .select('*')
+        .eq('is_active', true)
+        .order('method_type', { ascending: true });
+
+      if (error) {
+        console.error('Database error loading deposit methods:', error);
+        throw new Error(`Failed to load deposit methods: ${error.message}`);
       }
+      
+      this.depositSettings = {
+        methods: data || [],
+        currencies: [...new Set((data || []).map(method => method.currency))],
+        methodTypes: [...new Set((data || []).map(method => method.method_type))]
+      };
+      
+      console.log('Deposit methods loaded from database:', this.depositSettings.methods.length, 'methods');
     } catch (error) {
-      console.error('Error loading deposit settings:', error);
+      console.error('Failed to load deposit methods:', error);
+      if (window.Notify) {
+        window.Notify.error('Failed to load deposit methods. Please try again.');
+      }
+      this.depositSettings = {
+        methods: [],
+        currencies: [],
+        methodTypes: []
+      };
     }
   }
 
