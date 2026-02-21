@@ -725,7 +725,17 @@ class DepositsPage {
       };
 
       // Insert into deposit_requests table
-      const { data, error } = await window.API.serviceClient
+      let client;
+      if (this.api && this.api.serviceClient) {
+        client = this.api.serviceClient;
+      } else if (window.supabase && window.supabase.getClient) {
+        client = await window.supabase.getClient();
+        console.log('Using direct supabase client for deposit request');
+      } else {
+        throw new Error('No database client available');
+      }
+
+      const { data, error } = await client
         .from('deposit_requests')
         .insert(depositData)
         .select()
