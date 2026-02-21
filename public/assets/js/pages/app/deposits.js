@@ -164,7 +164,9 @@ class DepositsPage {
   }
 
   renderMethodCard(method) {
-    const colors = this.getMethodColors()[method.method_name] || this.getMethodColors()[method.method_type];
+    const colors = this.getMethodColors()[method.method_name] || 
+                   this.getMethodColors()[method.method_type] || 
+                   { primary: '#6B7280', secondary: '#4B5563', accent: '#9CA3AF' }; // fallback colors
     const icon = this.getMethodIcon(method.method_type);
     
     return `
@@ -213,7 +215,9 @@ class DepositsPage {
     const container = document.getElementById('deposit-form');
     if (!container || !this.selectedMethod) return;
 
-    const colors = this.getMethodColors()[this.selectedMethod.method_name] || this.getMethodColors()[this.selectedMethod.method_type];
+    const colors = this.getMethodColors()[this.selectedMethod.method_name] || 
+                   this.getMethodColors()[this.selectedMethod.method_type] || 
+                   { primary: '#6B7280', secondary: '#4B5563', accent: '#9CA3AF' }; // fallback colors
     
     container.innerHTML = `
       <div class="deposit-form-container">
