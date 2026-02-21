@@ -755,13 +755,13 @@
                 <div class="hero-features">
                     <div class="hero-feature">
                         <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                         <span>Advanced Controls</span>
                     </div>
                     <div class="hero-feature">
                         <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                         <span>Enhanced Security</span>
                     </div>
@@ -814,7 +814,7 @@
                 </div>
                 <p class="kyc-description" id="kyc-description">Loading KYC status...</p>
                 <div class="kyc-actions" id="kyc-actions">
-                    <button class="btn btn-primary" onclick="window.settingsPage.goToKYC()">Complete KYC</button>
+                    <button class="btn btn-primary" onclick="if(window.settingsPage && window.settingsPage.goToKYC) window.settingsPage.goToKYC(); else console.error('SettingsPage not initialized')">Complete KYC</button>
                 </div>
             </section>
 
@@ -1177,28 +1177,5 @@
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/settings.js"></script>
-    <script>
-        // Debug script to check settings functionality
-        setTimeout(() => {
-            console.log('=== SETTINGS DEBUG ===');
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
-            
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
-            console.log('AppShell initialized:', !!window.AppShell);
-            console.log('API client available:', !!window.API);
-            console.log('SettingsPage initialized:', !!window.settingsPage);
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    console.log('Manual toggle clicked');
-                    document.documentElement.classList.toggle('sidebar-open');
-                });
-            }
-        }, 1000);
-    </script>
-</body>
+    </body>
 </html>

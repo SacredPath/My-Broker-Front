@@ -3,9 +3,6 @@
  * Handles user settings and preferences
  */
 
-// Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
-
 class SettingsPage {
   constructor() {
     this.currentUser = null;
@@ -215,7 +212,7 @@ class SettingsPage {
       case 'not_submitted':
         statusText = 'Not Submitted';
         description = 'Complete identity verification to unlock full account features and higher withdrawal limits.';
-        actions = '<button class="btn btn-primary" onclick="window.settingsPage.goToKYC()">Complete KYC</button>';
+        actions = '<button class="btn btn-primary" onclick="if(window.settingsPage && window.settingsPage.goToKYC) window.settingsPage.goToKYC(); else console.error(\'SettingsPage not initialized\')">Complete KYC</button>';
         break;
       case 'pending':
         statusText = 'Pending Review';
@@ -230,7 +227,7 @@ class SettingsPage {
       case 'rejected':
         statusText = 'Rejected';
         description = this.kycStatus.rejection_reason || 'Your identity verification was rejected. Please review and resubmit.';
-        actions = '<button class="btn btn-primary" onclick="window.settingsPage.goToKYC()">Resubmit KYC</button>';
+        actions = '<button class="btn btn-primary" onclick="if(window.settingsPage && window.settingsPage.goToKYC) window.settingsPage.goToKYC(); else console.error(\'SettingsPage not initialized\')">Resubmit KYC</button>';
         break;
     }
 
