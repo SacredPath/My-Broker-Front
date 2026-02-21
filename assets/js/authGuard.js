@@ -162,12 +162,12 @@ class AuthGuard {
     }
     
     // Redirect
-    window.location.href = '/src/pages/login.html';
+    window.location.href = '/login.html';
     
     return { 
       allowed: false, 
       reason: 'not_authenticated',
-      redirect: '/src/pages/login.html'
+      redirect: '/login.html'
     };
   }
 
@@ -182,7 +182,7 @@ class AuthGuard {
         window.Notify.warning('Access denied. Redirecting to dashboard.');
       }
     } else {
-      redirectUrl = '/src/pages/login.html';
+      redirectUrl = '/login.html';
       if (window.Notify) {
         window.Notify.error('Access denied. Please contact support.');
       }
@@ -207,7 +207,7 @@ class AuthGuard {
       window.Notify.error('Authentication error. Please sign in again.');
     }
     
-    window.location.href = '/src/pages/login.html';
+    window.location.href = '/login.html';
     
     return { 
       allowed: false, 
@@ -224,7 +224,7 @@ class AuthGuard {
     sessionStorage.removeItem('intendedDestination');
     
     // Always redirect to login page after sign out
-    window.location.href = '/src/pages/login.html';
+    window.location.href = '/login.html';
   }
 
   // Handle sign in
@@ -243,7 +243,7 @@ class AuthGuard {
     } else {
       // Default redirect to home page
       console.log('AuthGuard: Redirecting to home page');
-      window.location.href = '/src/app/home.html';
+      window.location.href = '/app/home.html';
     }
   }
 
