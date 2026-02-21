@@ -47,6 +47,13 @@ class DepositsPage {
       await this.loadUserData();
       await this.loadDepositSettings();
       
+      // Check if deposit settings loaded successfully before continuing
+      if (!this.depositSettings) {
+        console.error('Cannot setup page: deposit settings not loaded');
+        this.showError('Failed to load deposit settings. Please refresh the page.');
+        return;
+      }
+      
       // Check for upgrade context
       this.checkUpgradeContext();
       
@@ -109,12 +116,45 @@ class DepositsPage {
       
       // Check if serviceClient is available
       if (!this.api || !this.api.serviceClient) {
-        if (retryCount < 5) {
-          console.warn(`API serviceClient not available, retrying in 1s... (${retryCount + 1}/5)`);
-          setTimeout(() => this.loadDepositSettings(retryCount + 1), 1000);
+        // Try to use direct supabase client as fallback
+        if (window.supabase && window.supabase.getClient) {
+          const supabaseClient = await window.supabase.getClient();
+          if (supabaseClient) {
+            console.log('Using direct supabase client as fallback');
+            const { data, error } = await supabaseClient
+              .from('deposit_methods')
+              .select('*')
+              .eq('is_active', true)
+              .order('method_type', { ascending: true });
+
+            if (error) {
+              console.error('Database error loading deposit methods:', error);
+              throw new Error(`Failed to load deposit methods: ${error.message}`);
+            }
+
+            console.log('Raw deposit methods data from database:', data);
+            console.log('Data length:', data?.length);
+            if (data && data.length > 0) {
+              console.log('Sample method data:', data[0]);
+            }
+            
+            this.depositSettings = {
+              methods: data || [],
+              currencies: [...new Set((data || []).filter(method => method.currency).map(method => method.currency))],
+              methodTypes: [...new Set((data || []).filter(method => method.method_type).map(method => method.method_type))]
+            };
+            
+            console.log('Deposit methods loaded from database:', this.depositSettings.methods.length, 'methods');
+            return;
+          }
+        }
+        
+        if (retryCount < 10) {
+          console.warn(`API serviceClient not available, retrying in 2s... (${retryCount + 1}/10)`);
+          setTimeout(() => this.loadDepositSettings(retryCount + 1), 2000);
           return;
         } else {
-          console.error('API serviceClient not available after 5 retries');
+          console.error('API serviceClient not available after 10 retries');
           throw new Error('API serviceClient not initialized');
         }
       }
