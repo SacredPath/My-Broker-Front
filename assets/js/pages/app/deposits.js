@@ -708,7 +708,6 @@ class DepositsPage {
       // Create deposit request
       const depositData = {
         user_id: userId,
-        method_id: methodId,
         method_name: method.method_name,
         method_type: method.method_type,
         currency: method.currency,
