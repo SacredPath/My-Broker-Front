@@ -349,7 +349,7 @@ class SignalsPage {
         <div class="signal-card ${hasAccess ? 'purchased' : ''}" data-signal-id="${signal.id}">
           <div class="signal-header">
             <h3 class="signal-title">${signal.category} Signal</h3>
-                <p class="signal-description">${signal.description}</p>
+                <p class="signal-description">${signal.description || `${signal.category} trading signal with ${signal.risk_rating?.toLowerCase() || 'medium'} risk level`}</p>
             </div>
             
             <div class="signal-meta">
