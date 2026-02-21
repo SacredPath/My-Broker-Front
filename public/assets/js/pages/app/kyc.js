@@ -78,6 +78,19 @@ class KYCPage {
       if (!this.currentUser) {
         throw new Error('User not authenticated');
       }
+
+      // If profile data is missing, fetch it using REST API (same as settings page)
+      if (!this.currentUser.profile) {
+        console.log('Profile data missing, fetching from database...');
+        const profileResult = await window.API.getProfile(this.currentUser.id);
+        
+        if (profileResult.success && profileResult.data) {
+          this.currentUser.profile = profileResult.data;
+          console.log('Profile data loaded from database:', this.currentUser.profile);
+        } else {
+          console.warn('Failed to load profile from database:', profileResult.error);
+        }
+      }
     } catch (error) {
       console.error('Failed to load user data:', error);
       throw error;
