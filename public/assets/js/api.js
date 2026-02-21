@@ -380,7 +380,7 @@ class APIClient {
     try {
       const { data, error } = await this.supabase
         .from('profiles')
-        .select('kyc_status, kyc_submitted_at, kyc_approved_at, kyc_rejection_reason')
+        .select('kyc_status, kyc_submitted_at, kyc_reviewed_at, kyc_rejection_reason')
         .eq('user_id', userId)
         .single();
 
@@ -405,7 +405,7 @@ class APIClient {
         data: {
           status: data.kyc_status || 'not_submitted',
           submitted_at: data.kyc_submitted_at,
-          approved_at: data.kyc_approved_at,
+          approved_at: data.kyc_reviewed_at, // Map reviewed_at to approved_at for consistency
           rejection_reason: data.kyc_rejection_reason
         }
       };
