@@ -286,7 +286,8 @@ class APIClient {
   // Deposit methods fetching
   async getDepositMethods() {
     try {
-      const data = await this.fetchSupabase('deposit_methods');
+      const response = await this.fetchSupabase('deposit_methods');
+      const data = response?.data || [];
       return this.transformDepositMethods(data);
     } catch (error) {
       console.error('Failed to fetch deposit methods:', error);
@@ -319,7 +320,8 @@ class APIClient {
   // Balance fetching with canonical mapping
   async fetchBalances() {
     try {
-      const data = await this.fetchSupabase('balances');
+      const response = await this.fetchSupabase('balances');
+      const data = response?.data || [];
       return this.transformBalanceData(data);
     } catch (error) {
       console.error('Failed to fetch balances:', error);
@@ -339,10 +341,11 @@ class APIClient {
   // Deposit request creation
   async createDepositRequest(depositData) {
     try {
-      const data = await this.fetchSupabase('deposit_requests', {
+      const response = await this.fetchSupabase('deposit_requests', {
         method: 'POST',
         body: depositData
       });
+      const data = response?.data || null;
       return this.transformDepositRequest(data);
     } catch (error) {
       console.error('Failed to create deposit request:', error);
