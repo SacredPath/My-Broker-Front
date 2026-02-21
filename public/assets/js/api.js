@@ -4,32 +4,18 @@
  * Bounded retries (max 1) and user-friendly error handling
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { supabase } from './supabaseClient.js';
 
 class APIClient {
   constructor() {
-    this.supabase = null;
+    this.supabase = supabase.supabase;
     this.keepAliveInterval = null;
     this.requestQueue = new Map();
     this.init();
   }
 
   init() {
-    this.initSupabase();
     this.startKeepAlive();
-  }
-
-  initSupabase() {
-    try {
-      const env = window.__ENV || {};
-      const SUPABASE_URL = env.SUPABASE_URL || "https://ubycoeyutauzjgxbozcm.supabase.co";
-      const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MDYyOTIsImV4cCI6MjA4NDk4MjI5Mn0.NUqdlArOGnCUEXuQYummEgsJKHoTk3fUvBarKIagHMM";
-      
-      this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('[APIClient] Initialized');
-    } catch (error) {
-      console.error('[APIClient] Init failed:', error);
-    }
   }
 
   // Direct Supabase REST API calls instead of edge functions

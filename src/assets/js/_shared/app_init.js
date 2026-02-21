@@ -6,12 +6,12 @@
 
 // Core dependencies that must be loaded first
 const CORE_DEPENDENCIES = [
-  '/src/js/api.js',
-  '/src/js/supabaseClient.js', 
-  '/src/js/auth.js',
-  '/src/js/money/money.js',
-  '/src/js/ui/notify.js',
-  '/src/js/ui/components.js'
+  '/assets/js/api.js',
+  '/assets/js/supabaseClient.js', 
+  '/assets/js/auth.js',
+  '/assets/js/money.js',
+  '/assets/js/notify.js',
+  '/assets/js/components.js'
 ];
 
 class AppInitializer {

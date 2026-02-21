@@ -4,7 +4,7 @@
  */
 
 // Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
+import '/assets/js/_shared/app_init.js';
 
 class TiersPage {
   constructor() {

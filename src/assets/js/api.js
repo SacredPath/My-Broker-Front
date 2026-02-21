@@ -4,32 +4,18 @@
  * Bounded retries (max 1) and user-friendly error handling
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { supabase } from './supabaseClient.js';
 
 class APIClient {
   constructor() {
-    this.supabase = null;
+    this.supabase = supabase.supabase;
     this.keepAliveInterval = null;
     this.requestQueue = new Map();
     this.init();
   }
 
   init() {
-    this.initSupabase();
     this.startKeepAlive();
-  }
-
-  initSupabase() {
-    try {
-      const env = window.__ENV || {};
-      const SUPABASE_URL = env.SUPABASE_URL || "https://ubycoeyutauzjgxbozcm.supabase.co";
-      const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MDYyOTIsImV4cCI6MjA4NDk4MjI5Mn0.NUqdlArOGnCUEXuQYummEgsJKHoTk3fUvBarKIagHMM";
-      
-      this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('[APIClient] Initialized');
-    } catch (error) {
-      console.error('[APIClient] Init failed:', error);
-    }
   }
 
   // Direct Supabase REST API calls instead of edge functions
@@ -286,7 +272,8 @@ class APIClient {
   // Deposit methods fetching
   async getDepositMethods() {
     try {
-      const data = await this.fetchSupabase('deposit_methods');
+      const response = await this.fetchSupabase('deposit_methods');
+      const data = response?.data || [];
       return this.transformDepositMethods(data);
     } catch (error) {
       console.error('Failed to fetch deposit methods:', error);
@@ -319,7 +306,8 @@ class APIClient {
   // Balance fetching with canonical mapping
   async fetchBalances() {
     try {
-      const data = await this.fetchSupabase('balances');
+      const response = await this.fetchSupabase('balances');
+      const data = response?.data || [];
       return this.transformBalanceData(data);
     } catch (error) {
       console.error('Failed to fetch balances:', error);
@@ -339,10 +327,11 @@ class APIClient {
   // Deposit request creation
   async createDepositRequest(depositData) {
     try {
-      const data = await this.fetchSupabase('deposit_requests', {
+      const response = await this.fetchSupabase('deposit_requests', {
         method: 'POST',
         body: depositData
       });
+      const data = response?.data || null;
       return this.transformDepositRequest(data);
     } catch (error) {
       console.error('Failed to create deposit request:', error);
@@ -375,6 +364,49 @@ class APIClient {
     return results;
   }
 
+  // KYC related methods
+  async getKYCStatus(userId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('kyc_status, kyc_submitted_at, kyc_reviewed_at, kyc_rejection_reason')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        // If no record found, return default status
+        if (error.code === 'PGRST116') {
+          return {
+            success: true,
+            data: {
+              status: 'not_submitted',
+              submitted_at: null,
+              approved_at: null,
+              rejection_reason: null
+            }
+          };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          status: data.kyc_status || 'not_submitted',
+          submitted_at: data.kyc_submitted_at,
+          approved_at: data.kyc_reviewed_at, // Map reviewed_at to approved_at for consistency
+          rejection_reason: data.kyc_rejection_reason
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get KYC status:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   // Cleanup method
   destroy() {
     if (this.keepAliveInterval) {
@@ -384,8 +416,10 @@ class APIClient {
   }
 }
 
-// Initialize global API client
-window.API = new APIClient();
+// Initialize global API client (singleton)
+if (!window.API) {
+  window.API = new APIClient();
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
@@ -403,6 +437,7 @@ export const {
   createDepositRequest,
   getCurrentUserId,
   getPortfolioSnapshot,
+  getKYCStatus,
   verifyEdgeFunctions,
   destroy
 } = APIClient;
