@@ -175,7 +175,7 @@ class TiersPage {
       
       // Handle missing data gracefully
       const tierName = tier.name || `Tier ${tier.id}`;
-      const tierDays = tier.days || 0;
+      const tierDays = tier.days || tier.investment_period_days || 0;
       const tierDailyRoi = tier.daily_roi || 0;
       
       return `
@@ -596,7 +596,7 @@ class TiersPage {
     
     if (currentTier) {
       const tierName = currentTier.name || `Tier ${currentTier.id}`;
-      const tierDays = currentTier.days || 0;
+      const tierDays = currentTier.days || currentTier.investment_period_days || 0;
       const tierDailyRoi = currentTier.daily_roi || 0;
       
       statsHTML = `
