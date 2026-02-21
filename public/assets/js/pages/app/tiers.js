@@ -156,6 +156,16 @@ class TiersPage {
     const tiersGrid = document.getElementById('tiers-grid');
     if (!tiersGrid) return;
 
+    if (this.tiers.length === 0) {
+      tiersGrid.innerHTML = `
+        <div class="tiers-header">
+          <h1>Investment Tiers</h1>
+          <p>Loading investment tiers...</p>
+        </div>
+      `;
+      return;
+    }
+
     const userTotalEquity = this.calculateTotalEquity();
     const currentTierId = this.getCurrentTierId();
 
@@ -185,12 +195,12 @@ class TiersPage {
           
           <div class="tier-allocations">
             <h4>Allocation Mix</h4>
-            ${Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
+            ${tier.allocation_mix ? Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
               <div class="allocation-item">
                 <span class="allocation-asset">${asset}</span>
                 <span class="allocation-percentage">${percentage}%</span>
               </div>
-            `).join('')}
+            `).join('') : '<div class="allocation-item"><span class="allocation-asset">Standard allocation</span></div>'}
           </div>
           
           <button class="tier-action" onclick="window.tiersPage.openTierModal(${tier.id})">
@@ -324,6 +334,9 @@ class TiersPage {
     `;
 
     shortfallSection.style.display = 'block';
+    
+    // Show the modal
+    modal.style.display = 'block';
   }
 
   async showConversionPreview(shortfall) {

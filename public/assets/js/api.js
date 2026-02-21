@@ -446,7 +446,9 @@ class APIClient {
         order: { min_amount: 'asc' }
       });
       
-      return response?.data || [];
+      const tiers = response?.data || [];
+      console.log('[API] Tiers loaded from database:', tiers.length, 'items');
+      return tiers;
     } catch (error) {
       console.error('Failed to fetch tiers:', error);
       return [];
