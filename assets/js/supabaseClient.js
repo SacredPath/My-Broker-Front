@@ -160,7 +160,7 @@ class SupabaseClient {
   }
 
   // Require authentication - redirect if not authenticated
-  async requireAuth(redirectTo = '/login.html') {
+  async requireAuth(redirectTo = '/src/pages/login.html') {
     try {
       const session = await this.getSession();
       
@@ -181,7 +181,7 @@ class SupabaseClient {
   }
 
   // Require specific role - redirect if user doesn't have required role
-  async requireRole(requiredRole, redirectTo = '/login.html') {
+  async requireRole(requiredRole, redirectTo = '/src/pages/login.html') {
     try {
       // First ensure user is authenticated
       const session = await this.requireAuth(redirectTo);
