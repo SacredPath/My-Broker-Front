@@ -334,6 +334,20 @@ class DepositsPage {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
+    // Debug: Check modal's actual styles and visibility
+    setTimeout(() => {
+      console.log('Modal debug info:');
+      console.log('- Modal element:', modal);
+      console.log('- Modal display style:', modal.style.display);
+      console.log('- Modal computed style:', window.getComputedStyle(modal).display);
+      console.log('- Modal z-index:', modal.style.zIndex);
+      console.log('- Modal position:', modal.style.position);
+      console.log('- Modal visibility:', window.getComputedStyle(modal).visibility);
+      console.log('- Modal in DOM:', document.body.contains(modal));
+      console.log('- Modal offsetWidth:', modal.offsetWidth);
+      console.log('- Modal offsetHeight:', modal.offsetHeight);
+    }, 100);
+    
     console.log('Modal should now be visible');
     
     // Add click outside to close
