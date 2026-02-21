@@ -89,6 +89,10 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
+      console.log('[DEPOSITS] loadDepositSettings called');
+      console.log('[DEPOSITS] API client available:', !!this.api);
+      console.log('[DEPOSITS] API client object:', this.api);
+      
       // Check if API client is available
       if (!this.api) {
         console.warn('API client not available, retrying in 1 second...');
@@ -106,7 +110,10 @@ class DepositsPage {
         console.log('Deposit settings initialized with defaults');
       }
       
+      console.log('[DEPOSITS] Calling API getDepositMethods...');
       const response = await this.api.getDepositMethods();
+      console.log('[DEPOSITS] API response:', response);
+      
       if (response.success) {
         this.depositSettings = response.data;
         console.log('Deposit settings loaded:', response.data);
