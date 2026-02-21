@@ -269,6 +269,58 @@
             color: var(--text-secondary);
             font-size: 7px;
         }
+        
+        /* Mobile Responsive - Further reduce sizes on mobile */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 15px 10px;
+                margin-bottom: 10px;
+            }
+            
+            .hero-title {
+                font-size: 0.8em;
+                margin-bottom: 4px;
+            }
+            
+            .hero-subtitle {
+                font-size: 0.4em;
+                margin-bottom: 8px;
+            }
+            
+            .hero-features {
+                gap: 10px;
+                margin-bottom: 8px;
+            }
+            
+            .hero-feature {
+                gap: 3px;
+                font-size: 0.3em;
+            }
+            
+            .feature-icon {
+                width: 8px;
+                height: 8px;
+            }
+            
+            .stats-row {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 5px;
+                margin: 10px 0;
+            }
+            
+            .stat-item {
+                padding: 6px;
+            }
+            
+            .stat-number {
+                font-size: 0.6em;
+                margin-bottom: 2px;
+            }
+            
+            .stat-label {
+                font-size: 5px;
+            }
+        }
     </style>
 </head>
 <body>
