@@ -330,3 +330,16 @@ window.API = new APIClient();
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = APIClient;
 }
+
+// Export individual methods for convenience
+export const {
+  fetchSupabase,
+  fetchEdge,
+  getProfile,
+  updateProfile,
+  fetchBalances,
+  getDepositMethods,
+  createDepositRequest,
+  verifyEdgeFunctions,
+  destroy
+} = APIClient;
