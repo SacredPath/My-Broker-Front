@@ -120,7 +120,7 @@ class HomePage {
       // Load portfolio data for invested amount and profit
       let portfolioData = null;
       try {
-        portfolioData = await window.API.getPortfolioSnapshot(userId);
+        portfolioData = await window.API.getPortfolioSnapshot();
       } catch (portfolioError) {
         console.warn('[HomePage] Portfolio data unavailable:', portfolioError.message);
       }

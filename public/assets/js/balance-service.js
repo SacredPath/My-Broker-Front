@@ -61,7 +61,7 @@ class BalanceService {
       console.log('[BalanceService] Fetching fresh balances from database');
       
       // Fetch from wallet_balances table (single source of truth)
-      const { data, error } = await api.serviceClient
+      const { data, error } = await api.supabase
         .from('wallet_balances')
         .select('*')
         .eq('user_id', userId);
