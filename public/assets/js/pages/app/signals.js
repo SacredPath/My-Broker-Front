@@ -117,7 +117,7 @@ class SignalsPage {
       // Load signals from signals table using shared client
       const { data, error } = await window.API.supabase
         .from('signals')
-        .select("id,category,risk_level,description,price_usdt,access_days,type,status,created_at")
+        .select("id,category,risk_level,price_usdt,access_days,type,status,created_at")
         .eq('status', 'active')
         .order('created_at', { ascending: false });
       
@@ -131,7 +131,8 @@ class SignalsPage {
         ...s,
         price: parseFloat(s.price_usdt) || 0,
         risk_rating: s.risk_level,
-        access_days: s.access_days
+        access_days: s.access_days,
+        description: `${s.category} trading signal with ${s.risk_level?.toLowerCase() || 'medium'} risk level`
       }));
       
       console.log('Signals loaded from database:', this.signals.length, 'signals');
