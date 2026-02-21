@@ -89,6 +89,15 @@ class DepositsPage {
 
   async loadDepositSettings() {
     try {
+      // Initialize deposit settings if not already set
+      if (!this.depositSettings) {
+        this.depositSettings = {
+          methods: [],
+          currencies: [],
+          processing: false
+        };
+      }
+      
       const response = await this.api.getDepositMethods();
       if (response.success) {
         this.depositSettings = response.data;
