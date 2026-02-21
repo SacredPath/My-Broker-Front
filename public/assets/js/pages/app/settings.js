@@ -372,12 +372,23 @@ class SettingsPage {
     const settings = { ...defaults, ...preferences };
 
     // Set toggle states
-    document.getElementById('email-notifications').checked = settings.emailNotifications;
-    document.getElementById('inapp-notifications').checked = settings.inappNotifications;
-    document.getElementById('deposit-notifications').checked = settings.depositNotifications;
-    document.getElementById('withdrawal-notifications').checked = settings.withdrawalNotifications;
-    document.getElementById('roi-notifications').checked = settings.roiNotifications;
-    document.getElementById('marketing-notifications').checked = settings.marketingNotifications;
+    const emailNotifEl = document.getElementById('email-notifications');
+    if (emailNotifEl) emailNotifEl.checked = settings.emailNotifications;
+    
+    const inappNotifEl = document.getElementById('inapp-notifications');
+    if (inappNotifEl) inappNotifEl.checked = settings.inappNotifications;
+    
+    const depositNotifEl = document.getElementById('deposit-notifications');
+    if (depositNotifEl) depositNotifEl.checked = settings.depositNotifications;
+    
+    const withdrawNotifEl = document.getElementById('withdrawal-notifications');
+    if (withdrawNotifEl) withdrawNotifEl.checked = settings.withdrawalNotifications;
+    
+    const roiNotifEl = document.getElementById('roi-notifications');
+    if (roiNotifEl) roiNotifEl.checked = settings.roiNotifications;
+    
+    const marketingNotifEl = document.getElementById('marketing-notifications');
+    if (marketingNotifEl) marketingNotifEl.checked = settings.marketingNotifications;
   }
 
   async saveProfile() {
@@ -438,12 +449,12 @@ class SettingsPage {
   async saveNotifications() {
     try {
       const preferences = {
-        emailNotifications: document.getElementById('email-notifications').checked,
-        inappNotifications: document.getElementById('inapp-notifications').checked,
-        depositNotifications: document.getElementById('deposit-notifications').checked,
-        withdrawalNotifications: document.getElementById('withdrawal-notifications').checked,
-        roiNotifications: document.getElementById('roi-notifications').checked,
-        marketingNotifications: document.getElementById('marketing-notifications').checked
+        emailNotifications: document.getElementById('email-notifications')?.checked || false,
+        inappNotifications: document.getElementById('inapp-notifications')?.checked || false,
+        depositNotifications: document.getElementById('deposit-notifications')?.checked || false,
+        withdrawalNotifications: document.getElementById('withdrawal-notifications')?.checked || false,
+        roiNotifications: document.getElementById('roi-notifications')?.checked || false,
+        marketingNotifications: document.getElementById('marketing-notifications')?.checked || false
       };
 
       // Save to localStorage
@@ -468,12 +479,23 @@ class SettingsPage {
       marketingNotifications: false
     };
 
-    document.getElementById('email-notifications').checked = defaults.emailNotifications;
-    document.getElementById('inapp-notifications').checked = defaults.inappNotifications;
-    document.getElementById('deposit-notifications').checked = defaults.depositNotifications;
-    document.getElementById('withdrawal-notifications').checked = defaults.withdrawalNotifications;
-    document.getElementById('roi-notifications').checked = defaults.roiNotifications;
-    document.getElementById('marketing-notifications').checked = defaults.marketingNotifications;
+    const emailNotifEl = document.getElementById('email-notifications');
+    if (emailNotifEl) emailNotifEl.checked = defaults.emailNotifications;
+    
+    const inappNotifEl = document.getElementById('inapp-notifications');
+    if (inappNotifEl) inappNotifEl.checked = defaults.inappNotifications;
+    
+    const depositNotifEl = document.getElementById('deposit-notifications');
+    if (depositNotifEl) depositNotifEl.checked = defaults.depositNotifications;
+    
+    const withdrawNotifEl = document.getElementById('withdrawal-notifications');
+    if (withdrawNotifEl) withdrawNotifEl.checked = defaults.withdrawalNotifications;
+    
+    const roiNotifEl = document.getElementById('roi-notifications');
+    if (roiNotifEl) roiNotifEl.checked = defaults.roiNotifications;
+    
+    const marketingNotifEl = document.getElementById('marketing-notifications');
+    if (marketingNotifEl) marketingNotifEl.checked = defaults.marketingNotifications;
 
     window.Notify.info('Notification preferences reset to defaults');
   }
@@ -726,8 +748,8 @@ class SettingsPage {
   async saveSecurity() {
     try {
       const securitySettings = {
-        twoFactor: document.getElementById('two-factor').checked,
-        darkMode: document.getElementById('dark-mode').checked
+        twoFactor: document.getElementById('two-factor')?.checked || false,
+        darkMode: document.getElementById('dark-mode')?.checked || false
       };
 
       const { data, error } = await window.API.updateProfile(this.currentUser.id, securitySettings);
