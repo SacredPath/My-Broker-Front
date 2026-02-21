@@ -117,7 +117,7 @@ class SignalsPage {
       // Load signals from signals table using shared client
       const { data, error } = await window.API.supabase
         .from('signals')
-        .select("id,category,risk_level,price_usdt,access_days,type,status,created_at")
+        .select("id,category,risk_level,price,access_days,type,status,created_at")
         .eq('status', 'active')
         .order('created_at', { ascending: false });
       
@@ -129,7 +129,7 @@ class SignalsPage {
       
       this.signals = (data || []).map(s => ({
         ...s,
-        price: parseFloat(s.price_usdt) || 0,
+        price: parseFloat(s.price) || 0,
         risk_rating: s.risk_level,
         access_days: s.access_days,
         description: `${s.category} trading signal with ${s.risk_level?.toLowerCase() || 'medium'} risk level`
@@ -282,10 +282,10 @@ class SignalsPage {
     // Apply sorting
     switch (this.filters.sort) {
       case 'price-low':
-        filtered.sort((a, b) => a.price_usdt - b.price_usdt);
+        filtered.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        filtered.sort((a, b) => b.price_usdt - a.price_usdt);
+        filtered.sort((a, b) => b.price - a.price);
         break;
       case 'popular':
         filtered.sort((a, b) => (b.purchase_count || 0) - (a.purchase_count || 0));
@@ -361,7 +361,7 @@ class SignalsPage {
             <div class="signal-details">
                 <div class="detail-item">
                     <span class="detail-label">Price</span>
-                    <span class="detail-value price">₮${this.formatMoney(signal.price_usdt, 6)}</span>
+                    <span class="detail-value price">₮${this.formatMoney(signal.price, 6)}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Duration</span>
@@ -433,8 +433,8 @@ class SignalsPage {
     
     // Calculate total cost
     const totalCost = signal.type === 'subscription' 
-      ? signal.price_usdt 
-      : signal.price_usdt;
+      ? signal.price 
+      : signal.price;
 
     purchaseSummary.innerHTML = `
       <div class="purchase-row">
@@ -511,7 +511,7 @@ class SignalsPage {
         user_id: userId,
         signal_id: this.selectedSignal.id,
         signal_string_id: this.selectedSignal.id,
-        purchase_price: this.selectedSignal.price_usdt,
+        purchase_price: this.selectedSignal.price,
         purchase_type: this.selectedSignal.type,
         access_duration: this.selectedSignal.access_days,
         access_expires_at: this.calculateExpiryDate(this.selectedSignal.access_days),
@@ -530,7 +530,7 @@ class SignalsPage {
       }
 
       // Show deposit instructions
-      this.showDepositInstructions(depositAddress, this.selectedSignal.price_usdt, purchase.id);
+      this.showDepositInstructions(depositAddress, this.selectedSignal.price, purchase.id);
 
     } catch (error) {
       console.error('Purchase failed:', error);
@@ -641,7 +641,7 @@ class SignalsPage {
 
     if (!addressError && addressData?.address) {
       window.Notify.success('Deposit address is now available!');
-      this.showDepositInstructions(addressData.address, this.selectedSignal.price_usdt, this.selectedSignal.id);
+      this.showDepositInstructions(addressData.address, this.selectedSignal.price, this.selectedSignal.id);
     } else {
       window.Notify.error('Deposit address still not available');
     }
