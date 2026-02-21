@@ -91,9 +91,9 @@ class DepositsPage {
       // Mock deposit settings for now since getDepositMethods doesn't exist
       const mockSettings = {
         methods: [
-          { id: 'bank', name: 'Bank Transfer', enabled: true, minAmount: 100, maxAmount: 50000 },
-          { id: 'crypto', name: 'Cryptocurrency', enabled: true, minAmount: 50, maxAmount: 100000 },
-          { id: 'card', name: 'Credit/Debit Card', enabled: false, minAmount: 10, maxAmount: 10000 }
+          { id: 'bank', name: 'Bank Transfer', is_active: true, minAmount: 100, maxAmount: 50000 },
+          { id: 'crypto', name: 'Cryptocurrency', is_active: true, minAmount: 50, maxAmount: 100000 },
+          { id: 'card', name: 'Credit/Debit Card', is_active: false, minAmount: 10, maxAmount: 10000 }
         ]
       };
       
