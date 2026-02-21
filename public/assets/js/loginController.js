@@ -257,42 +257,201 @@ class LoginController {
   }
 
   setupForgotPassword() {
-    // Use event delegation for password reset button
-    document.addEventListener('click', async (e) => {
+    // Get modal elements
+    const modal = document.getElementById('password-reset-modal');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const cancelBtn = document.getElementById('cancel-reset-btn');
+    const closeSuccessBtn = document.getElementById('close-success-btn');
+    const form = document.getElementById('password-reset-form');
+    const resetEmailInput = document.getElementById('reset-email');
+    
+    if (!modal) {
+      console.warn('Password reset modal not found');
+      return;
+    }
+
+    // Setup event listeners
+    const openModal = (e) => {
       if (e.target.closest('[data-action="password-reset"]')) {
         e.preventDefault();
         
-        // Get email from the login form if available
+        // Get email from login form if available
         const emailInput = document.getElementById('email');
         const defaultEmail = emailInput?.value.trim() || '';
         
-        const email = prompt('Enter your email address for password reset:', defaultEmail);
-        
-        if (email && email.trim()) {
-          await this.handlePasswordReset(email.trim());
+        // Set default email in modal
+        if (resetEmailInput && defaultEmail) {
+          resetEmailInput.value = defaultEmail;
         }
+        
+        // Show modal
+        modal.style.display = 'flex';
+        
+        // Focus email input
+        if (resetEmailInput) {
+          setTimeout(() => resetEmailInput.focus(), 100);
+        }
+      }
+    };
+
+    const closeModal = () => {
+      modal.style.display = 'none';
+      // Reset form
+      if (form) form.reset();
+      // Hide loading/success states
+      this.hideResetLoading();
+      this.hideResetSuccess();
+    };
+
+    // Handle modal open
+    document.addEventListener('click', openModal);
+
+    // Handle modal close
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+    
+    if (closeSuccessBtn) {
+      closeSuccessBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Handle form submission
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = resetEmailInput?.value.trim();
+        if (email) {
+          await this.handlePasswordReset(email);
+        }
+      });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        closeModal();
       }
     });
   }
 
   async handlePasswordReset(email) {
+    console.log('handlePasswordReset called with:', email);
+    console.log('AuthService available:', !!window.AuthService);
+    console.log('resetPassword function available:', !!(window.AuthService && window.AuthService.resetPassword));
+    
+    if (!window.AuthService) {
+      this.showResetError('Authentication service not available');
+      return;
+    }
+    
+    if (!window.AuthService.resetPassword) {
+      this.showResetError('Password reset function not available');
+      return;
+    }
+    
     if (!email) {
-      alert('Please enter your email address');
+      this.showResetError('Please enter your email address');
       return;
     }
 
     try {
-      const result = await window.AuthService.requestPasswordReset(email);
+      // Show loading state
+      this.showResetLoading();
+      
+      const result = await window.AuthService.resetPassword(email);
       
       if (result.success) {
-        alert('Password reset link sent! Check your email.');
+        // Show success state
+        this.showResetSuccess();
       } else {
-        alert(result.error || 'Failed to send password reset email');
+        this.showResetError(result.error || 'Failed to send password reset email');
       }
     } catch (error) {
       console.error('Password reset error:', error);
       const errorMessage = error.message || 'Failed to send password reset email';
-      alert(errorMessage);
+      this.showResetError(errorMessage);
+    }
+  }
+
+  showResetLoading() {
+    const loading = document.getElementById('reset-loading');
+    const form = document.getElementById('password-reset-form');
+    const success = document.getElementById('reset-success');
+    
+    if (loading) loading.style.display = 'block';
+    if (form) form.style.display = 'none';
+    if (success) success.style.display = 'none';
+  }
+
+  hideResetLoading() {
+    const loading = document.getElementById('reset-loading');
+    const form = document.getElementById('password-reset-form');
+    
+    if (loading) loading.style.display = 'none';
+    if (form) form.style.display = 'block';
+  }
+
+  showResetSuccess() {
+    const success = document.getElementById('reset-success');
+    const form = document.getElementById('password-reset-form');
+    const loading = document.getElementById('reset-loading');
+    
+    if (success) success.style.display = 'block';
+    if (form) form.style.display = 'none';
+    if (loading) loading.style.display = 'none';
+  }
+
+  hideResetSuccess() {
+    const success = document.getElementById('reset-success');
+    const form = document.getElementById('password-reset-form');
+    
+    if (success) success.style.display = 'none';
+    if (form) form.style.display = 'block';
+  }
+
+  showResetError(message) {
+    // Hide other states
+    this.hideResetLoading();
+    this.hideResetSuccess();
+    
+    // Show error message
+    const form = document.getElementById('password-reset-form');
+    if (form) {
+      // Remove existing error
+      const existingError = form.querySelector('.reset-error');
+      if (existingError) existingError.remove();
+      
+      // Create error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'reset-error';
+      errorDiv.style.cssText = `
+        color: #ef4444;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      `;
+      errorDiv.textContent = message;
+      
+      // Insert at the beginning of the form
+      form.insertBefore(errorDiv, form.firstChild);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (errorDiv.parentNode) {
+          errorDiv.remove();
+        }
+      }, 5000);
     }
   }
 
@@ -309,6 +468,9 @@ class LoginController {
 
   async checkExistingAuth() {
     try {
+      // Wait a bit for Supabase client to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check if user is already authenticated
       const result = await window.AuthService.getCurrentUserWithProfile();
       

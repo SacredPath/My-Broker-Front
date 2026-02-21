@@ -468,6 +468,9 @@ class LoginController {
 
   async checkExistingAuth() {
     try {
+      // Wait a bit for Supabase client to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check if user is already authenticated
       const result = await window.AuthService.getCurrentUserWithProfile();
       

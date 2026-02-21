@@ -60,7 +60,7 @@ class SupabaseClient {
         },
         global: {
           headers: {
-            'X-Client-Info': 'exchange-web/1.0.0'
+            'X-Client-Info': 'broker-web/1.0.0'
           }
         }
       });
@@ -130,15 +130,30 @@ class SupabaseClient {
   // Get current user
   async getCurrentUser() {
     try {
+      // Ensure client is initialized before attempting to get user
+      if (!this.initialized) {
+        await this.init();
+      }
+      
       const client = await this.getClient();
       const { data: { user }, error } = await client.auth.getUser();
       
       if (error) {
+        // Check if this is just "no user" error, not a real error
+        if (error.message?.includes('Invalid') || error.message?.includes('not found') || error.message?.includes('missing')) {
+          console.log('No authenticated user found - this is expected for public routes');
+          return null; // Don't throw error for missing user
+        }
         throw error;
       }
       
       return user;
     } catch (error) {
+      // Handle AuthSessionMissingError gracefully during initialization
+      if (error.message?.includes('Auth session missing') || error.name === 'AuthSessionMissingError') {
+        console.log('No authenticated session found - user not logged in');
+        return null;
+      }
       console.error('Failed to get current user:', error);
       return null;
     }
@@ -190,7 +205,7 @@ class SupabaseClient {
         
         // Redirect to appropriate page based on current role
         if (userRole === 'user') {
-          window.location.href = '/src/pages/dashboard.html';
+          window.location.href = '/app/home.html';
         } else {
           window.location.href = redirectTo;
         }
@@ -286,9 +301,6 @@ window.supabase = supabaseClient; // Legacy compatibility
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = supabaseClient;
 }
-
-// Export the class and instance
-export { SupabaseClient };
 
 // Export individual methods for convenience
 export const {

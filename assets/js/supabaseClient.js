@@ -130,6 +130,11 @@ class SupabaseClient {
   // Get current user
   async getCurrentUser() {
     try {
+      // Ensure client is initialized before attempting to get user
+      if (!this.initialized) {
+        await this.init();
+      }
+      
       const client = await this.getClient();
       const { data: { user }, error } = await client.auth.getUser();
       
@@ -144,6 +149,11 @@ class SupabaseClient {
       
       return user;
     } catch (error) {
+      // Handle AuthSessionMissingError gracefully during initialization
+      if (error.message?.includes('Auth session missing') || error.name === 'AuthSessionMissingError') {
+        console.log('No authenticated session found - user not logged in');
+        return null;
+      }
       console.error('Failed to get current user:', error);
       return null;
     }

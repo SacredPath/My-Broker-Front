@@ -54,10 +54,10 @@ class AuthStateManager {
       clearTimeout(AuthStateManager.debounceTimeout);
     }
 
-    // Debounce rapid auth changes (100ms delay)
+    // Debounce rapid auth changes (150ms delay to reduce duplicates)
     AuthStateManager.debounceTimeout = setTimeout(() => {
       AuthStateManager.processAuthChange(event, session);
-    }, 100);
+    }, 150);
   }
 
   /**
