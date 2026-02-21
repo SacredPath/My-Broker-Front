@@ -710,6 +710,7 @@ class DepositsPage {
         user_id: userId,
         amount: this.currentDepositAmount,
         currency: method.currency,
+        method: method.method_name, // Add missing method column
         status: 'pending',
         created_at: new Date().toISOString()
       };
