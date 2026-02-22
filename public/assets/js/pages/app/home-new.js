@@ -111,7 +111,10 @@ class HomePage {
       // Get current user ID
       const userId = await window.API.getCurrentUserId();
       if (!userId) {
-        throw new Error('User not authenticated');
+        console.warn('[HomePage] User not authenticated, showing guest view');
+        userDisplay.textContent = 'Guest';
+        this.renderGuestView();
+        return;
       }
 
       // Load real balance data using unified service
@@ -120,7 +123,7 @@ class HomePage {
       // Load portfolio data for invested amount and profit
       let portfolioData = null;
       try {
-        portfolioData = await window.API.getPortfolioSnapshot();
+        portfolioData = await window.API.getPortfolioSnapshot(userId);
       } catch (portfolioError) {
         console.warn('[HomePage] Portfolio data unavailable:', portfolioError.message);
       }
@@ -134,7 +137,7 @@ class HomePage {
       let activeSignals = 0;
       try {
         const { data: signalData, error: signalError } = await window.API.supabase
-          .from('trading_signals')
+          .from('signals')
           .select('id')
           .eq('status', 'active');
 
@@ -268,8 +271,8 @@ class HomePage {
       // Load recent signal purchases
       try {
         const { data: signalData, error: signalError } = await window.API.supabase
-          .from('trading_signals')
-          .select('title, created_at, category, risk_level')
+          .from('signals')
+          .select('title, price, created_at, category, risk_level')
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(5);
@@ -308,31 +311,21 @@ class HomePage {
   renderRecentActivity(activity) {
     const activityList = document.getElementById('recent-activity-list');
     if (!activityList) return;
-
-    if (!activity || activity.length === 0) {
-      activityList.innerHTML = '<p class="no-activity">No recent activity</p>';
+    
+    if (activity.length === 0) {
+      activityList.innerHTML = '<div class="no-activity">No recent activity</div>';
       return;
     }
-
-    const activityHTML = activity.map(item => {
-      const icon = this.getActivityIcon(item.type);
-      const timeAgo = this.formatTimeAgo(item.timestamp);
-      
-      return `
-        <div class="activity-item">
-          <div class="activity-icon ${item.type}">
-            ${icon}
-          </div>
-          <div class="activity-details">
-            <div class="activity-description">${item.description}</div>
-            <div class="activity-amount">${this.formatCurrency(item.amount, item.currency)}</div>
-          </div>
-          <div class="activity-time">${timeAgo}</div>
+    
+    activityList.innerHTML = activity.map(item => `
+      <div class="activity-item">
+        <div class="activity-icon">${this.getActivityIcon(item.type)}</div>
+        <div class="activity-details">
+          <div class="activity-title">${item.title}</div>
+          <div class="activity-time">${this.formatTime(item.created_at)}</div>
         </div>
-      `;
-    }).join('');
-
-    activityList.innerHTML = activityHTML;
+      </div>
+    `).join('');
   }
 
   getActivityIcon(type) {

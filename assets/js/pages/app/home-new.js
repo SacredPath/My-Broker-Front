@@ -111,7 +111,10 @@ class HomePage {
       // Get current user ID
       const userId = await window.API.getCurrentUserId();
       if (!userId) {
-        throw new Error('User not authenticated');
+        console.warn('[HomePage] User not authenticated, showing guest view');
+        userDisplay.textContent = 'Guest';
+        this.renderGuestView();
+        return;
       }
 
       // Load real balance data using unified service
@@ -308,31 +311,21 @@ class HomePage {
   renderRecentActivity(activity) {
     const activityList = document.getElementById('recent-activity-list');
     if (!activityList) return;
-
-    if (!activity || activity.length === 0) {
-      activityList.innerHTML = '<p class="no-activity">No recent activity</p>';
+    
+    if (activity.length === 0) {
+      activityList.innerHTML = '<div class="no-activity">No recent activity</div>';
       return;
     }
-
-    const activityHTML = activity.map(item => {
-      const icon = this.getActivityIcon(item.type);
-      const timeAgo = this.formatTimeAgo(item.timestamp);
-      
-      return `
-        <div class="activity-item">
-          <div class="activity-icon ${item.type}">
-            ${icon}
-          </div>
-          <div class="activity-details">
-            <div class="activity-description">${item.description}</div>
-            <div class="activity-amount">${this.formatCurrency(item.amount, item.currency)}</div>
-          </div>
-          <div class="activity-time">${timeAgo}</div>
+    
+    activityList.innerHTML = activity.map(item => `
+      <div class="activity-item">
+        <div class="activity-icon">${this.getActivityIcon(item.type)}</div>
+        <div class="activity-details">
+          <div class="activity-title">${item.title}</div>
+          <div class="activity-time">${this.formatTime(item.created_at)}</div>
         </div>
-      `;
-    }).join('');
-
-    activityList.innerHTML = activityHTML;
+      </div>
+    `).join('');
   }
 
   getActivityIcon(type) {
