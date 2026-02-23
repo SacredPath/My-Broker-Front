@@ -857,8 +857,30 @@ class SettingsPage {
       submitBtn.textContent = 'Changing...';
       submitBtn.disabled = true;
 
-      // Get Supabase client and update password
-      const supabaseClient = await window.SupabaseClient.getClient();
+      // Ensure Supabase client is properly initialized
+      console.log('Getting Supabase client...');
+      let supabaseClient;
+      try {
+        supabaseClient = await window.SupabaseClient.getClient();
+        console.log('Supabase client obtained:', supabaseClient);
+      } catch (clientError) {
+        console.error('Failed to get Supabase client:', clientError);
+        window.Notify.error('Failed to initialize authentication client');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // Double-check auth property exists
+      if (!supabaseClient || !supabaseClient.auth) {
+        console.error('Supabase client or auth property not available');
+        window.Notify.error('Authentication system not available');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+
+      console.log('Attempting password update...');
       const { data, error } = supabaseClient.auth.updateUser({
         password: newPassword
       });
@@ -868,9 +890,11 @@ class SettingsPage {
       submitBtn.disabled = false;
 
       if (error) {
+        console.error('Password update error:', error);
         throw error;
       }
 
+      console.log('Password update successful');
       // Close modal and show success
       event.target.closest('dialog').close();
       window.Notify.success('Password changed successfully!');
