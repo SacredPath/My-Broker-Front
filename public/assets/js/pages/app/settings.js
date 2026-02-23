@@ -106,7 +106,7 @@ class SettingsPage {
   async loadPayoutMethods() {
     try {
       const result = await window.API.getWithdrawalMethods();
-      this.payoutMethods = result.methods || [];
+      this.payoutMethods = result.data || [];
     } catch (error) {
       console.error('Failed to load payout methods:', error);
       this.payoutMethods = [];

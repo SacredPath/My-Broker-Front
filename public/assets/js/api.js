@@ -269,18 +269,47 @@ class APIClient {
     });
   }
 
-  // Withdrawal methods using edge functions
+  // Withdrawal methods using REST API
   async getWithdrawalMethods() {
-    return await this.fetchEdge('user_withdrawal_methods', {
-      method: 'GET'
-    });
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        return { methods: [] };
+      }
+      
+      return await this.fetchSupabase('withdrawal_methods', {
+        filters: { user_id: userId },
+        select: 'id,method,details,is_active,created_at,updated_at'
+      });
+    } catch (error) {
+      console.error('Failed to fetch withdrawal methods:', error);
+      return { methods: [] };
+    }
   }
 
   async upsertWithdrawalMethod(methodData) {
-    return await this.fetchEdge('user_withdrawal_methods_update', {
-      method: 'POST',
-      body: methodData
-    });
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+      
+      const dataToInsert = {
+        user_id: userId,
+        method: methodData.method,
+        details: methodData.details,
+        is_active: true
+      };
+      
+      return await this.fetchSupabase('withdrawal_methods', {
+        method: 'POST',
+        body: dataToInsert,
+        select: 'id,method,details,is_active,created_at,updated_at'
+      });
+    } catch (error) {
+      console.error('Failed to upsert withdrawal method:', error);
+      throw error;
+    }
   }
 
   // Deposit methods fetching
