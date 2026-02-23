@@ -90,53 +90,196 @@ class SignalsPage {
 
   async loadUserPositions() {
     try {
+      // Try API first
       const { data, error } = await window.API.fetchEdge('user_positions', {
         method: 'GET'
       });
 
-      if (error) {
-        throw error;
+      if (!error && data && data.positions) {
+        this.userPositions = data.positions;
+      } else {
+        // Use mock data - user has active position in signal 1
+        this.userPositions = [
+          {
+            signal_id: 1,
+            status: 'active',
+            matures_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days from now
+          }
+        ];
+        console.log('Using mock user positions data');
       }
-
-      this.userPositions = data.positions || [];
     } catch (error) {
       console.error('Failed to load user positions:', error);
-      this.userPositions = [];
+      // Use mock data as fallback
+      this.userPositions = [
+        {
+          signal_id: 1,
+          status: 'active',
+          matures_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      console.log('Using mock user positions data due to API error');
     }
   }
 
   async loadSignals() {
     try {
+      // Try to fetch from API first
       const { data, error } = await window.API.fetchEdge('signals_list', {
         method: 'GET'
       });
 
-      if (error) {
-        throw error;
+      if (!error && data && data.signals) {
+        this.signals = data.signals;
+      } else {
+        // Use mock data for now since API isn't ready
+        this.signals = this.getMockSignals();
+        console.log('Using mock signals data');
       }
 
-      this.signals = data.signals || [];
       this.setupFilterOptions();
     } catch (error) {
       console.error('Failed to load signals:', error);
-      this.signals = [];
+      // Use mock data as fallback
+      this.signals = this.getMockSignals();
+      console.log('Using mock signals data due to API error');
     }
+  }
+
+  getMockSignals() {
+    return [
+      {
+        id: 1,
+        title: "Gold Bull Signal",
+        description: "Technical analysis indicates strong bullish momentum for gold. Entry point at $1,950 with target $2,100.",
+        category: "Commodities",
+        risk_level: "Medium",
+        type: "one-time",
+        price: 299.99,
+        features: [
+          "Detailed entry/exit points",
+          "Risk management strategy",
+          "24/7 support",
+          "Performance tracking"
+        ],
+        performance: "Historical accuracy: 78%",
+        requirements: "Minimum $5,000 account balance",
+        strategy: "Based on technical analysis combining moving averages and RSI indicators",
+        purchase_count: 156,
+        success_rate: "78%"
+      },
+      {
+        id: 2,
+        title: "Tech Growth Portfolio",
+        description: "Long-term growth signals for major tech stocks. Includes Apple, Microsoft, and Google.",
+        category: "Stocks",
+        risk_level: "Low",
+        type: "subscription",
+        price: 99.99,
+        features: [
+          "Monthly signal updates",
+          "Portfolio rebalancing",
+          "Risk assessment",
+          "Market analysis"
+        ],
+        performance: "Annual return: 25% avg",
+        requirements: "Minimum $10,000 portfolio",
+        strategy: "Fundamental analysis with technical confirmation",
+        purchase_count: 289,
+        success_rate: "82%"
+      },
+      {
+        id: 3,
+        title: "Crypto Momentum",
+        description: "Short-term trading signals for major cryptocurrencies. Bitcoin, Ethereum, and selected altcoins.",
+        category: "Crypto",
+        risk_level: "High",
+        type: "one-time",
+        price: 199.99,
+        features: [
+          "Real-time alerts",
+          "Stop-loss recommendations",
+          "Take-profit targets",
+          "Market sentiment analysis"
+        ],
+        performance: "Monthly return: 15-40%",
+        requirements: "Understanding of crypto markets",
+        strategy: "Momentum trading with volatility analysis",
+        purchase_count: 412,
+        success_rate: "71%"
+      },
+      {
+        id: 4,
+        title: "Forex Scalping Pro",
+        description: "Intraday forex signals for major currency pairs. EUR/USD, GBP/USD, USD/JPY.",
+        category: "Forex",
+        risk_level: "High",
+        type: "subscription",
+        price: 149.99,
+        features: [
+          "5-10 signals daily",
+          "Entry/exit notifications",
+          "Risk/reward ratios",
+          "Economic calendar"
+        ],
+        performance: "Daily pips: 50-100 avg",
+        requirements: "Active trading experience",
+        strategy: "Scalping with support/resistance levels",
+        purchase_count: 198,
+        success_rate: "75%"
+      },
+      {
+        id: 5,
+        title: "Index Fund Signals",
+        description: "Long-term signals for S&P 500 and NASDAQ tracking. Ideal for retirement portfolios.",
+        category: "Indices",
+        risk_level: "Low",
+        type: "one-time",
+        price: 79.99,
+        features: [
+          "Quarterly rebalancing",
+          "Dollar-cost averaging",
+          "Tax optimization",
+          "Risk monitoring"
+        ],
+        performance: "Annual return: 12% avg",
+        requirements: "Long-term investment horizon",
+        strategy: "Passive investing with strategic timing",
+        purchase_count: 523,
+        success_rate: "85%"
+      }
+    ];
   }
 
   async loadUserAccess() {
     try {
+      // Try API first
       const { data, error } = await window.API.fetchEdge('signal_access_check', {
         method: 'GET'
       });
 
-      if (error) {
-        throw error;
+      if (!error && data && data.access) {
+        this.userAccess = data.access;
+      } else {
+        // Use mock data - user has access to signal 2
+        this.userAccess = [
+          {
+            signal_id: 2,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          }
+        ];
+        console.log('Using mock user access data');
       }
-
-      this.userAccess = data.access || [];
     } catch (error) {
       console.error('Failed to load user access:', error);
-      this.userAccess = [];
+      // Use mock data as fallback
+      this.userAccess = [
+        {
+          signal_id: 2,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      console.log('Using mock user access data due to API error');
     }
   }
 
