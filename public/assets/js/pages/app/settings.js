@@ -754,8 +754,46 @@ class SettingsPage {
     }
   }
 
+  resetNotifications() {
+    // Reset to defaults
+    const defaults = {
+      emailNotifications: true,
+      inappNotifications: true,
+      depositNotifications: true,
+      withdrawalNotifications: true,
+      roiNotifications: true,
+      marketingNotifications: false
+    };
+
+    const emailNotifEl = document.getElementById('email-notifications');
+    if (emailNotifEl) emailNotifEl.checked = defaults.emailNotifications;
+    
+    const inappNotifEl = document.getElementById('inapp-notifications');
+    if (inappNotifEl) inappNotifEl.checked = defaults.inappNotifications;
+    
+    const depositNotifEl = document.getElementById('deposit-notifications');
+    if (depositNotifEl) depositNotifEl.checked = defaults.depositNotifications;
+    
+    const withdrawNotifEl = document.getElementById('withdrawal-notifications');
+    if (withdrawNotifEl) withdrawNotifEl.checked = defaults.withdrawalNotifications;
+    
+    const roiNotifEl = document.getElementById('roi-notifications');
+    if (roiNotifEl) roiNotifEl.checked = defaults.roiNotifications;
+    
+    const marketingNotifEl = document.getElementById('marketing-notifications');
+    if (marketingNotifEl) marketingNotifEl.checked = defaults.marketingNotifications;
+
+    window.Notify.info('Notification preferences reset to defaults');
+  }
+
   changePassword() {
-    // Create password change modal
+    // Create modal for password change
+    const modal = this.createPasswordChangeModal();
+    document.body.appendChild(modal);
+    modal.showModal();
+  }
+
+  createPasswordChangeModal() {
     const modal = document.createElement('dialog');
     modal.className = 'modal';
     modal.innerHTML = `
@@ -764,57 +802,85 @@ class SettingsPage {
           <h3>Change Password</h3>
           <button class="modal-close" onclick="this.closest('dialog').close()">×</button>
         </div>
-        <div class="modal-body">
-          <form id="password-form">
-            <div class="form-group">
-              <label class="form-label">Current Password</label>
-              <input type="password" class="form-input" id="current-password" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">New Password</label>
-              <input type="password" class="form-input" id="new-password" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Confirm New Password</label>
-              <input type="password" class="form-input" id="confirm-password" required>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="window.settingsPage.updatePassword()">Update Password</button>
-        </div>
+        <form id="password-change-form" onsubmit="window.settingsPage.savePasswordChange(event)">
+          <div class="form-group">
+            <label class="form-label" for="current-password">Current Password</label>
+            <input type="password" class="form-input" id="current-password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-password">New Password</label>
+            <input type="password" class="form-input" id="new-password" required minlength="8">
+            <small style="color: var(--text-secondary); font-size: 12px;">Minimum 8 characters</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm-password">Confirm New Password</label>
+            <input type="password" class="form-input" id="confirm-password" required minlength="8">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+          </div>
+        </form>
       </div>
     `;
-    document.body.appendChild(modal);
-    modal.showModal();
+    return modal;
   }
 
-  async updatePassword() {
+  async savePasswordChange(event) {
+    event.preventDefault();
+    
     try {
-      const modal = document.querySelector('dialog[open]');
-      const currentPassword = modal.querySelector('#current-password').value;
-      const newPassword = modal.querySelector('#new-password').value;
-      const confirmPassword = modal.querySelector('#confirm-password').value;
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
 
       // Validation
-      if (newPassword !== confirmPassword) {
-        window.Notify.error('Passwords do not match');
-        return;
-      }
-
       if (newPassword.length < 8) {
         window.Notify.error('Password must be at least 8 characters long');
         return;
       }
 
-      // TODO: Implement password change via REST API when endpoint is available
-      window.Notify.error('Password change functionality not yet available');
-      return;
+      if (newPassword !== confirmPassword) {
+        window.Notify.error('New passwords do not match');
+        return;
+      }
+
+      if (currentPassword === newPassword) {
+        window.Notify.error('New password must be different from current password');
+        return;
+      }
+
+      // Show loading state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Changing...';
+      submitBtn.disabled = true;
+
+      // Use Supabase auth to update password
+      const { data, error } = await window.supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      // Reset button state
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+
+      if (error) {
+        throw error;
+      }
+
+      // Close modal and show success
+      event.target.closest('dialog').close();
+      window.Notify.success('Password changed successfully!');
 
     } catch (error) {
-      console.error('Failed to update password:', error);
-      window.Notify.error('Failed to update password');
+      console.error('Failed to change password:', error);
+      window.Notify.error('Failed to change password. Please check your current password and try again.');
+      
+      // Reset button state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      submitBtn.textContent = 'Change Password';
+      submitBtn.disabled = false;
     }
   }
 
