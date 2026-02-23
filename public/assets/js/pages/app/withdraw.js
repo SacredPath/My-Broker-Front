@@ -4,7 +4,7 @@
  */
 
 // Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
+import '/assets/js/_shared/app_init.js';
 
 class WithdrawPage {
   constructor() {
@@ -770,7 +770,13 @@ class WithdrawPage {
 }
 
 // Initialize page controller
-window.withdrawPage = new WithdrawPage();
+try {
+  console.log('Initializing WithdrawPage...');
+  window.withdrawPage = new WithdrawPage();
+  console.log('WithdrawPage initialized successfully:', !!window.withdrawPage);
+} catch (error) {
+  console.error('Failed to initialize WithdrawPage:', error);
+}
 
 // Export for potential testing
 if (typeof module !== 'undefined' && module.exports) {
