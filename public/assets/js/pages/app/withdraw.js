@@ -58,7 +58,7 @@ class WithdrawPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/src/components/app-shell.html')
+      fetch('/public/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
@@ -248,11 +248,11 @@ class WithdrawPage {
       return;
     }
 
-    if (availableUSD) {
+    if (availableUSD && this.userBalances?.USD?.available !== undefined) {
       availableUSD.textContent = `$${this.formatMoney(this.userBalances.USD.available)}`;
     }
 
-    if (availableUSDT) {
+    if (availableUSDT && this.userBalances?.USDT?.available !== undefined) {
       availableUSDT.textContent = `₮${this.formatMoney(this.userBalances.USDT.available, 6)}`;
     }
 

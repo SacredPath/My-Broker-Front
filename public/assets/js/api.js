@@ -509,6 +509,37 @@ class APIClient {
       case 'keepalive':
         return { data: { status: 'ok', timestamp: new Date().toISOString() } };
       
+      // Withdrawal-related functions - use REST API
+      case 'withdrawal_settings':
+        return await this.fetchSupabase('withdrawal_settings', {
+          select: '*',
+          filters: { active: true }
+        });
+      
+      case 'user_withdrawal_methods':
+        return await this.fetchSupabase('user_withdrawal_methods', {
+          filters: { user_id: await this.getCurrentUserId() }
+        });
+      
+      case 'withdrawal_limits_check':
+        // For now, return default limits
+        return {
+          data: {
+            daily_limit: 10000,
+            daily_used: 0,
+            monthly_limit: 50000,
+            monthly_used: 0,
+            min_withdrawal: 10,
+            max_withdrawal: 25000
+          }
+        };
+      
+      case 'withdraw_list':
+        return await this.fetchSupabase('withdrawal_requests', {
+          filters: { user_id: await this.getCurrentUserId() },
+          order: { created_at: 'desc' }
+        });
+      
       default:
         throw new Error(`Unknown edge function: ${functionName}`);
     }
