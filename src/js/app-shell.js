@@ -185,7 +185,7 @@ class AppShell {
       } else if (event === 'SIGNED_OUT') {
         this.currentUser = null;
         // Redirect to login
-        window.location.href = '/src/pages/login.html';
+        window.location.href = '/login.html';
       }
     }, {
       id: 'appShell',
@@ -234,7 +234,7 @@ class AppShell {
       
       if (!user) {
         // Redirect to login if not authenticated
-        window.location.href = '/src/pages/login.html';
+        window.location.href = '/login.html';
         return false;
       }
       
@@ -243,7 +243,7 @@ class AppShell {
       return true;
     } catch (error) {
       console.error('Authentication check failed:', error);
-      window.location.href = '/src/pages/login.html';
+      window.location.href = '/login.html';
       return false;
     }
   }
@@ -471,7 +471,7 @@ class AppShell {
     try {
       await window.AuthService.logout();
       // Redirect to login page
-      window.location.href = '/src/pages/login.html';
+      window.location.href = '/login.html';
     } catch (error) {
       console.error('Logout error:', error);
       // Use new toast system
