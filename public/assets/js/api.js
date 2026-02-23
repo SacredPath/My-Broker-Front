@@ -511,15 +511,36 @@ class APIClient {
       
       // Withdrawal-related functions - use REST API
       case 'withdrawal_settings':
-        return await this.fetchSupabase('withdrawal_settings', {
-          select: '*',
-          filters: { active: true }
-        });
+        try {
+          return await this.fetchSupabase('withdrawal_settings', {
+            select: '*',
+            filters: { active: true }
+          });
+        } catch (error) {
+          console.warn('withdrawal_settings table not found, using defaults');
+          return {
+            data: [
+              {
+                id: 1,
+                min_withdrawal: 10,
+                max_withdrawal: 25000,
+                daily_limit: 10000,
+                fee_percent: 0.01,
+                active: true
+              }
+            ]
+          };
+        }
       
       case 'user_withdrawal_methods':
-        return await this.fetchSupabase('user_withdrawal_methods', {
-          filters: { user_id: await this.getCurrentUserId() }
-        });
+        try {
+          return await this.fetchSupabase('user_withdrawal_methods', {
+            filters: { user_id: await this.getCurrentUserId() }
+          });
+        } catch (error) {
+          console.warn('user_withdrawal_methods table not found, returning empty');
+          return { data: [] };
+        }
       
       case 'withdrawal_limits_check':
         // For now, return default limits
@@ -535,10 +556,15 @@ class APIClient {
         };
       
       case 'withdraw_list':
-        return await this.fetchSupabase('withdrawal_requests', {
-          filters: { user_id: await this.getCurrentUserId() },
-          order: { created_at: 'desc' }
-        });
+        try {
+          return await this.fetchSupabase('withdrawal_requests', {
+            filters: { user_id: await this.getCurrentUserId() },
+            order: { created_at: 'desc' }
+          });
+        } catch (error) {
+          console.warn('withdrawal_requests table not found, returning empty');
+          return { data: [] };
+        }
       
       default:
         throw new Error(`Unknown edge function: ${functionName}`);

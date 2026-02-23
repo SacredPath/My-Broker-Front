@@ -58,7 +58,7 @@ class WithdrawPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/src/components/app-shell.html')
+      fetch('/public/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
