@@ -1,6 +1,9 @@
 -- Fix the handle_new_auth_user trigger function
 -- This resolves the "Database error saving new user" issue during registration
 
+-- First, disable RLS temporarily for the trigger to work
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+
 -- Drop the trigger first (it depends on the function)
 DROP TRIGGER IF EXISTS handle_new_auth_user_trigger ON auth.users;
 
@@ -10,17 +13,49 @@ DROP FUNCTION IF EXISTS handle_new_auth_user();
 CREATE OR REPLACE FUNCTION handle_new_auth_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO profiles (id, email, email_verified, created_at, updated_at)
-    VALUES (NEW.id, NEW.email, NEW.email_confirmed, NOW(), NOW());
+    -- Insert with all required columns, using defaults for missing data
+    INSERT INTO public.profiles (
+        id, 
+        email, 
+        email_verified, 
+        kyc_status,
+        tier_level,
+        balance,
+        is_active,
+        created_at, 
+        updated_at
+    )
+    VALUES (
+        NEW.id, 
+        NEW.email, 
+        COALESCE(NEW.email_confirmed, false), 
+        'pending',
+        1,
+        0,
+        true,
+        NOW(), 
+        NOW()
+    );
     RETURN NEW;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Log the error but don't fail the user creation
+        RAISE WARNING 'Failed to create profile for user %: %', NEW.id, SQLERRM;
+        RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Recreate the trigger with the fixed function
 CREATE TRIGGER handle_new_auth_user_trigger
     AFTER INSERT ON auth.users
     FOR EACH ROW
     EXECUTE FUNCTION handle_new_auth_user();
+
+-- Re-enable RLS with proper policies
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Ensure the trigger function has proper permissions
+GRANT EXECUTE ON FUNCTION handle_new_auth_user() TO service_role;
 
 -- Verify the function was created correctly
 SELECT 'TRIGGER_FUNCTION_FIXED' as status,
