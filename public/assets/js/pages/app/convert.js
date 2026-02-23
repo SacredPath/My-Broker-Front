@@ -188,29 +188,31 @@ class ConvertPage {
 
   async loadConversionSettings() {
     try {
-      // Use withdrawal_settings to get conversion fees
-      const { data, error } = await window.API.fetchEdge('withdrawal_settings', {
-        method: 'GET'
+      // Use app_settings table to get conversion fees
+      const { data, error } = await window.API.fetchSupabase('app_settings', {
+        select: 'withdrawal_fee_pct, withdrawal_daily_cap_usd, withdrawal_daily_cap_usdt'
       });
 
       if (error) {
         throw error;
       }
 
+      const settings = data?.[0] || {};
       // Use real settings only
       this.conversionSettings = {
-        auto_convert_enabled: data.auto_convert_enabled ?? true,
+        auto_convert_enabled: true,
+        refresh_interval: 30,
         fees: {
-          markup_percentage: data.markup_percentage ?? 0,
-          fixed_fee_usd: data.fixed_fee_usd ?? 0,
-          variable_fee_percentage: data.variable_fee_percentage ?? 0
+          markup_percentage: parseFloat(settings.withdrawal_fee_pct) || 0,
+          fixed_fee_usd: 0,
+          variable_fee_percentage: 0
         },
         rounding: {
-          usd_decimals: data.usd_decimals ?? 2,
-          usdt_decimals: data.usdt_decimals ?? 6
+          usd_decimals: 2,
+          usdt_decimals: 6
         },
-        rate_provider: data.rate_provider ?? 'fixed',
-        refresh_interval: data.refresh_interval ?? 30
+        rate_provider: 'fixed',
+        refresh_interval: 30
       };
     } catch (error) {
       console.error('Failed to load conversion settings:', error);
@@ -232,8 +234,10 @@ class ConvertPage {
 
   async loadConversionHistory() {
     try {
-      const { data, error } = await window.API.fetchEdge('conversion_history', {
-        method: 'GET'
+      const { data, error } = await window.API.fetchSupabase('conversions', {
+        select: 'id,usdt_amount,fx_rate,markup_pct,fee_fixed_usd,fee_pct,usd_gross,usd_net,status,created_at',
+        order: 'created_at.desc',
+        limit: 50
       });
 
       if (error) {
@@ -241,7 +245,7 @@ class ConvertPage {
       }
 
       // Use real conversions or empty array
-      this.lastConversions = data.conversions || [];
+      this.lastConversions = data || [];
       this.renderConversionHistory();
     } catch (error) {
       console.error('Failed to load conversion history:', error);
@@ -337,20 +341,20 @@ class ConvertPage {
     }
 
     try {
-      const { data, error } = await window.API.fetchEdge('fx_quote', {
-        method: 'POST',
-        body: {
-          from_currency: 'USDT',
-          to_currency: 'USD',
-          amount: amount
-        }
-      });
+      // Simple 1:1 conversion rate for now
+      const rate = 1.0;
+      const fees = this.calculateFees(amount);
+      const usdGross = amount * rate;
+      const usdNet = usdGross - fees.total;
 
-      if (error) {
-        throw error;
-      }
-
-      this.currentQuote = data.quote;
+      this.currentQuote = {
+        from_amount: amount,
+        to_amount: usdNet,
+        live_rate: rate,
+        fixed_fee: fees.fixed,
+        variable_fee: fees.variable,
+        total_fees: fees.total
+      };
       this.displayQuote();
 
     } catch (error) {
@@ -436,6 +440,19 @@ class ConvertPage {
     this.updateQuote();
   }
 
+  calculateFees(amount) {
+    const settings = this.conversionSettings?.fees || {};
+    const markupPercentage = parseFloat(settings.markup_percentage) || 0;
+    const fixedFee = parseFloat(settings.fixed_fee_usd) || 0;
+    const variableFee = amount * (markupPercentage / 100);
+    
+    return {
+      fixed: fixedFee,
+      variable: variableFee,
+      total: fixedFee + variableFee
+    };
+  }
+
   async executeConversion() {
     const amount = parseFloat(document.getElementById('convert-amount').value);
     
@@ -454,12 +471,28 @@ class ConvertPage {
     try {
       this.setButtonLoading('execute-convert-btn', true);
 
-      // Use real convert_usdt_to_usd endpoint
-      const { data, error } = await window.API.fetchEdge('convert_usdt_to_usd', {
+      // Calculate conversion locally
+      const rate = 1.0;
+      const fees = this.calculateFees(amount);
+      const usdGross = amount * rate;
+      const usdNet = usdGross - fees.total;
+
+      // Create conversion record
+      const conversionData = {
+        user_id: this.currentUser.id,
+        usdt_amount: amount,
+        fx_rate: rate,
+        markup_pct: fees.markup_percentage || 0,
+        fee_fixed_usd: fees.fixed,
+        fee_pct: fees.variable,
+        usd_gross: usdGross,
+        usd_net: usdNet,
+        status: 'completed'
+      };
+
+      const { data, error } = await window.API.fetchSupabase('conversions', {
         method: 'POST',
-        body: {
-          usdt_amount: amount
-        }
+        body: conversionData
       });
 
       if (error) {
@@ -467,8 +500,7 @@ class ConvertPage {
       }
 
       // Show success message
-      const usdReceived = data?.conversion?.usd_net || 0;
-      window.Notify.success(`Successfully converted ₮${this.formatMoney(amount, 6)} to $${this.formatMoney(usdReceived, 2)}!`);
+      window.Notify.success(`Successfully converted ₮${this.formatMoney(amount, 6)} to $${this.formatMoney(usdNet, 2)}!`);
 
       // Reset form
       this.resetForm();

@@ -306,7 +306,7 @@ class APIClient {
   // Balance fetching with canonical mapping
   async fetchBalances() {
     try {
-      const response = await this.fetchSupabase('balances');
+      const response = await this.fetchSupabase('wallet_balances');
       const data = response?.data || [];
       return this.transformBalanceData(data);
     } catch (error) {
@@ -316,12 +316,16 @@ class APIClient {
   }
 
   transformBalanceData(data) {
-    if (!data) return [];
-    return data.map(item => ({
-      symbol: item.symbol,
-      amount: item.amount,
-      value: item.usd_value || 0
-    }));
+    if (!data) return {};
+    // Transform wallet_balances to expected format
+    const balances = {};
+    data.forEach(item => {
+      balances[item.currency] = {
+        available: parseFloat(item.available) || 0,
+        total: parseFloat(item.available) || 0
+      };
+    });
+    return balances;
   }
 
   // Deposit request creation
