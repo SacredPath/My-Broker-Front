@@ -5,6 +5,7 @@
 
 class SignalsPage {
   constructor() {
+    console.log('SignalsPage constructor called');
     this.currentUser = null;
     this.signals = [];
     this.userAccess = [];
@@ -24,6 +25,7 @@ class SignalsPage {
       console.warn("SignalsPage: API client not found on load. Retrying in 500ms...");
       setTimeout(() => this.retryInit(), 500);
     } else {
+      console.log("SignalsPage: API client found, initializing...");
       this.init();
     }
   }
@@ -732,7 +734,13 @@ class SignalsPage {
 }
 
 // Initialize page controller
-window.signalsPage = new SignalsPage();
+try {
+  console.log('Creating SignalsPage instance...');
+  window.signalsPage = new SignalsPage();
+  console.log('SignalsPage instance created successfully:', !!window.signalsPage);
+} catch (error) {
+  console.error('Failed to create SignalsPage instance:', error);
+}
 
 // Export for potential testing
 if (typeof module !== 'undefined' && module.exports) {
