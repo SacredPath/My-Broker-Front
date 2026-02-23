@@ -331,7 +331,7 @@ class ConvertPage {
     }
 
     // Check if amount exceeds available balance
-    if (amount > this.userBalances.USDT.available) {
+    if (!this.userBalances || !this.userBalances.USDT || amount > this.userBalances.USDT.available) {
       this.showQuoteError('Insufficient USDT balance');
       return;
     }
@@ -431,7 +431,8 @@ class ConvertPage {
 
   setMaxAmount() {
     const amountInput = document.getElementById('convert-amount');
-    amountInput.value = this.userBalances.USDT.available;
+    const maxAmount = this.userBalances?.USDT?.available || 0;
+    amountInput.value = maxAmount;
     this.updateQuote();
   }
 
