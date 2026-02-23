@@ -115,7 +115,7 @@ class SignalsPage {
       const { data, error } = await window.API.serviceClient
         .from('trading_signals')
         .select('*')
-        .eq('is_active', true)
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) {

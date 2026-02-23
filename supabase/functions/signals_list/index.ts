@@ -14,8 +14,8 @@ serve(async (req: Request) => {
     
     const { data, error } = await supabase
       .from("trading_signals")
-      .select("id,title,category,risk_rating,description,price_usdt,access_days,type,pdf_path,is_active,created_at")
-      .eq("is_active", true)
+      .select("id,title,category,risk_rating,description,price_usdt,access_days,type,pdf_path,status,created_at")
+      .eq("status", "active")
       .order("created_at", { ascending: false });
 
     if (error) {

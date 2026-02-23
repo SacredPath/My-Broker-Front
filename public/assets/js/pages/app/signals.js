@@ -90,15 +90,19 @@ class SignalsPage {
 
   async loadUserPositions() {
     try {
-      const { data, error } = await window.API.fetchEdge('user_positions', {
-        method: 'GET'
-      });
+      // Query signal_purchases table directly
+      const { data, error } = await window.API.serviceClient
+        .from('signal_purchases')
+        .select('*')
+        .eq('user_id', window.API.getCurrentUserId())
+        .eq('status', 'active');
 
       if (error) {
-        throw error;
+        console.error('Failed to load user positions:', error);
+        this.userPositions = [];
+      } else {
+        this.userPositions = data || [];
       }
-
-      this.userPositions = data.positions || [];
     } catch (error) {
       console.error('Failed to load user positions:', error);
       this.userPositions = [];
@@ -107,15 +111,20 @@ class SignalsPage {
 
   async loadSignals() {
     try {
-      const { data, error } = await window.API.fetchEdge('signals_list', {
-        method: 'GET'
-      });
+      // Query trading_signals table directly
+      const { data, error } = await window.API.serviceClient
+        .from('trading_signals')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
 
       if (error) {
-        throw error;
+        console.error('Failed to load signals:', error);
+        this.signals = [];
+      } else {
+        this.signals = data || [];
       }
 
-      this.signals = data.signals || [];
       this.setupFilterOptions();
     } catch (error) {
       console.error('Failed to load signals:', error);
@@ -125,15 +134,19 @@ class SignalsPage {
 
   async loadUserAccess() {
     try {
-      const { data, error } = await window.API.fetchEdge('signal_access_check', {
-        method: 'GET'
-      });
+      // Query signal_access table directly
+      const { data, error } = await window.API.serviceClient
+        .from('signal_access')
+        .select('*')
+        .eq('user_id', window.API.getCurrentUserId())
+        .gt('expires_at', new Date().toISOString());
 
       if (error) {
-        throw error;
+        console.error('Failed to load user access:', error);
+        this.userAccess = [];
+      } else {
+        this.userAccess = data || [];
       }
-
-      this.userAccess = data.access || [];
     } catch (error) {
       console.error('Failed to load user access:', error);
       this.userAccess = [];
