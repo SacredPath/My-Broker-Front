@@ -261,7 +261,7 @@ class SettingsPage {
   }
 
   formatPayoutMethod(method) {
-    const icon = this.getMethodIcon(method.type);
+    const icon = this.getMethodIcon(method.method_type);
     const statusClass = method.is_active ? 'status-active' : 'status-inactive';
     const statusText = method.is_active ? 'Active' : 'Inactive';
 
@@ -270,12 +270,12 @@ class SettingsPage {
         <div class="method-header">
           <div class="method-type">
             <div class="method-icon">${icon}</div>
-            <div class="method-name">${method.name}</div>
+            <div class="method-name">${method.method_name}</div>
           </div>
           <div class="method-status ${statusClass}">${statusText}</div>
         </div>
         <div class="method-details">
-          ${this.formatMethodDetails(method)}
+          ${this.formatMethodDetails(method.method_type, method)}
         </div>
         <div class="method-actions">
           <button class="btn btn-small btn-outline" onclick="window.settingsPage.editPayoutMethod('${method.id}')">Edit</button>
@@ -297,53 +297,49 @@ class SettingsPage {
     return icons[type] || icons.bank;
   }
 
-  formatMethodDetails(method) {
-    let details = [];
+  formatMethodDetails(methodType, method) {
+    let detailsHtml = [];
     
-    switch (method.type) {
+    switch (methodType) {
       case 'bank':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Account Name</div>
-            <div class="detail-value">${method.details.account_name}</div>
+            <div class="detail-value">${method.account_holder_name}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Account Number</div>
-            <div class="detail-value">${method.details.account_number}</div>
+            <div class="detail-value">${method.account_number}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Bank Name</div>
-            <div class="detail-value">${method.details.bank_name}</div>
+            <div class="detail-value">${method.bank_name}</div>
           </div>`
         ];
         break;
       case 'paypal':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Email</div>
-            <div class="detail-value">${method.details.email}</div>
-          </div>`,
-          `<div class="detail-item">
-            <div class="detail-label">Account ID</div>
-            <div class="detail-value">${method.details.account_id}</div>
+            <div class="detail-value">${method.paypal_email}</div>
           </div>`
         ];
         break;
       case 'crypto':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Network</div>
-            <div class="detail-value">${method.details.network}</div>
+            <div class="detail-value">${method.network}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Address</div>
-            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${method.details.address}</div>
+            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${method.address}</div>
           </div>`
         ];
         break;
     }
 
-    return details.join('');
+    return detailsHtml.join('');
   }
 
   loadNotificationPreferences() {
