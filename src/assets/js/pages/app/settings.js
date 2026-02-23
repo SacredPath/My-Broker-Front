@@ -476,6 +476,7 @@ class SettingsPage {
   }
 
   changePassword() {
+    console.log('changePassword function called'); // Debug log
     // Create modal for password change
     const modal = this.createPasswordChangeModal();
     document.body.appendChild(modal);
