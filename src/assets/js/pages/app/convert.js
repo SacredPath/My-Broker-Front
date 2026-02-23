@@ -351,11 +351,8 @@ class ConvertPage {
       return;
     }
 
-    // Check if amount exceeds available balance
-    if (!this.userBalances || !this.userBalances.USDT || amount > this.userBalances.USDT.available) {
-      this.showQuoteError('Insufficient USDT balance');
-      return;
-    }
+    // Balance check moved to execution phase - allow quotes without balance
+    // This lets users see quotes even if they don't have funds yet
 
     try {
       // Simple 1:1 conversion rate for now
@@ -386,25 +383,37 @@ class ConvertPage {
     const quotePreview = document.getElementById('quote-preview');
     const quoteStatus = document.getElementById('quote-status');
     
-    // Update quote elements with safe defaults
-    document.getElementById('quote-usdt-amount').textContent = `₮${this.formatMoney(this.currentQuote?.from_amount || 0, 6)}`;
-    document.getElementById('quote-live-rate').textContent = `1 USDT = $${this.formatMoney(this.currentQuote?.live_rate || 0, 6)}`;
-    document.getElementById('quote-markup').textContent = `+${this.conversionSettings?.fees?.markup_percentage || 0}%`;
-    document.getElementById('quote-fixed-fee').textContent = `$${this.formatMoney(this.currentQuote?.fixed_fee || 0, 2)}`;
-    document.getElementById('quote-variable-fee').textContent = `$${this.formatMoney(this.currentQuote?.variable_fee || 0, 2)}`;
-    document.getElementById('quote-total-fees').textContent = `$${this.formatMoney(this.currentQuote?.total_fees || 0, 2)}`;
-    document.getElementById('quote-usd-received').textContent = `$${this.formatMoney(this.currentQuote?.to_amount || 0, 2)}`;
+    if (!quotePreview) {
+      console.error('Quote preview element not found');
+      return;
+    }
+    
+    // Update quote elements with safe defaults and null checks
+    const updateElement = (id, text) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = text;
+    };
+    
+    updateElement('quote-usdt-amount', `₮${this.formatMoney(this.currentQuote?.from_amount || 0, 6)}`);
+    updateElement('quote-live-rate', `1 USDT = $${this.formatMoney(this.currentQuote?.live_rate || 1.0, 6)}`);
+    updateElement('quote-markup', `+${this.conversionSettings?.fees?.markup_percentage || 0}%`);
+    updateElement('quote-fixed-fee', `$${this.formatMoney(this.currentQuote?.fixed_fee || 0, 2)}`);
+    updateElement('quote-variable-fee', `$${this.formatMoney(this.currentQuote?.variable_fee || 0, 2)}`);
+    updateElement('quote-total-fees', `$${this.formatMoney(this.currentQuote?.total_fees || 0, 2)}`);
+    updateElement('quote-usd-received', `$${this.formatMoney(this.currentQuote?.to_amount || 0, 2)}`);
     
     // Update rate breakdown with safe defaults
     const fromAmount = this.currentQuote?.from_amount || 0;
     const toAmount = this.currentQuote?.to_amount || 0;
-    const finalRate = fromAmount > 0 ? toAmount / fromAmount : 0;
-    document.getElementById('breakdown-live-rate').textContent = this.formatMoney(this.currentQuote?.live_rate || 0, 6);
-    document.getElementById('breakdown-markup-rate').textContent = `${this.conversionSettings?.fees?.markup_percentage || 0}%`;
-    document.getElementById('breakdown-final-rate').textContent = this.formatMoney(finalRate, 6);
+    const finalRate = fromAmount > 0 ? toAmount / fromAmount : 1.0;
+    updateElement('breakdown-live-rate', this.formatMoney(this.currentQuote?.live_rate || 1.0, 6));
+    updateElement('breakdown-markup-rate', `${this.conversionSettings?.fees?.markup_percentage || 0}%`);
+    updateElement('breakdown-final-rate', this.formatMoney(finalRate, 6));
     
     // Update status
-    quoteStatus.textContent = `Live (${new Date().toLocaleTimeString()})`;
+    if (quoteStatus) {
+      quoteStatus.textContent = `Live (${new Date().toLocaleTimeString()})`;
+    }
     
     quotePreview.style.display = 'block';
   }
@@ -413,9 +422,16 @@ class ConvertPage {
     const quotePreview = document.getElementById('quote-preview');
     const quoteStatus = document.getElementById('quote-status');
     
-    quoteStatus.textContent = 'Error';
-    quoteStatus.style.background = 'rgba(239, 68, 68, 0.1)';
-    quoteStatus.style.color = 'var(--error)';
+    if (!quotePreview) {
+      console.error('Quote preview element not found');
+      return;
+    }
+    
+    if (quoteStatus) {
+      quoteStatus.textContent = 'Error';
+      quoteStatus.style.background = 'rgba(239, 68, 68, 0.1)';
+      quoteStatus.style.color = 'var(--error)';
+    }
     
     // Show error message instead of quote
     quotePreview.innerHTML = `
