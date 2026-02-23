@@ -162,9 +162,9 @@ class SettingsPage {
     
     // Store original data for reset functionality
     this.originalProfileData = {
-      firstName: profile.first_name || '',
-      lastName: profile.last_name || '',
-      displayName: profile.display_name || '',
+      first_name: profile.first_name || '',
+      last_name: profile.last_name || '',
+      display_name: profile.display_name || '',
       phone: profile.phone || '',
       country: profile.country || '',
       bio: profile.bio || '',
@@ -391,8 +391,8 @@ class SettingsPage {
     try {
       const formData = new FormData(document.getElementById('profile-form'));
       const profileData = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
+        first_name: formData.get('firstName'),
+        last_name: formData.get('lastName'),
         phone: formData.get('phone'),
         country: formData.get('country'),
         bio: formData.get('bio')
@@ -422,13 +422,13 @@ class SettingsPage {
   resetProfile() {
     // Reset form to original values
     const displayNameEl = document.getElementById('display-name');
-    if (displayNameEl) displayNameEl.value = this.originalProfileData.displayName;
+    if (displayNameEl) displayNameEl.value = this.originalProfileData.display_name;
     
     const firstNameEl = document.getElementById('first-name');
-    if (firstNameEl) firstNameEl.value = this.originalProfileData.firstName;
+    if (firstNameEl) firstNameEl.value = this.originalProfileData.first_name;
     
     const lastNameEl = document.getElementById('last-name');
-    if (lastNameEl) lastNameEl.value = this.originalProfileData.lastName;
+    if (lastNameEl) lastNameEl.value = this.originalProfileData.last_name;
     
     const phoneEl = document.getElementById('phone');
     if (phoneEl) phoneEl.value = this.originalProfileData.phone;
