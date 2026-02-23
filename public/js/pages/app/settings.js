@@ -108,8 +108,8 @@ class SettingsPage {
 
   async loadPayoutMethods() {
     try {
-      const result = await window.API.getWithdrawalMethods();
-      this.payoutMethods = result.data || [];
+      // For now, set empty array since payout methods might be handled separately
+      this.payoutMethods = [];
     } catch (error) {
       console.error('Failed to load payout methods:', error);
       this.payoutMethods = [];
@@ -165,9 +165,9 @@ class SettingsPage {
     
     // Store original data for reset functionality
     this.originalProfileData = {
-      first_name: profile.first_name || '',
-      last_name: profile.last_name || '',
-      display_name: profile.display_name || '',
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      displayName: profile.display_name || '',
       phone: profile.phone || '',
       country: profile.country || '',
       bio: profile.bio || '',
@@ -261,7 +261,7 @@ class SettingsPage {
   }
 
   formatPayoutMethod(method) {
-    const icon = this.getMethodIcon(method.method_type);
+    const icon = this.getMethodIcon(method.type);
     const statusClass = method.is_active ? 'status-active' : 'status-inactive';
     const statusText = method.is_active ? 'Active' : 'Inactive';
 
@@ -270,12 +270,12 @@ class SettingsPage {
         <div class="method-header">
           <div class="method-type">
             <div class="method-icon">${icon}</div>
-            <div class="method-name">${method.method_name}</div>
+            <div class="method-name">${method.name}</div>
           </div>
           <div class="method-status ${statusClass}">${statusText}</div>
         </div>
         <div class="method-details">
-          ${this.formatMethodDetails(method.method_type, method)}
+          ${this.formatMethodDetails(method)}
         </div>
         <div class="method-actions">
           <button class="btn btn-small btn-outline" onclick="window.settingsPage.editPayoutMethod('${method.id}')">Edit</button>
@@ -297,49 +297,53 @@ class SettingsPage {
     return icons[type] || icons.bank;
   }
 
-  formatMethodDetails(methodType, method) {
-    let detailsHtml = [];
+  formatMethodDetails(method) {
+    let details = [];
     
-    switch (methodType) {
+    switch (method.type) {
       case 'bank':
-        detailsHtml = [
+        details = [
           `<div class="detail-item">
             <div class="detail-label">Account Name</div>
-            <div class="detail-value">${method.account_holder_name}</div>
+            <div class="detail-value">${method.details.account_name}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Account Number</div>
-            <div class="detail-value">${method.account_number}</div>
+            <div class="detail-value">${method.details.account_number}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Bank Name</div>
-            <div class="detail-value">${method.bank_name}</div>
+            <div class="detail-value">${method.details.bank_name}</div>
           </div>`
         ];
         break;
       case 'paypal':
-        detailsHtml = [
+        details = [
           `<div class="detail-item">
             <div class="detail-label">Email</div>
-            <div class="detail-value">${method.paypal_email}</div>
+            <div class="detail-value">${method.details.email}</div>
+          </div>`,
+          `<div class="detail-item">
+            <div class="detail-label">Account ID</div>
+            <div class="detail-value">${method.details.account_id}</div>
           </div>`
         ];
         break;
       case 'crypto':
-        detailsHtml = [
+        details = [
           `<div class="detail-item">
             <div class="detail-label">Network</div>
-            <div class="detail-value">${method.network}</div>
+            <div class="detail-value">${method.details.network}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Address</div>
-            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${method.address}</div>
+            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${method.details.address}</div>
           </div>`
         ];
         break;
     }
 
-    return detailsHtml.join('');
+    return details.join('');
   }
 
   loadNotificationPreferences() {
@@ -370,8 +374,8 @@ class SettingsPage {
     try {
       const formData = new FormData(document.getElementById('profile-form'));
       const profileData = {
-        first_name: formData.get('firstName'),
-        last_name: formData.get('lastName'),
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
         phone: formData.get('phone'),
         country: formData.get('country'),
         bio: formData.get('bio')
@@ -400,23 +404,12 @@ class SettingsPage {
 
   resetProfile() {
     // Reset form to original values
-    const displayNameEl = document.getElementById('display-name');
-    if (displayNameEl) displayNameEl.value = this.originalProfileData.display_name;
-    
-    const firstNameEl = document.getElementById('first-name');
-    if (firstNameEl) firstNameEl.value = this.originalProfileData.first_name;
-    
-    const lastNameEl = document.getElementById('last-name');
-    if (lastNameEl) lastNameEl.value = this.originalProfileData.last_name;
-    
-    const phoneEl = document.getElementById('phone');
-    if (phoneEl) phoneEl.value = this.originalProfileData.phone;
-    
-    const countryEl = document.getElementById('country');
-    if (countryEl) countryEl.value = this.originalProfileData.country;
-    
-    const bioEl = document.getElementById('bio');
-    if (bioEl) bioEl.value = this.originalProfileData.bio;
+    document.getElementById('display-name').value = this.originalProfileData.displayName;
+    document.getElementById('first-name').value = this.originalProfileData.firstName;
+    document.getElementById('last-name').value = this.originalProfileData.lastName;
+    document.getElementById('phone').value = this.originalProfileData.phone;
+    document.getElementById('country').value = this.originalProfileData.country;
+    document.getElementById('bio').value = this.originalProfileData.bio;
 
     window.Notify.info('Profile reset to original values');
   }
@@ -454,149 +447,14 @@ class SettingsPage {
       marketingNotifications: false
     };
 
-    const emailNotifEl = document.getElementById('email-notifications');
-    if (emailNotifEl) emailNotifEl.checked = defaults.emailNotifications;
-    
-    const inappNotifEl = document.getElementById('inapp-notifications');
-    if (inappNotifEl) inappNotifEl.checked = defaults.inappNotifications;
-    
-    const depositNotifEl = document.getElementById('deposit-notifications');
-    if (depositNotifEl) depositNotifEl.checked = defaults.depositNotifications;
-    
-    const withdrawNotifEl = document.getElementById('withdrawal-notifications');
-    if (withdrawNotifEl) withdrawNotifEl.checked = defaults.withdrawalNotifications;
-    
-    const roiNotifEl = document.getElementById('roi-notifications');
-    if (roiNotifEl) roiNotifEl.checked = defaults.roiNotifications;
-    
-    const marketingNotifEl = document.getElementById('marketing-notifications');
-    if (marketingNotifEl) marketingNotifEl.checked = defaults.marketingNotifications;
+    document.getElementById('email-notifications').checked = defaults.emailNotifications;
+    document.getElementById('inapp-notifications').checked = defaults.inappNotifications;
+    document.getElementById('deposit-notifications').checked = defaults.depositNotifications;
+    document.getElementById('withdrawal-notifications').checked = defaults.withdrawalNotifications;
+    document.getElementById('roi-notifications').checked = defaults.roiNotifications;
+    document.getElementById('marketing-notifications').checked = defaults.marketingNotifications;
 
     window.Notify.info('Notification preferences reset to defaults');
-  }
-
-  changePassword() {
-    console.log('changePassword function called'); // Debug log
-    // Create modal for password change
-    const modal = this.createPasswordChangeModal();
-    document.body.appendChild(modal);
-    modal.showModal();
-  }
-
-  createPasswordChangeModal() {
-    const modal = document.createElement('dialog');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-content" style="max-width: 400px;">
-        <div class="modal-header">
-          <h3>Change Password</h3>
-          <button class="modal-close" onclick="this.closest('dialog').close()">×</button>
-        </div>
-        <form id="password-change-form" onsubmit="window.settingsPage.savePasswordChange(event)">
-          <div class="form-group">
-            <label class="form-label" for="current-password">Current Password</label>
-            <input type="password" class="form-input" id="current-password" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="new-password">New Password</label>
-            <input type="password" class="form-input" id="new-password" required minlength="8">
-            <small style="color: var(--text-secondary); font-size: 12px;">Minimum 8 characters</small>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="confirm-password">Confirm New Password</label>
-            <input type="password" class="form-input" id="confirm-password" required minlength="8">
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Change Password</button>
-          </div>
-        </form>
-      </div>
-    `;
-    return modal;
-  }
-
-  async savePasswordChange(event) {
-    event.preventDefault();
-    
-    try {
-      const currentPassword = document.getElementById('current-password').value;
-      const newPassword = document.getElementById('new-password').value;
-      const confirmPassword = document.getElementById('confirm-password').value;
-
-      // Validation
-      if (newPassword.length < 8) {
-        window.Notify.error('Password must be at least 8 characters long');
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        window.Notify.error('New passwords do not match');
-        return;
-      }
-
-      if (currentPassword === newPassword) {
-        window.Notify.error('New password must be different from current password');
-        return;
-      }
-
-      // Show loading state
-      const submitBtn = event.target.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Changing...';
-      submitBtn.disabled = true;
-
-      // Ensure Supabase client is properly initialized
-      console.log('Getting Supabase client...');
-      let supabaseClient;
-      try {
-        supabaseClient = await window.SupabaseClient.getClient();
-        console.log('Supabase client obtained:', supabaseClient);
-      } catch (clientError) {
-        console.error('Failed to get Supabase client:', clientError);
-        window.Notify.error('Failed to initialize authentication client');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        return;
-      }
-
-      // Double-check auth property exists
-      if (!supabaseClient || !supabaseClient.auth) {
-        console.error('Supabase client or auth property not available');
-        window.Notify.error('Authentication system not available');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        return;
-      }
-
-      console.log('Attempting password update...');
-      const { data, error } = supabaseClient.auth.updateUser({
-        password: newPassword
-      });
-
-      // Reset button state
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-
-      if (error) {
-        console.error('Password update error:', error);
-        throw error;
-      }
-
-      console.log('Password update successful');
-      // Close modal and show success
-      event.target.closest('dialog').close();
-      window.Notify.success('Password changed successfully!');
-
-    } catch (error) {
-      console.error('Failed to change password:', error);
-      window.Notify.error('Failed to change password. Please check your current password and try again.');
-      
-      // Reset button state
-      const submitBtn = event.target.querySelector('button[type="submit"]');
-      submitBtn.textContent = 'Change Password';
-      submitBtn.disabled = false;
-    }
   }
 
   addPayoutMethod() {

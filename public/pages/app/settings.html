@@ -208,11 +208,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            display: none;
-        }
-        
-        .settings-section.active {
-            display: block;
         }
         
         .settings-section::before {
@@ -752,6 +747,59 @@
     <!-- Main Content -->
     <main class="app-main">
         <div class="container">
+            <!-- Premium Hero Section -->
+            <section class="settings-hero">
+                <h1 class="hero-title">Premium Account Settings</h1>
+                <p class="hero-subtitle">Access advanced account controls with enhanced security and premium features</p>
+                
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                        </svg>
+                        <span>Advanced Controls</span>
+                    </div>
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
+                        </svg>
+                        <span>Enhanced Security</span>
+                    </div>
+                    <div class="hero-feature">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11H3v2m0-13V6a2 2 0 112 2h-2V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                        </svg>
+                        <span>Premium Features</span>
+                    </div>
+                </div>
+                
+                <div class="premium-badges">
+                    <span class="premium-badge">Advanced Security</span>
+                    <span class="premium-badge">Premium Features</span>
+                    <span class="premium-badge">Priority Support</span>
+                </div>
+            </section>
+            
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Security Score</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Monitoring</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number"><1s</div>
+                    <div class="stat-label">Response Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+            
             <!-- Header -->
             <section class="settings-header">
                 <h1>Settings</h1>
