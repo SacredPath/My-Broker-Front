@@ -248,11 +248,11 @@ class WithdrawPage {
       return;
     }
 
-    if (availableUSD) {
+    if (availableUSD && this.userBalances?.USD?.available !== undefined) {
       availableUSD.textContent = `$${this.formatMoney(this.userBalances.USD.available)}`;
     }
 
-    if (availableUSDT) {
+    if (availableUSDT && this.userBalances?.USDT?.available !== undefined) {
       availableUSDT.textContent = `₮${this.formatMoney(this.userBalances.USDT.available, 6)}`;
     }
 
@@ -267,7 +267,7 @@ class WithdrawPage {
     }
 
     // Update status indicators
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     
     if (usdStatus) {
       if (hasActivePositions) {
@@ -308,7 +308,7 @@ class WithdrawPage {
     if (!currencySelect) return;
 
     // Check if withdrawals are blocked due to active positions
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     
     if (hasActivePositions) {
       // Disable all currencies if there are active positions
@@ -600,7 +600,7 @@ class WithdrawPage {
     }
 
     // Check for active positions
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     if (hasActivePositions) {
       window.Notify.error('Withdrawals are blocked while you have active positions');
       return false;

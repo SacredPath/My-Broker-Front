@@ -290,15 +290,20 @@ class WithdrawPage {
     }
 
     if (limitsStatus) {
-      const totalLimit = this.withdrawalSettings.currencies.USD.daily_limit + this.withdrawalSettings.currencies.USDT.daily_limit;
-      const totalUsed = this.dailyLimits.USD.used + this.dailyLimits.USDT.used;
-      
-      if (totalUsed >= totalLimit) {
-        limitsStatus.textContent = 'Daily Limit Reached';
-        limitsStatus.className = 'balance-status locked';
+      if (!this.withdrawalSettings?.currencies || !this.dailyLimits) {
+        limitsStatus.textContent = 'Limits unavailable';
+        limitsStatus.className = 'balance-status error';
       } else {
-        limitsStatus.textContent = 'Within Limits';
-        limitsStatus.className = 'balance-status available';
+        const totalLimit = (this.withdrawalSettings.currencies.USD?.daily_limit || 0) + (this.withdrawalSettings.currencies.USDT?.daily_limit || 0);
+        const totalUsed = (this.dailyLimits.USD?.used || 0) + (this.dailyLimits.USDT?.used || 0);
+        
+        if (totalUsed >= totalLimit) {
+          limitsStatus.textContent = 'Daily Limit Reached';
+          limitsStatus.className = 'balance-status locked';
+        } else {
+          limitsStatus.textContent = 'Within Limits';
+          limitsStatus.className = 'balance-status available';
+        }
       }
     }
   }
@@ -308,7 +313,7 @@ class WithdrawPage {
     if (!currencySelect) return;
 
     // Check if withdrawals are blocked due to active positions
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     
     if (hasActivePositions) {
       // Disable all currencies if there are active positions
@@ -600,7 +605,7 @@ class WithdrawPage {
     }
 
     // Check for active positions
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     if (hasActivePositions) {
       window.Notify.error('Withdrawals are blocked while you have active positions');
       return false;
