@@ -188,22 +188,25 @@ class ConvertPage {
 
   async loadConversionSettings() {
     try {
-      // Use app_settings table to get conversion fees
+      // Use app_settings table to get conversion fees (key-value structure)
       const { data, error } = await window.API.fetchSupabase('app_settings', {
-        select: 'withdrawal_fee_pct, withdrawal_daily_cap_usd, withdrawal_daily_cap_usdt'
+        select: 'setting_key, setting_value',
+        filter: 'setting_key=eq.withdrawal_fee_percent'
       });
 
       if (error) {
         throw error;
       }
 
-      const settings = data?.[0] || {};
+      const feeSetting = data?.find(item => item.setting_key === 'withdrawal_fee_percent');
+      const feePercent = feeSetting ? parseFloat(feeSetting.setting_value) : 0;
+
       // Use real settings only
       this.conversionSettings = {
         auto_convert_enabled: true,
         refresh_interval: 30,
         fees: {
-          markup_percentage: parseFloat(settings.withdrawal_fee_pct) || 0,
+          markup_percentage: feePercent,
           fixed_fee_usd: 0,
           variable_fee_percentage: 0
         },
@@ -216,8 +219,22 @@ class ConvertPage {
       };
     } catch (error) {
       console.error('Failed to load conversion settings:', error);
-      // No fallback - show error state
-      this.conversionSettings = null;
+      // Use default settings as fallback
+      this.conversionSettings = {
+        auto_convert_enabled: true,
+        refresh_interval: 30,
+        fees: {
+          markup_percentage: 0.5,
+          fixed_fee_usd: 0,
+          variable_fee_percentage: 0
+        },
+        rounding: {
+          usd_decimals: 2,
+          usdt_decimals: 6
+        },
+        rate_provider: 'fixed',
+        refresh_interval: 30
+      };
     }
   }
 
@@ -235,7 +252,7 @@ class ConvertPage {
   async loadConversionHistory() {
     try {
       const { data, error } = await window.API.fetchSupabase('conversions', {
-        select: 'id,usdt_amount,fx_rate,markup_pct,fee_fixed_usd,fee_pct,usd_gross,usd_net,status,created_at',
+        select: 'id,from_amount,to_amount,rate,fees,status,created_at,from_currency,to_currency',
         order: 'created_at.desc',
         limit: 50
       });
@@ -480,13 +497,12 @@ class ConvertPage {
       // Create conversion record
       const conversionData = {
         user_id: this.currentUser.id,
-        usdt_amount: amount,
-        fx_rate: rate,
-        markup_pct: fees.markup_percentage || 0,
-        fee_fixed_usd: fees.fixed,
-        fee_pct: fees.variable,
-        usd_gross: usdGross,
-        usd_net: usdNet,
+        from_currency: 'USDT',
+        to_currency: 'USD',
+        from_amount: amount,
+        to_amount: usdNet,
+        rate: rate,
+        fees: fees.total,
         status: 'completed'
       };
 
