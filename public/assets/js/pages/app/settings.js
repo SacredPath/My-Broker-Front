@@ -857,8 +857,9 @@ class SettingsPage {
       submitBtn.textContent = 'Changing...';
       submitBtn.disabled = true;
 
-      // Use Supabase auth to update password
-      const { data, error } = await window.supabase.auth.updateUser({
+      // Get Supabase client and update password
+      const supabaseClient = await window.SupabaseClient.getClient();
+      const { data, error } = supabaseClient.auth.updateUser({
         password: newPassword
       });
 
