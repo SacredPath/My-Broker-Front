@@ -415,6 +415,13 @@ class ConvertPage {
       quoteStatus.textContent = `Live (${new Date().toLocaleTimeString()})`;
     }
     
+    // Add bright background styling
+    quotePreview.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    quotePreview.style.border = '1px solid #667eea';
+    quotePreview.style.borderRadius = '12px';
+    quotePreview.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.3)';
+    quotePreview.style.color = '#ffffff';
+    quotePreview.style.padding = '20px';
     quotePreview.style.display = 'block';
   }
 
