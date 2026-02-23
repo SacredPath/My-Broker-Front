@@ -322,7 +322,7 @@ class HomePage {
         <div class="activity-icon">${this.getActivityIcon(item.type)}</div>
         <div class="activity-details">
           <div class="activity-title">${item.title}</div>
-          <div class="activity-time">${this.formatTime(item.created_at)}</div>
+          <div class="activity-time">${this.formatTimeAgo(item.timestamp)}</div>
         </div>
       </div>
     `).join('');
