@@ -58,7 +58,7 @@ class WithdrawPage {
   loadAppShell() {
     const shellContainer = document.getElementById('app-shell-container');
     if (shellContainer) {
-      fetch('/public/components/app-shell.html')
+      fetch('/components/app-shell.html')
         .then(response => response.text())
         .then(html => {
           shellContainer.innerHTML = html;
@@ -267,7 +267,7 @@ class WithdrawPage {
     }
 
     // Update status indicators
-    const hasActivePositions = this.userBalances.USD.locked > 0 || this.userBalances.USDT.locked > 0;
+    const hasActivePositions = (this.userBalances?.USD?.locked || 0) > 0 || (this.userBalances?.USDT?.locked || 0) > 0;
     
     if (usdStatus) {
       if (hasActivePositions) {
@@ -364,7 +364,7 @@ class WithdrawPage {
 
   setupMethodOptions() {
     const methodSelect = document.getElementById('method-select');
-    if (!methodSelect || !this.selectedCurrency) return;
+    if (!methodSelect || !this.selectedCurrency || !this.withdrawalSettings?.methods) return;
 
     methodSelect.innerHTML = '<option value="">Select Method</option>';
     methodSelect.disabled = false;
