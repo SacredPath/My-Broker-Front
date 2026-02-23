@@ -4,9 +4,9 @@
  */
 
 // Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
+import '/assets/js/_shared/app_init.js';
 // Import USDT purchase modal
-import '/public/assets/js/components/usdt-purchase-modal.js';
+import '/assets/js/components/usdt-purchase-modal.js';
 
 class SignalDetailPage {
   constructor() {
