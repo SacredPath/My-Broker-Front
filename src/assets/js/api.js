@@ -269,6 +269,20 @@ class APIClient {
     });
   }
 
+  // Withdrawal methods using edge functions
+  async getWithdrawalMethods() {
+    return await this.fetchEdge('user_withdrawal_methods', {
+      method: 'GET'
+    });
+  }
+
+  async upsertWithdrawalMethod(methodData) {
+    return await this.fetchEdge('user_withdrawal_methods_update', {
+      method: 'POST',
+      body: methodData
+    });
+  }
+
   // Deposit methods fetching
   async getDepositMethods() {
     try {

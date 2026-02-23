@@ -105,8 +105,8 @@ class SettingsPage {
 
   async loadPayoutMethods() {
     try {
-      // For now, set empty array since payout methods might be handled separately
-      this.payoutMethods = [];
+      const result = await window.API.getWithdrawalMethods();
+      this.payoutMethods = result.methods || [];
     } catch (error) {
       console.error('Failed to load payout methods:', error);
       this.payoutMethods = [];
@@ -271,7 +271,7 @@ class SettingsPage {
   }
 
   formatPayoutMethod(method) {
-    const icon = this.getMethodIcon(method.type);
+    const icon = this.getMethodIcon(method.method);
     const statusClass = method.is_active ? 'status-active' : 'status-inactive';
     const statusText = method.is_active ? 'Active' : 'Inactive';
 
@@ -280,12 +280,12 @@ class SettingsPage {
         <div class="method-header">
           <div class="method-type">
             <div class="method-icon">${icon}</div>
-            <div class="method-name">${method.name}</div>
+            <div class="method-name">${this.getMethodName(method.method)}</div>
           </div>
           <div class="method-status ${statusClass}">${statusText}</div>
         </div>
         <div class="method-details">
-          ${this.formatMethodDetails(method)}
+          ${this.formatMethodDetails(method.method, method.details)}
         </div>
         <div class="method-actions">
           <button class="btn btn-small btn-outline" onclick="window.settingsPage.editPayoutMethod('${method.id}')">Edit</button>
@@ -307,53 +307,49 @@ class SettingsPage {
     return icons[type] || icons.bank;
   }
 
-  formatMethodDetails(method) {
-    let details = [];
+  formatMethodDetails(methodType, details) {
+    let detailsHtml = [];
     
-    switch (method.type) {
+    switch (methodType) {
       case 'bank':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Account Name</div>
-            <div class="detail-value">${method.details.account_name}</div>
+            <div class="detail-value">${details.account_name}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Account Number</div>
-            <div class="detail-value">${method.details.account_number}</div>
+            <div class="detail-value">${details.account_number}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Bank Name</div>
-            <div class="detail-value">${method.details.bank_name}</div>
+            <div class="detail-value">${details.bank_name}</div>
           </div>`
         ];
         break;
       case 'paypal':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Email</div>
-            <div class="detail-value">${method.details.email}</div>
-          </div>`,
-          `<div class="detail-item">
-            <div class="detail-label">Account ID</div>
-            <div class="detail-value">${method.details.account_id}</div>
+            <div class="detail-value">${details.email}</div>
           </div>`
         ];
         break;
       case 'crypto':
-        details = [
+        detailsHtml = [
           `<div class="detail-item">
             <div class="detail-label">Network</div>
-            <div class="detail-value">${method.details.network}</div>
+            <div class="detail-value">${details.network}</div>
           </div>`,
           `<div class="detail-item">
             <div class="detail-label">Address</div>
-            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${method.details.address}</div>
+            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${details.address}</div>
           </div>`
         ];
         break;
     }
 
-    return details.join('');
+    return detailsHtml.join('');
   }
 
   loadNotificationPreferences() {
@@ -621,9 +617,8 @@ class SettingsPage {
       const methodType = modal.querySelector('#method-type').value;
       
       let methodData = {
-        type: methodType,
-        name: this.getMethodName(methodType),
-        is_active: true
+        method: methodType,
+        details: {}
       };
 
       // Collect method-specific data
@@ -638,8 +633,7 @@ class SettingsPage {
           break;
         case 'paypal':
           methodData.details = {
-            email: modal.querySelector('#paypal-email').value,
-            account_id: 'paypal_' + Date.now()
+            email: modal.querySelector('#paypal-email').value
           };
           break;
         case 'crypto':
@@ -655,12 +649,7 @@ class SettingsPage {
         return;
       }
 
-      const endpoint = methodId ? 'payout_methods_update' : 'payout_methods_upsert';
-      const profileData = {
-        method_id: methodId,
-        method_data: methodData
-      };
-      const { data, error } = await window.API.updateProfile(this.currentUser.id, profileData);
+      const { data, error } = await window.API.upsertWithdrawalMethod(methodData);
 
       if (error) {
         throw error;
@@ -680,13 +669,13 @@ class SettingsPage {
 
   validatePayoutMethod(methodData) {
     // Basic validation
-    if (!methodData.type || !methodData.details) {
+    if (!methodData.method || !methodData.details) {
       window.Notify.error('Please fill in all required fields');
       return false;
     }
 
     // Type-specific validation
-    switch (methodData.type) {
+    switch (methodData.method) {
       case 'bank':
         if (!methodData.details.account_name || !methodData.details.account_number || 
             !methodData.details.routing_number || !methodData.details.bank_name) {
