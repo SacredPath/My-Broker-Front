@@ -1144,13 +1144,22 @@ class SettingsPage {
         return;
       }
       
+      const currencySelect = modal.querySelector('#method-currency');
+      if (!currencySelect) {
+        console.error('❌ Currency select not found in modal');
+        window.Notify.error('Form not loaded properly. Please try again.');
+        return;
+      }
+      
       const methodType = methodTypeSelect.value;
+      const currency = currencySelect.value;
       console.log('🔍 Method type found:', methodType);
+      console.log('🔍 Currency found:', currency);
       
       let methodData = {
         method_type: methodType,
         method_name: this.getMethodName(methodType),
-        currency: modal.querySelector('#method-currency').value,
+        currency: currency,
         is_active: true,
         is_default: false
       };
@@ -1158,17 +1167,35 @@ class SettingsPage {
       // Collect method-specific data
       switch (methodType) {
         case 'bank_transfer':
+          const accountName = modal.querySelector('#account-name');
+          const accountNumber = modal.querySelector('#account-number');
+          const routingNumber = modal.querySelector('#routing-number');
+          const bankName = modal.querySelector('#bank-name');
+          const swiftCode = modal.querySelector('#swift-code');
+          
+          if (!accountName || !accountNumber || !routingNumber || !bankName || !swiftCode) {
+            console.error('❌ Bank form elements not found');
+            window.Notify.error('Bank account form not loaded properly. Please try again.');
+            return;
+          }
+          
           methodData.details = {
-            account_name: modal.querySelector('#account-name').value,
-            account_number: modal.querySelector('#account-number').value,
-            routing_number: modal.querySelector('#routing-number').value,
-            bank_name: modal.querySelector('#bank-name').value,
-            swift_code: modal.querySelector('#swift-code').value
+            account_name: accountName.value,
+            account_number: accountNumber.value,
+            routing_number: routingNumber.value,
+            bank_name: bankName.value,
+            swift_code: swiftCode.value
           };
           break;
         case 'paypal':
+          const paypalEmail = modal.querySelector('#paypal-email');
+          if (!paypalEmail) {
+            console.error('❌ PayPal form elements not found');
+            window.Notify.error('PayPal form not loaded properly. Please try again.');
+            return;
+          }
           methodData.details = {
-            email: modal.querySelector('#paypal-email').value,
+            email: paypalEmail.value,
             account_id: 'paypal_' + Date.now()
           };
           break;
