@@ -46,6 +46,9 @@ body {
   color: var(--text);
   line-height: 1.6;
   transition: var(--transition);
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Buttons */

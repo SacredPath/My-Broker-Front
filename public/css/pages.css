@@ -57,6 +57,8 @@
 .main-content {
   min-height: calc(100vh - 64px);
   padding: 40px 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Hero Section */
@@ -492,6 +494,8 @@
   align-items: center;
   min-height: calc(100vh - 64px);
   padding: 20px;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .auth-card {
