@@ -4,7 +4,7 @@
  */
 
 // Import shared app initializer
-import '/public/assets/js/_shared/app_init.js';
+import '/assets/js/_shared/app_init.js';
 
 class SettingsPage {
   constructor() {
@@ -27,8 +27,10 @@ class SettingsPage {
 
   async setupPage() {
     try {
-      // Load app shell components
-      this.loadAppShell();
+      // Initialize app shell (sidebar, navigation, etc.)
+      if (window.AppShell) {
+        window.AppShell.initShell();
+      }
       
       // Load data
       await this.loadUserData();
@@ -48,24 +50,6 @@ class SettingsPage {
       if (window.Notify) {
         window.Notify.error('Failed to load settings');
       }
-    }
-  }
-
-  loadAppShell() {
-    const shellContainer = document.getElementById('app-shell-container');
-    if (shellContainer) {
-      fetch('/src/components/app-shell.html')
-        .then(response => response.text())
-        .then(html => {
-          shellContainer.innerHTML = html;
-          
-          if (window.AppShell) {
-            window.AppShell.setupShell();
-          }
-        })
-        .catch(error => {
-          console.error('Failed to load app shell:', error);
-        });
     }
   }
 

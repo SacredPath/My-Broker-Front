@@ -1137,25 +1137,65 @@
     <script>
         setTimeout(() => {
             console.log('=== SETTINGS DEBUG ===');
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
             
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
+            // Check all potential sidebar toggle selectors
+            const sidebarToggle1 = document.querySelector('[data-action="sidebar-toggle"]');
+            const sidebarToggle2 = document.querySelector('.mobile-menu-toggle');
+            const sidebarToggle3 = document.querySelector('button[data-action="sidebar-toggle"]');
+            
+            // Check all potential sidebar selectors  
+            const sidebar1 = document.querySelector('[data-role="sidebar"]');
+            const sidebar2 = document.querySelector('#side-nav');
+            const sidebar3 = document.querySelector('.side-nav');
+            
+            // Check all potential overlay selectors
+            const overlay1 = document.querySelector('[data-role="sidebar-overlay"]');
+            const overlay2 = document.querySelector('#mobile-menu-overlay');
+            const overlay3 = document.querySelector('.mobile-menu-overlay');
+            
+            console.log('Sidebar toggle found:', {
+                '[data-action="sidebar-toggle"]': !!sidebarToggle1,
+                '.mobile-menu-toggle': !!sidebarToggle2,
+                'button[data-action="sidebar-toggle"]': !!sidebarToggle3
+            });
+            
+            console.log('Sidebar found:', {
+                '[data-role="sidebar"]': !!sidebar1,
+                '#side-nav': !!sidebar2,
+                '.side-nav': !!sidebar3
+            });
+            
+            console.log('Overlay found:', {
+                '[data-role="sidebar-overlay"]': !!overlay1,
+                '#mobile-menu-overlay': !!overlay2,
+                '.mobile-menu-overlay': !!overlay3
+            });
+            
             console.log('AppShell initialized:', !!window.AppShell);
             console.log('API client available:', !!window.API);
             console.log('SettingsPage initialized:', !!window.settingsPage);
             console.log('AuthService available:', !!window.AuthService);
             
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    console.log('Manual toggle clicked');
-                    document.documentElement.classList.toggle('sidebar-open');
+            // Check if AppShell has found the elements
+            if (window.AppShell) {
+                console.log('AppShell internal state:', {
+                    sidebarToggles: window.AppShell.sidebarToggles?.length || 0,
+                    sidebar: !!window.AppShell.sidebar,
+                    overlay: !!window.AppShell.overlay
                 });
             }
-        }, 2000); // Increased delay to allow all modules to load
+            
+            // Try to bind manually if elements exist but aren't working
+            if (sidebarToggle1 && sidebar1 && overlay1) {
+                console.log('Elements found, attempting manual bind...');
+                sidebarToggle1.addEventListener('click', () => {
+                    console.log('Manual toggle clicked');
+                    document.documentElement.classList.toggle('sidebar-open');
+                    sidebar1.classList.toggle('open');
+                    overlay1.classList.toggle('open');
+                });
+            }
+        }, 3000); // Increased delay further
     </script>
 </body>
 </html>
