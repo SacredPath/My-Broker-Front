@@ -433,6 +433,11 @@ collectCurrentStepData() {
 
             if (result.success) {
                 console.log('Registration successful:', result);
+                
+                // Save registration data to localStorage for profile sync
+                localStorage.setItem('registrationData', JSON.stringify(registrationData));
+                sessionStorage.setItem('registrationData', JSON.stringify(registrationData));
+                
                 this.showSuccess();
             } else {
                 console.error('Registration failed:', result.error);
