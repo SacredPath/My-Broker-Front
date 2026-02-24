@@ -119,8 +119,26 @@ class SettingsPage {
 
   async loadKYCStatus() {
     try {
-      // For now, set default status since KYC might be handled separately
-      this.kycStatus = { status: 'not_submitted' };
+      console.log('Loading KYC status via API...');
+      
+      // Get current user ID
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        console.warn('User not authenticated, using default KYC status');
+        this.kycStatus = { status: 'not_submitted' };
+        return;
+      }
+
+      // Load KYC status from database using proper API
+      const result = await window.API.getKYCStatus(userId);
+      
+      if (result.success && result.data) {
+        this.kycStatus = result.data;
+        console.log('KYC status loaded:', this.kycStatus);
+      } else {
+        console.warn('Failed to load KYC status, using default:', result.error);
+        this.kycStatus = { status: 'not_submitted' };
+      }
     } catch (error) {
       console.error('Failed to load KYC status:', error);
       this.kycStatus = { status: 'not_submitted' };
@@ -803,18 +821,16 @@ class SettingsPage {
       if (methodId) {
         // Update existing method
         result = await window.API.supabase
-          .from('payout_methods')
+          .from('withdrawal_methods')
           .update(methodData)
           .eq('id', methodId)
-          .select()
-          .single();
+          .select();
       } else {
         // Insert new method
         result = await window.API.supabase
-          .from('payout_methods')
+          .from('withdrawal_methods')
           .insert(methodData)
-          .select()
-          .single();
+          .select();
       }
 
       const { data, error } = result;
@@ -880,19 +896,31 @@ class SettingsPage {
   async togglePayoutMethod(methodId) {
     try {
       const method = this.payoutMethods.find(m => m.id === methodId);
-      if (!method) return;
+      if (!method) {
+        console.error('Method not found in local array:', methodId);
+        return;
+      }
 
-      // Update the payout method in the payout_methods table, not the profiles table
+      console.log('Toggling payout method:', methodId, 'current state:', method.is_active);
+
+      // Update the payout method in the withdrawal_methods table (not payout_methods)
       const { data, error } = await window.API.supabase
-        .from('payout_methods')
+        .from('withdrawal_methods')
         .update({ is_active: !method.is_active })
         .eq('id', methodId)
-        .select()
-        .single();
+        .eq('user_id', this.currentUser.id) // Ensure user can only update their own methods
+        .select();
 
       if (error) {
+        console.error('Database error:', error);
         throw error;
       }
+
+      if (!data || data.length === 0) {
+        throw new Error('Payout method not found or you do not have permission to update it');
+      }
+
+      console.log('Successfully updated payout method:', data);
 
       // Update local state
       method.is_active = !method.is_active;
@@ -905,7 +933,7 @@ class SettingsPage {
     } catch (error) {
       console.error('Failed to toggle payout method:', error);
       if (window.Notify) {
-        window.Notify.error('Failed to update payout method');
+        window.Notify.error('Failed to update payout method: ' + error.message);
       }
     }
   }
