@@ -693,9 +693,9 @@ class SettingsPage {
             <div class="form-group">
               <label class="form-label">Method Type</label>
               <select class="form-input form-select" id="method-type" ${isEdit ? 'disabled' : ''}>
-                <option value="bank" ${method?.type === 'bank' ? 'selected' : ''}>Bank Account</option>
+                <option value="bank_transfer" ${method?.type === 'bank_transfer' ? 'selected' : ''}>Bank Account</option>
                 <option value="paypal" ${method?.type === 'paypal' ? 'selected' : ''}>PayPal</option>
-                <option value="crypto" ${method?.type === 'crypto' ? 'selected' : ''}>Cryptocurrency</option>
+                <option value="crypto_wallet" ${method?.type === 'crypto_wallet' ? 'selected' : ''}>Cryptocurrency</option>
               </select>
             </div>
             
@@ -707,7 +707,7 @@ class SettingsPage {
               </select>
             </div>
             
-            <div id="bank-fields" class="method-fields" style="${method?.type === 'bank' || !method ? '' : 'display: none;'}">
+            <div id="bank-fields" class="method-fields" style="${method?.type === 'bank_transfer' || !method ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Account Name</label>
                 <input type="text" class="form-input" id="account-name" value="${method?.details?.account_name || ''}" required>
@@ -724,6 +724,10 @@ class SettingsPage {
                 <label class="form-label">Bank Name</label>
                 <input type="text" class="form-input" id="bank-name" value="${method?.details?.bank_name || ''}" required>
               </div>
+              <div class="form-group">
+                <label class="form-label">SWIFT Code</label>
+                <input type="text" class="form-input" id="swift-code" value="${method?.details?.swift_code || ''}" required>
+              </div>
             </div>
             
             <div id="paypal-fields" class="method-fields" style="${method?.type === 'paypal' ? '' : 'display: none;'}">
@@ -733,7 +737,7 @@ class SettingsPage {
               </div>
             </div>
             
-            <div id="crypto-fields" class="method-fields" style="${method?.type === 'crypto' ? '' : 'display: none;'}">
+            <div id="crypto-fields" class="method-fields" style="${method?.type === 'crypto_wallet' ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Network</label>
                 <select class="form-input form-select" id="crypto-network">
@@ -786,20 +790,29 @@ class SettingsPage {
     try {
       const modal = document.querySelector('dialog[open]');
       if (!modal) {
-        window.Notify.error('Modal not found');
+        console.error('❌ No open modal found');
+        window.Notify.error('Modal not found. Please try again.');
         return;
       }
-
-      const methodTypeSelect = modal.querySelector('#method-type');
-      const currencySelect = modal.querySelector('#method-currency');
       
-      if (!methodTypeSelect || !currencySelect) {
-        window.Notify.error('Required form elements not found');
+      const methodTypeSelect = modal.querySelector('#method-type');
+      if (!methodTypeSelect) {
+        console.error('❌ Method type select not found in modal');
+        window.Notify.error('Form not loaded properly. Please try again.');
         return;
       }
-
+      
+      const currencySelect = modal.querySelector('#method-currency');
+      if (!currencySelect) {
+        console.error('❌ Currency select not found in modal');
+        window.Notify.error('Form not loaded properly. Please try again.');
+        return;
+      }
+      
       const methodType = methodTypeSelect.value;
       const currency = currencySelect.value;
+      console.log('🔍 Method type found:', methodType);
+      console.log('🔍 Currency found:', currency);
       
       let methodData = {
         method_type: methodType,
@@ -811,14 +824,16 @@ class SettingsPage {
 
       // Collect method-specific data
       switch (methodType) {
-        case 'bank':
+        case 'bank_transfer':
           const accountName = modal.querySelector('#account-name');
           const accountNumber = modal.querySelector('#account-number');
           const routingNumber = modal.querySelector('#routing-number');
           const bankName = modal.querySelector('#bank-name');
+          const swiftCode = modal.querySelector('#swift-code');
           
-          if (!accountName || !accountNumber || !routingNumber || !bankName) {
-            window.Notify.error('Bank account form elements not found');
+          if (!accountName || !accountNumber || !routingNumber || !bankName || !swiftCode) {
+            console.error('❌ Bank form elements not found');
+            window.Notify.error('Bank account form not loaded properly. Please try again.');
             return;
           }
           
@@ -826,13 +841,15 @@ class SettingsPage {
             account_name: accountName.value,
             account_number: accountNumber.value,
             routing_number: routingNumber.value,
-            bank_name: bankName.value
+            bank_name: bankName.value,
+            swift_code: swiftCode.value
           };
           break;
         case 'paypal':
           const paypalEmail = modal.querySelector('#paypal-email');
           if (!paypalEmail) {
-            window.Notify.error('PayPal form elements not found');
+            console.error('❌ PayPal form elements not found');
+            window.Notify.error('PayPal form not loaded properly. Please try again.');
             return;
           }
           methodData.details = {
@@ -840,18 +857,20 @@ class SettingsPage {
             account_id: 'paypal_' + Date.now()
           };
           break;
-        case 'crypto':
+        case 'crypto_wallet':
           const cryptoNetwork = modal.querySelector('#crypto-network');
           const walletAddress = modal.querySelector('#wallet-address');
+          console.log('🔍 Crypto network element:', cryptoNetwork);
+          console.log('🔍 Crypto network value:', cryptoNetwork?.value);
+          console.log('🔍 Wallet address element:', walletAddress);
+          console.log('🔍 Wallet address value:', walletAddress?.value);
           
-          if (!cryptoNetwork || !walletAddress) {
-            window.Notify.error('Cryptocurrency form elements not found');
-            return;
-          }
+          const networkValue = cryptoNetwork?.value || '';
+          const addressValue = walletAddress?.value || '';
           
           methodData.details = {
-            network: cryptoNetwork.value,
-            address: walletAddress.value
+            network: networkValue,
+            address: addressValue
           };
           break;
       }
