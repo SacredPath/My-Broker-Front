@@ -41,12 +41,39 @@ class SignalsPage {
     
     while ((!window.API || !window.API.initialized) && retries < maxRetries) {
       console.log(`Waiting for API client... (${retries}/${maxRetries})`);
+      
+      // Debug: Check what's available
+      if (retries === 10) {
+        console.log('Debug - window.API:', !!window.API);
+        console.log('Debug - window.API.initialized:', window.API?.initialized);
+        console.log('Debug - window.API.supabase:', !!window.API?.supabase);
+        console.log('Debug - window.API.serviceClient:', !!window.API?.serviceClient);
+        console.log('Debug - window.API.initPromise:', !!window.API?.initPromise);
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 100));
       retries++;
     }
     
     if (!window.API || !window.API.initialized) {
       console.error('API client failed to initialize within timeout');
+      
+      // Debug: Show final state
+      console.log('Final debug - window.API:', !!window.API);
+      console.log('Final debug - window.API.initialized:', window.API?.initialized);
+      console.log('Final debug - window.API.supabase:', !!window.API?.supabase);
+      console.log('Final debug - window.API.serviceClient:', !!window.API?.serviceClient);
+      
+      // Try to force initialization
+      if (window.API && window.API.initPromise) {
+        console.log('Trying to wait for init promise...');
+        try {
+          await window.API.initPromise;
+          console.log('Init promise completed!');
+        } catch (error) {
+          console.error('Init promise failed:', error);
+        }
+      }
     } else {
       console.log('API client is ready');
       // Ensure we wait for the initialization promise
