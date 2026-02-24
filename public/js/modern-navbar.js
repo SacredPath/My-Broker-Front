@@ -2,6 +2,7 @@
 class ModernNavbar {
     constructor() {
         this.isOpen = false;
+        this.notifications = [];
         this.currentPage = this.getCurrentPage();
         this.init();
     }
@@ -174,6 +175,17 @@ class ModernNavbar {
         </div>
     </div>
 </nav>
+
+<!-- Notification Panel -->
+<div id="notification-panel" class="notification-panel">
+    <div class="notification-header">
+        <h3>Notifications</h3>
+        <button id="close-notifications" class="close-btn">×</button>
+    </div>
+    <div class="notification-list" id="notification-list">
+        <!-- Notifications will be loaded here -->
+    </div>
+</div>
 
 <!-- Mobile Navigation Menu -->
 <div class="mobile-nav-menu" id="mobile-nav-menu">
@@ -446,13 +458,163 @@ class ModernNavbar {
 
     setupNotifications() {
         const notificationBtn = document.getElementById('notification-btn');
+        const notificationPanel = document.getElementById('notification-panel');
+        const closeNotifications = document.getElementById('close-notifications');
+
         if (notificationBtn) {
-            notificationBtn.addEventListener('click', () => {
-                // Toggle notification panel (to be implemented)
-                console.log('Notifications clicked');
-                this.clearNotificationIndicator();
+            notificationBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleNotificationPanel();
             });
         }
+
+        if (closeNotifications) {
+            closeNotifications.addEventListener('click', () => {
+                this.closeNotificationPanel();
+            });
+        }
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#notification-btn') && !e.target.closest('.notification-panel')) {
+                this.closeNotificationPanel();
+            }
+        });
+
+        // Load initial notifications
+        this.loadNotifications();
+    }
+
+    toggleNotificationPanel() {
+        const notificationPanel = document.getElementById('notification-panel');
+        if (notificationPanel) {
+            const isOpen = notificationPanel.classList.contains('show');
+            if (isOpen) {
+                this.closeNotificationPanel();
+            } else {
+                this.openNotificationPanel();
+            }
+        }
+    }
+
+    openNotificationPanel() {
+        const notificationPanel = document.getElementById('notification-panel');
+        if (notificationPanel) {
+            notificationPanel.classList.add('show');
+            this.markNotificationsAsRead();
+        }
+    }
+
+    closeNotificationPanel() {
+        const notificationPanel = document.getElementById('notification-panel');
+        if (notificationPanel) {
+            notificationPanel.classList.remove('show');
+        }
+    }
+
+    async loadNotifications() {
+        try {
+            if (!window.API) {
+                console.warn('API not available, cannot load notifications');
+                return;
+            }
+            
+            const userId = await window.API.getCurrentUserId();
+            if (!userId) {
+                console.warn('User not authenticated, cannot load notifications');
+                return;
+            }
+
+            const { data, error } = await window.API.supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) {
+                console.error('Failed to load notifications:', error);
+                this.notifications = [];
+            } else {
+                this.notifications = data || [];
+            }
+            
+            this.updateNotificationBadge();
+            this.renderNotifications();
+        } catch (error) {
+            console.error('Failed to load notifications:', error);
+            this.notifications = [];
+            this.updateNotificationBadge();
+            this.renderNotifications();
+        }
+    }
+
+    updateNotificationBadge() {
+        const unreadCount = this.notifications.filter(n => n.unread).length;
+        const indicator = document.getElementById('notification-indicator');
+        
+        if (indicator) {
+            if (unreadCount > 0) {
+                indicator.style.display = 'block';
+                indicator.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+    }
+
+    renderNotifications() {
+        const notificationList = document.getElementById('notification-list');
+        
+        if (!notificationList) return;
+
+        if (this.notifications.length === 0) {
+            notificationList.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px; opacity: 0.5;">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <p>No notifications</p>
+                </div>
+            `;
+            return;
+        }
+
+        notificationList.innerHTML = this.notifications.map(notification => `
+            <div class="notification-item ${notification.unread ? 'unread' : ''}" data-id="${notification.id}">
+                <div class="notification-header-info">
+                    <div>
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                    </div>
+                    <div class="notification-time">${notification.time || 'Just now'}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    markNotificationsAsRead() {
+        this.notifications.forEach(notification => {
+            notification.unread = false;
+        });
+        this.updateNotificationBadge();
+        this.renderNotifications();
+    }
+
+    // Public methods for other components to use
+    addNotification(notification) {
+        if (!this.notifications) this.notifications = [];
+        
+        this.notifications.unshift({
+            ...notification,
+            id: Date.now(),
+            time: 'Just now',
+            unread: true
+        });
+        
+        this.updateNotificationBadge();
+        this.renderNotifications();
     }
 
     showNotification() {
