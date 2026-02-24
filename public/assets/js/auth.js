@@ -124,24 +124,21 @@ class AuthService {
 
       console.log('Supabase signup successful:', data);
 
-      // If user was created successfully, wait a moment for trigger to complete, then update profile
+      // If user was created successfully, create profile manually (no trigger)
       if (data.user && registrationData) {
-        console.log('Waiting for trigger to create initial profile...');
+        console.log('Creating user profile manually...');
         
-        // Wait a moment for trigger to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        console.log('Updating user profile with comprehensive data...');
-        const profileResult = await this.updateUserProfile(data.user.id, {
+        // Create profile directly instead of relying on trigger
+        const profileResult = await this.createUserProfile(data.user.id, {
           ...registrationData,
           email: email
         });
         
         if (!profileResult.success) {
-          console.warn('Profile update failed but user was created:', profileResult.error);
+          console.warn('Profile creation failed but user was created:', profileResult.error);
           // Don't throw error here - user was created successfully
         } else {
-          console.log('User profile updated successfully');
+          console.log('User profile created successfully');
         }
       }
 
