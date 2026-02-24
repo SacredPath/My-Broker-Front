@@ -780,9 +780,11 @@ class SettingsPage {
       const methodType = modal.querySelector('#method-type').value;
       
       let methodData = {
-        type: methodType,
-        name: this.getMethodName(methodType),
-        is_active: true
+        method_type: methodType,
+        method_name: this.getMethodName(methodType),
+        currency: modal.querySelector('#method-currency').value,
+        is_active: true,
+        is_default: false
       };
 
       // Collect method-specific data
@@ -821,14 +823,14 @@ class SettingsPage {
       if (methodId) {
         // Update existing method
         result = await window.API.supabase
-          .from('withdrawal_methods')
+          .from('payout_methods')
           .update(methodData)
           .eq('id', methodId)
           .select();
       } else {
         // Insert new method
         result = await window.API.supabase
-          .from('withdrawal_methods')
+          .from('payout_methods')
           .insert(methodData)
           .select();
       }
@@ -903,9 +905,9 @@ class SettingsPage {
 
       console.log('Toggling payout method:', methodId, 'current state:', method.is_active);
 
-      // Update the payout method in the withdrawal_methods table (not payout_methods)
+      // Update the payout method in the payout_methods table
       const { data, error } = await window.API.supabase
-        .from('withdrawal_methods')
+        .from('payout_methods')
         .update({ is_active: !method.is_active })
         .eq('id', methodId)
         .eq('user_id', this.currentUser.id) // Ensure user can only update their own methods
