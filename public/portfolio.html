@@ -529,29 +529,7 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
-    <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/portfolio.js"></script>
-    <script>
-        // Debug script to check sidebar functionality
-        setTimeout(() => {
-            console.log('=== SIDEBAR DEBUG ===');
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
-            
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
-            console.log('AppShell initialized:', !!window.AppShell);
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    console.log('Manual toggle clicked');
-                    document.documentElement.classList.toggle('sidebar-open');
-                });
-            }
-        }, 1000);
-    </script>
     
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async></script>
