@@ -87,7 +87,7 @@ class SignalsPage {
       this.loadAppShell();
       
       // Check if API client is properly initialized
-      if (!window.API || !window.API.serviceClient || !window.API.supabase) {
+      if (!window.API || !window.API.supabase) {
         console.error('API client not properly initialized, showing error state');
         this.showErrorState('API client failed to initialize. Please refresh the page.');
         return;
@@ -171,23 +171,33 @@ class SignalsPage {
       console.log('Loading user positions via REST API...');
       
       // Double-check API client is available
-      if (!window.API || !window.API.serviceClient) {
+      if (!window.API || !window.API.supabase) {
         throw new Error('API client not available');
       }
       
-      // Query signal_purchases table directly
-      const { data, error } = await window.API.serviceClient
+      // Get current user ID
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        console.log('No user ID found, skipping user positions loading');
+        this.userPositions = [];
+        return;
+      }
+
+      // Load user positions from signal_purchases table using shared client
+      const { data, error } = await window.API.supabase
         .from('signal_purchases')
         .select('*')
-        .eq('user_id', await window.API.getCurrentUserId())
+        .eq('user_id', userId)
         .eq('status', 'active');
 
       if (error) {
-        console.error('Failed to load user positions:', error);
+        console.error('Database error loading user positions:', error);
         this.userPositions = [];
       } else {
         this.userPositions = data || [];
       }
+      
+      console.log('User positions loaded:', this.userPositions.length, 'positions');
     } catch (error) {
       console.error('Failed to load user positions:', error);
       this.userPositions = [];
@@ -200,25 +210,30 @@ class SignalsPage {
       console.log('Loading signals from database...');
       
       // Double-check API client is available
-      if (!window.API || !window.API.serviceClient) {
+      if (!window.API || !window.API.supabase) {
         throw new Error('API client not available');
       }
       
-      // Query trading_signals table directly
-      const { data, error } = await window.API.serviceClient
-        .from('trading_signals')
-        .select('*')
+      // Load signals from signals table using shared client (like working version)
+      const { data, error } = await window.API.supabase
+        .from('signals')
+        .select("id,title,category,risk_rating,description,price_usdt,access_days,type,status,created_at")
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Failed to load signals:', error);
+        console.error('Database error loading signals:', error);
         this.signals = [];
       } else {
-        this.signals = data || [];
+        this.signals = (data || []).map(s => ({
+          ...s,
+          price: parseFloat(s.price_usdt) || 0,
+          risk_rating: s.risk_rating,
+          access_days: s.access_days
+        }));
       }
-
-      this.setupFilterOptions();
+      
+      console.log('Signals loaded from database:', this.signals.length, 'signals');
     } catch (error) {
       console.error('Failed to load signals:', error);
       this.signals = [];
@@ -231,23 +246,33 @@ class SignalsPage {
       console.log('Loading user signal access from database...');
       
       // Double-check API client is available
-      if (!window.API || !window.API.serviceClient) {
+      if (!window.API || !window.API.supabase) {
         throw new Error('API client not available');
       }
       
-      // Query signal_access table directly
-      const { data, error } = await window.API.serviceClient
+      // Get current user ID
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        console.log('No user ID found, skipping user access loading');
+        this.userAccess = [];
+        return;
+      }
+
+      // Load user signal access from signal_access table using shared client
+      const { data, error } = await window.API.supabase
         .from('signal_access')
         .select('*')
-        .eq('user_id', await window.API.getCurrentUserId())
+        .eq('user_id', userId)
         .gt('expires_at', new Date().toISOString());
 
       if (error) {
-        console.error('Failed to load user access:', error);
+        console.error('Database error loading user access:', error);
         this.userAccess = [];
       } else {
         this.userAccess = data || [];
       }
+      
+      console.log('User signal access loaded:', this.userAccess.length, 'access records');
     } catch (error) {
       console.error('Failed to load user access:', error);
       this.userAccess = [];
