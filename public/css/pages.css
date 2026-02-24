@@ -7,26 +7,36 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  overflow: hidden;
 }
 
 .navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  padding: 16px 20px;
   height: 64px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .navbar-brand h1 {
-  font-size: 24px;
+  font-size: clamp(18px, 3vw, 24px);
   font-weight: 700;
   color: var(--primary);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .navbar-menu {
   display: flex;
-  gap: 32px;
+  gap: clamp(16px, 3vw, 32px);
+  flex-shrink: 0;
 }
 
 .nav-link {
@@ -36,6 +46,8 @@
   transition: var(--transition);
   padding: 8px 0;
   border-bottom: 2px solid transparent;
+  font-size: clamp(12px, 2vw, 14px);
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -50,7 +62,8 @@
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
+  flex-shrink: 0;
 }
 
 /* Main Content */
@@ -1140,7 +1153,29 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .navbar-menu {
+    gap: clamp(12px, 2vw, 24px);
+  }
+  
+  .navbar-content {
+    padding: 16px 16px;
+  }
+}
+
 @media (max-width: 768px) {
+  .navbar-content {
+    padding: 16px 12px;
+  }
+  
+  .navbar-menu {
+    gap: 12px;
+  }
+  
+  .navbar-brand h1 {
+    font-size: clamp(16px, 4vw, 20px);
+  }
+  
   .welcome-section {
     flex-direction: column;
     text-align: center;
@@ -1178,6 +1213,28 @@
 }
 
 @media (max-width: 480px) {
+  .navbar-content {
+    padding: 12px 8px;
+  }
+  
+  .navbar-brand h1 {
+    font-size: clamp(14px, 3.5vw, 18px);
+    max-width: 150px;
+  }
+  
+  .navbar-menu {
+    gap: 8px;
+  }
+  
+  .nav-link {
+    font-size: clamp(11px, 2.5vw, 13px);
+    padding: 6px 0;
+  }
+  
+  .navbar-actions {
+    gap: 6px;
+  }
+  
   .page-header h1 {
     font-size: 24px;
   }
@@ -1227,5 +1284,20 @@
   
   .app-info {
     padding: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-brand h1 {
+    font-size: 14px;
+    max-width: 120px;
+  }
+  
+  .navbar-content {
+    padding: 12px 6px;
+  }
+  
+  .navbar-menu {
+    gap: 6px;
   }
 }
