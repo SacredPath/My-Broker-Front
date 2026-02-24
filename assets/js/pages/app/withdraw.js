@@ -454,19 +454,63 @@ class WithdrawPage {
     try {
       console.log('Loading daily limits via REST API...');
       
-      // For now, use null since we don't have a limits API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getDailyLimits(userId);
+      const userId = await window.API.getCurrentUserId();
       
-      this.dailyLimits = null;
-      console.log('Daily limits loaded: null (no API endpoint yet)');
+      // Calculate daily limits from existing withdrawal requests
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const { data, error } = await window.API.supabase
+        .from('withdrawal_requests')
+        .select('currency, amount')
+        .eq('user_id', userId)
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .lt('created_at', `${today}T23:59:59.999Z`)
+        .in('status', ['pending', 'approved']);
+
+      if (error) {
+        console.error('Database error loading daily limits:', error);
+        
+        // Handle specific table not found error
+        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.warn('withdrawal_requests table does not exist yet, using mock limits.');
+          this.dailyLimits = this.getMockDailyLimits();
+          return;
+        }
+        
+        this.dailyLimits = this.getMockDailyLimits();
+        return;
+      }
+
+      // Calculate used amounts per currency
+      const usedAmounts = {};
+      if (data) {
+        data.forEach(request => {
+          if (!usedAmounts[request.currency]) {
+            usedAmounts[request.currency] = 0;
+          }
+          usedAmounts[request.currency] += parseFloat(request.amount);
+        });
+      }
+
+      // Get limits from withdrawal settings or use defaults
+      const limits = {
+        USD: { limit: 10000, used: 0, remaining: 10000 },
+        USDT: { limit: 50000, used: 0, remaining: 50000 }
+      };
+
+      Object.keys(limits).forEach(currency => {
+        const used = usedAmounts[currency] || 0;
+        limits[currency] = {
+          limit: limits[currency].limit,
+          used: used,
+          remaining: limits[currency].limit - used
+        };
+      });
+
+      this.dailyLimits = limits;
+      console.log('Daily limits calculated:', this.dailyLimits);
     } catch (error) {
       console.error('Failed to load daily limits:', error);
-      // Show error to user instead of fallback mock data
-      if (window.Notify) {
-        window.Notify.error('Failed to load daily limits. Please try again.');
-      }
-      this.dailyLimits = null;
+      this.dailyLimits = this.getMockDailyLimits();
     }
   }
 
@@ -489,12 +533,32 @@ class WithdrawPage {
     try {
       console.log('Loading withdrawal requests via REST API...');
       
-      // For now, use mock data since we don't have a withdrawal requests API endpoint yet
-      // TODO: Replace with actual REST API call when available
-      // const data = await this.api.getWithdrawalRequests(userId);
+      const userId = await window.API.getCurrentUserId();
       
-      this.renderWithdrawalRequests([]);
-      console.log('Withdrawal requests loaded: 0 requests');
+      // Get withdrawal requests using REST API
+      const { data, error } = await window.API.supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Database error loading withdrawal requests:', error);
+        
+        // Handle specific table not found error
+        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.warn('withdrawal_requests table does not exist yet.');
+          this.renderWithdrawalRequests([]);
+          return;
+        }
+        
+        this.renderWithdrawalRequests([]);
+        return;
+      }
+
+      this.renderWithdrawalRequests(data || []);
+      console.log('Withdrawal requests loaded:', data?.length || 0, 'requests');
     } catch (error) {
       console.error('Failed to load withdrawal requests:', error);
       this.renderWithdrawalRequests([]);
@@ -653,16 +717,23 @@ class WithdrawPage {
     const currencySelect = document.getElementById('currency-select');
     if (!currencySelect) return;
 
+    // Check if withdrawalSettings is loaded
+    if (!this.withdrawalSettings || !this.withdrawalSettings.currencies) {
+      console.warn('Withdrawal settings not available, using default currency options');
+      currencySelect.innerHTML = '<option value="">Loading...</option>';
+      currencySelect.disabled = true;
+      return;
+    }
+
     // Check if userBalances is null or undefined
     if (!this.userBalances) {
       console.warn('User balances not available, using default currency options');
       // Enable all currencies by default when balances are not available
-      return;
     }
 
     // Check if withdrawals are blocked due to active positions
-    const hasActivePositions = (this.userBalances.USD && this.userBalances.USD.locked > 0) || 
-                              (this.userBalances.USDT && this.userBalances.USDT.locked > 0);
+    const hasActivePositions = (this.userBalances && this.userBalances.USD && this.userBalances.USD.locked > 0) || 
+                              (this.userBalances && this.userBalances.USDT && this.userBalances.USDT.locked > 0);
     
     if (hasActivePositions) {
       // Disable all currencies if there are active positions
@@ -676,8 +747,8 @@ class WithdrawPage {
     currencySelect.innerHTML = '<option value="">Select Currency</option>';
     
     Object.keys(this.withdrawalSettings.currencies).forEach(currency => {
-      const balance = this.userBalances[currency];
-      if (balance && balance.available > 0) {
+      const balance = this.userBalances && this.userBalances[currency];
+      if (!balance || balance.available > 0) {
         const option = document.createElement('option');
         option.value = currency;
         option.textContent = `${currency} (Available: ${currency === 'USD' ? '$' : '₮'}${this.formatMoney(balance.available, currency === 'USDT' ? 6 : 2)})`;
@@ -954,14 +1025,21 @@ class WithdrawPage {
     try {
       this.setButtonLoading('save-method-btn', true);
 
-      const { data, error } = await window.API.fetchEdge('user_withdrawal_methods_update', {
-        method: 'POST',
-        body: {
+      const userId = await window.API.getCurrentUserId();
+      
+      // Update or insert payout method details using REST API
+      const { data, error } = await window.API.supabase
+        .from('payout_methods')
+        .upsert({
+          user_id: userId,
           currency: this.selectedCurrency,
-          method: this.selectedMethod,
-          details: methodData
-        }
-      });
+          method_type: this.selectedMethod,
+          method_details: methodData,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
       if (error) {
         throw error;
@@ -995,15 +1073,22 @@ class WithdrawPage {
     try {
       this.setButtonLoading('submit-withdrawal', true);
 
-      const { data, error } = await window.API.fetchEdge('withdraw_create_request', {
-        method: 'POST',
-        body: {
+      const userId = await window.API.getCurrentUserId();
+      
+      // Create withdrawal request using REST API
+      const { data, error } = await window.API.supabase
+        .from('withdrawal_requests')
+        .insert({
+          user_id: userId,
           currency: this.selectedCurrency,
           amount: amount,
-          method: this.selectedMethod,
-          method_details: methodDetails
-        }
-      });
+          method_type: this.selectedMethod,
+          method_details: methodDetails,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
       if (error) {
         throw error;
