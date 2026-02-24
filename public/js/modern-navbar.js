@@ -53,10 +53,15 @@ class ModernNavbar {
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                 </a>
-                <a href="/app/portfolio.html" class="nav-item" data-page="portfolio" title="Portfolio">
+                <a href="/app/tiers.html" class="nav-item" data-page="tiers" title="Investment Tiers">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                    </svg>
+                </a>
+                <a href="/app/positions.html" class="nav-item" data-page="positions" title="Positions">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
                     </svg>
                 </a>
                 <a href="/app/signals.html" class="nav-item" data-page="signals" title="Signals">
@@ -68,7 +73,7 @@ class ModernNavbar {
                 <a href="/app/settings.html" class="nav-item" data-page="settings" title="Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.54l4.24 4.24M20.46 14.46l-4.24 4.24M7.76 7.76L3.52 3.52"></path>
+                        <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24"></path>
                     </svg>
                 </a>
             </nav>
@@ -108,7 +113,7 @@ class ModernNavbar {
                 </div>
                 
                 <!-- Dropdown Menu -->
-                <div class="dropdown-menu" id="dropdown-menu">
+                <div class="dropdown-menu" id="main-dropdown-menu">
                     <div class="dropdown-section">
                         <div class="dropdown-title">Account</div>
                         <a href="/app/profile.html" class="dropdown-item">
@@ -118,12 +123,14 @@ class ModernNavbar {
                             </svg>
                             <span>Profile</span>
                         </a>
-                        <a href="/app/settings.html" class="dropdown-item">
+                        <a href="/app/kyc.html" class="dropdown-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.54l4.24 4.24M20.46 14.46l-4.24 4.24M7.76 7.76L3.52 3.52"></path>
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
                             </svg>
-                            <span>Settings</span>
+                            <span>KYC Verification</span>
                         </a>
                     </div>
                     
@@ -178,13 +185,6 @@ class ModernNavbar {
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span>Home</span>
-            </a>
-            <a href="/app/portfolio.html" class="mobile-nav-item" data-page="portfolio">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                <span>Portfolio</span>
             </a>
             <a href="/app/history.html" class="mobile-nav-item" data-page="history">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -278,17 +278,17 @@ class ModernNavbar {
         // User dropdown
         const userDropdown = document.getElementById('user-dropdown');
         const userMenu = document.getElementById('user-menu');
-        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownMenu = document.getElementById('main-dropdown-menu');
 
         if (userDropdown && userMenu && dropdownMenu) {
             userMenu.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleUserDropdown();
             });
-
+            
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
-                if (!userDropdown.contains(e.target)) {
+                if (!userDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
                     this.closeUserDropdown();
                 }
             });
@@ -353,14 +353,14 @@ class ModernNavbar {
     }
 
     toggleUserDropdown() {
-        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownMenu = document.getElementById('main-dropdown-menu');
         if (dropdownMenu) {
             dropdownMenu.classList.toggle('show');
         }
     }
 
     closeUserDropdown() {
-        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownMenu = document.getElementById('main-dropdown-menu');
         if (dropdownMenu) {
             dropdownMenu.classList.remove('show');
         }

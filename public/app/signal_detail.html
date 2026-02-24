@@ -12,6 +12,11 @@
     <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
     <link rel="stylesheet" href="/css/app-shell.css">
@@ -389,115 +394,11 @@
     </style>
 </head>
 <body>
-    <!-- App Shell Components -->
-    <div id="app-shell-container">
-        <!-- Top Navigation Bar -->
-        <header id="app-topbar" class="app-topbar">
-            <div class="container">
-                <div class="topbar-content">
-                    <div class="topbar-left">
-                        <button class="mobile-menu-toggle" data-action="sidebar-toggle">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                            </svg>
-                        </button>
-                        <div class="app-logo">
-                            <h1>PALANTIR INVESTMENTS</h1>
-                        </div>
-                        <nav class="desktop-nav">
-                            <a href="/app/home.html" class="nav-link" data-page="home">Home</a>
-                            <a href="/app/tiers.html" class="nav-link" data-page="tiers">Tiers</a>
-                            <a href="/app/portfolio.html" class="nav-link" data-page="portfolio">Portfolio</a>
-                        </nav>
-                    </div>
-                    
-                    <div class="topbar-right">
-                        <button id="notification-bell" class="notification-bell" data-action="notifications">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            </svg>
-                        </button>
-                        
-                        <button id="theme-toggle" class="theme-toggle-btn" data-action="theme-toggle">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="5"></circle>
-                            </svg>
-                        </button>
-                        
-                        <div class="user-menu">
-                            <button id="user-menu-btn" class="user-menu-btn" data-menu-trigger>
-                                <div class="user-avatar" id="user-avatar">U</div>
-                                <span id="user-name">User</span>
-                            </button>
-                            
-                            <div class="user-dropdown" id="user-dropdown" data-menu>
-                                <a href="/app/settings.html" class="dropdown-item">Settings</a>
-                                <a href="/app/support.html" class="dropdown-item">Support</a>
-                                <button id="logout-btn" class="dropdown-item logout-btn" data-action="logout">Sign Out</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Mobile Bottom Navigation -->
-        <nav id="mobile-nav" class="mobile-nav">
-            <a href="/app/home.html" class="mobile-nav-link" data-page="home">Home</a>
-            <a href="/app/tiers.html" class="mobile-nav-link" data-page="tiers">Tiers</a>
-            <a href="/app/deposits.html" class="mobile-nav-link" data-page="deposits">Deposit</a>
-            <a href="/app/portfolio.html" class="mobile-nav-link" data-page="portfolio">Portfolio</a>
-            <a href="/app/more.html" class="mobile-nav-link" data-page="more">More</a>
-        </nav>
-
-        <!-- Side Navigation -->
-        <aside id="side-nav" class="side-nav" data-role="sidebar">
-            <div class="side-nav-header">
-                <div class="side-nav-logo">
-                    <h2>PALANTIR INVESTMENTS</h2>
-                </div>
-            </div>
-            
-            <nav class="side-nav-menu">
-                <div class="nav-section">
-                    <h3 class="nav-section-title">Main</h3>
-                    <a href="/app/home.html" class="side-nav-link" data-page="home">Home</a>
-                    <a href="/app/tiers.html" class="side-nav-link" data-page="tiers">Tiers</a>
-                    <a href="/app/deposits.html" class="side-nav-link" data-page="deposits">Deposits</a>
-                    <a href="/app/withdraw.html" class="side-nav-link" data-page="withdraw">Withdraw</a>
-                    <a href="/app/convert.html" class="side-nav-link" data-page="convert">Convert</a>
-                    <a href="/app/signals.html" class="side-nav-link active" data-page="signals">Signals</a>
-                    <a href="/app/portfolio.html" class="side-nav-link" data-page="portfolio">Portfolio</a>
-                    <a href="/app/history.html" class="side-nav-link" data-page="history">History</a>
-                </div>
-                
-                <div class="nav-section">
-                    <h3 class="nav-section-title">Account</h3>
-                    <a href="/app/settings.html" class="side-nav-link" data-page="settings">Settings</a>
-                    <a href="/app/support.html" class="side-nav-link" data-page="support">Support</a>
-                </div>
-            </nav>
-        </aside>
-
-        <!-- Mobile Menu Overlay -->
-        <div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
-
-        <!-- Notification Panel -->
-        <div id="notification-panel" class="notification-panel">
-            <div class="notification-header">
-                <h3>Notifications</h3>
-                <button id="close-notifications" class="close-btn">×</button>
-            </div>
-            <div class="notification-list" id="notification-list">
-                <!-- Notifications will be populated here -->
-            </div>
-        </div>
-    </div>
+    <!-- Modern Navbar -->
+    <div id="modern-navbar-container"></div>
 
     <!-- Main Content -->
-    <main class="app-main">
+    <main class="main-content">
         <div class="container">
             <!-- Header -->
             <section class="signal-detail-header">
@@ -522,7 +423,6 @@
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/balance-service.js"></script>
-    <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/services/pdf-download-service.js?v=1.0.3"></script>
     <script type="module" src="/assets/js/pages/app/signal_detail.js?v=1.0.3"></script>
 </html>

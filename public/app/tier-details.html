@@ -12,6 +12,11 @@
     <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
     <link rel="stylesheet" href="/css/app-shell.css">
@@ -159,9 +164,11 @@
     </style>
 </head>
 <body>
-    <!-- App Shell Components -->
-    <div id="app-shell-container">
-        <!-- Top Navigation Bar -->
+    <!-- Modern Navbar -->
+    <div id="modern-navbar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
         <header id="app-topbar" class="app-topbar">
             <div class="container">
                 <div class="topbar-content">
@@ -573,7 +580,6 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
-    <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/tier-details.js?v=20260211-1"></script>
 </body>
 </html>
