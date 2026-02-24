@@ -281,8 +281,15 @@ class ModernNavbar {
         const userMenu = document.getElementById('user-menu');
         const dropdownMenu = document.getElementById('main-dropdown-menu');
 
+        console.log('User dropdown elements found:', {
+            userDropdown: !!userDropdown,
+            userMenu: !!userMenu,
+            dropdownMenu: !!dropdownMenu
+        });
+
         if (userDropdown && userMenu && dropdownMenu) {
             userMenu.addEventListener('click', (e) => {
+                console.log('User menu clicked');
                 e.stopPropagation();
                 this.toggleUserDropdown();
             });
@@ -292,6 +299,12 @@ class ModernNavbar {
                 if (!userDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
                     this.closeUserDropdown();
                 }
+            });
+        } else {
+            console.error('User dropdown elements not found:', {
+                userDropdown: !!userDropdown,
+                userMenu: !!userMenu,
+                dropdownMenu: !!dropdownMenu
             });
         }
 
@@ -354,9 +367,37 @@ class ModernNavbar {
     }
 
     toggleUserDropdown() {
+        console.log('toggleUserDropdown called');
         const dropdownMenu = document.getElementById('main-dropdown-menu');
+        console.log('dropdownMenu found:', !!dropdownMenu);
+        
         if (dropdownMenu) {
-            dropdownMenu.classList.toggle('show');
+            const isVisible = dropdownMenu.classList.contains('show');
+            console.log('Dropdown currently visible:', isVisible);
+            
+            if (isVisible) {
+                dropdownMenu.classList.remove('show');
+                console.log('Dropdown hidden');
+            } else {
+                dropdownMenu.classList.add('show');
+                // Temporary: Add inline styles to ensure visibility
+                dropdownMenu.style.opacity = '1';
+                dropdownMenu.style.visibility = 'visible';
+                dropdownMenu.style.transform = 'translateY(0)';
+                dropdownMenu.style.display = 'block';
+                console.log('Dropdown shown with inline styles');
+            }
+            
+            // Log the computed styles for debugging
+            const styles = window.getComputedStyle(dropdownMenu);
+            console.log('Dropdown styles:', {
+                opacity: styles.opacity,
+                visibility: styles.visibility,
+                transform: styles.transform,
+                display: styles.display
+            });
+        } else {
+            console.error('main-dropdown-menu element not found');
         }
     }
 
@@ -364,6 +405,12 @@ class ModernNavbar {
         const dropdownMenu = document.getElementById('main-dropdown-menu');
         if (dropdownMenu) {
             dropdownMenu.classList.remove('show');
+            // Reset inline styles
+            dropdownMenu.style.opacity = '';
+            dropdownMenu.style.visibility = '';
+            dropdownMenu.style.transform = '';
+            dropdownMenu.style.display = '';
+            console.log('Dropdown closed and styles reset');
         }
     }
 
