@@ -380,12 +380,12 @@ class ModernNavbar {
                 console.log('Dropdown hidden');
             } else {
                 dropdownMenu.classList.add('show');
-                // Temporary: Add inline styles to ensure visibility
-                dropdownMenu.style.opacity = '1';
-                dropdownMenu.style.visibility = 'visible';
-                dropdownMenu.style.transform = 'translateY(0)';
-                dropdownMenu.style.display = 'block';
-                console.log('Dropdown shown with inline styles');
+                // Force visibility with !important to override CSS classes
+                dropdownMenu.style.setProperty('opacity', '1', 'important');
+                dropdownMenu.style.setProperty('visibility', 'visible', 'important');
+                dropdownMenu.style.setProperty('transform', 'translateY(0)', 'important');
+                dropdownMenu.style.setProperty('display', 'block', 'important');
+                console.log('Dropdown shown with !important styles');
             }
             
             // Log the computed styles for debugging
@@ -405,11 +405,11 @@ class ModernNavbar {
         const dropdownMenu = document.getElementById('main-dropdown-menu');
         if (dropdownMenu) {
             dropdownMenu.classList.remove('show');
-            // Reset inline styles
-            dropdownMenu.style.opacity = '';
-            dropdownMenu.style.visibility = '';
-            dropdownMenu.style.transform = '';
-            dropdownMenu.style.display = '';
+            // Reset all inline styles including !important ones
+            dropdownMenu.style.removeProperty('opacity');
+            dropdownMenu.style.removeProperty('visibility');
+            dropdownMenu.style.removeProperty('transform');
+            dropdownMenu.style.removeProperty('display');
             console.log('Dropdown closed and styles reset');
         }
     }
