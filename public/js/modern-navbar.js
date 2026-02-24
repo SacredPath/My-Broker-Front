@@ -12,6 +12,7 @@ class ModernNavbar {
         this.updateActiveNavigation();
         this.setupThemeToggle();
         this.setupNotifications();
+        this.setupUserDisplay();
     }
 
     injectNavbar() {
@@ -105,8 +106,8 @@ class ModernNavbar {
             
             <div class="user-dropdown" id="user-dropdown">
                 <div class="user-menu" id="user-menu">
-                    <div class="user-avatar">JD</div>
-                    <span class="user-name">John Doe</span>
+                    <div class="user-avatar" id="navbar-user-avatar">U</div>
+                    <span class="user-name" id="navbar-user-name">Loading...</span>
                     <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
@@ -450,11 +451,116 @@ class ModernNavbar {
             indicator.style.display = 'none';
         }
     }
+
+    // User display functionality
+    async setupUserDisplay() {
+        // Load initial user data
+        await this.updateUserDisplay();
+        
+        // Listen for auth state changes
+        if (window.AuthStateManager) {
+            window.AuthStateManager.addListener(async (event, session) => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    await this.updateUserDisplay();
+                } else if (event === 'SIGNED_OUT') {
+                    this.clearUserDisplay();
+                }
+            }, { id: 'modernNavbar' });
+        }
+    }
+
+    async updateUserDisplay() {
+        try {
+            // Get current user with profile
+            let user = null;
+            
+            // Try different auth service methods
+            if (window.AuthService && window.AuthService.getCurrentUserWithProfile) {
+                console.log('Using AuthService.getCurrentUserWithProfile');
+                user = await window.AuthService.getCurrentUserWithProfile();
+            } else if (window.AuthStateManager && window.AuthStateManager.getCurrentUser) {
+                console.log('Using AuthStateManager.getCurrentUser');
+                const currentUser = window.AuthStateManager.getCurrentUser();
+                if (currentUser) {
+                    user = {
+                        ...currentUser,
+                        profile: null // Will be populated if we can fetch it
+                    };
+                }
+            } else {
+                console.warn('No auth services available for user display');
+                this.clearUserDisplay();
+                return;
+            }
+
+            if (!user) {
+                console.log('No user found, clearing display');
+                this.clearUserDisplay();
+                return;
+            }
+
+            console.log('User found for display:', user.email);
+
+            // Get display name from profile or email
+            const displayName = user.profile?.display_name || 
+                              user.email?.split('@')[0] || 
+                              'User';
+
+            // Update navbar elements
+            const userAvatar = document.getElementById('navbar-user-avatar');
+            const userName = document.getElementById('navbar-user-name');
+            
+            if (userAvatar) {
+                userAvatar.textContent = displayName.charAt(0).toUpperCase();
+                console.log('Updated avatar:', displayName.charAt(0).toUpperCase());
+            } else {
+                console.warn('navbar-user-avatar element not found');
+            }
+            
+            if (userName) {
+                userName.textContent = displayName;
+                console.log('Updated user name:', displayName);
+            } else {
+                console.warn('navbar-user-name element not found');
+            }
+
+        } catch (error) {
+            console.error('Error updating user display:', error);
+            this.clearUserDisplay();
+        }
+    }
+
+    clearUserDisplay() {
+        const userAvatar = document.getElementById('navbar-user-avatar');
+        const userName = document.getElementById('navbar-user-name');
+        
+        if (userAvatar) {
+            userAvatar.textContent = 'U';
+        }
+        
+        if (userName) {
+            userName.textContent = 'Guest';
+        }
+    }
 }
 
 // Initialize navbar when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.modernNavbar = new ModernNavbar();
+    
+    // Wait for auth services to be available, then update user display
+    const waitForAuthServices = () => {
+        if (window.AuthService || window.AuthStateManager) {
+            console.log('Auth services available, updating user display');
+            window.modernNavbar.updateUserDisplay();
+        } else {
+            console.log('Auth services not yet available, retrying in 100ms');
+            setTimeout(waitForAuthServices, 100);
+        }
+    };
+    
+    // Start checking for auth services
+    setTimeout(waitForAuthServices, 500);
 });
 
 // Export for module usage

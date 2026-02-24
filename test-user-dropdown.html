@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dropdown Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .user-avatar { 
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: #007bff; color: white; display: flex; 
+            align-items: center; justify-content: center; 
+            font-weight: bold; margin-right: 10px; 
+        }
+        .user-menu { 
+            display: flex; align-items: center; 
+            padding: 10px; border: 1px solid #ddd; 
+            border-radius: 8px; margin-bottom: 20px; 
+        }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>User Dropdown Test</h1>
+    
+    <div class="test-section">
+        <h2>Modern Navbar Dropdown</h2>
+        <div id="modern-navbar-container">
+            <!-- Modern navbar will be injected here -->
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Test Controls</h2>
+        <button onclick="testMockUser()">Test Mock User</button>
+        <button onclick="testRealUser()">Test Real User</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <button onclick="testModernNavbarUpdate()">Test Modern Navbar Update</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Status</h2>
+        <div id="status">Loading...</div>
+    </div>
+
+    <!-- Mock dependencies -->
+    <script>
+        // Mock AuthService for testing
+        window.AuthService = {
+            getCurrentUserWithProfile: async () => {
+                return window.mockUser || null;
+            }
+        };
+
+        // Mock AuthStateManager for testing
+        window.AuthStateManager = {
+            listeners: [],
+            addListener: function(callback, options) {
+                this.listeners.push({ callback, ...options });
+                console.log('Mock AuthStateManager: Listener added');
+                // Call immediately if user is already set
+                if (window.mockUser && options.immediate !== false) {
+                    setTimeout(() => callback('SIGNED_IN', { user: window.mockUser }), 0);
+                }
+                return Date.now();
+            }
+        };
+
+        // Test functions
+        function testMockUser() {
+            window.mockUser = {
+                id: 'test-user-id',
+                email: 'john.doe@example.com',
+                profile: {
+                    display_name: 'John Doe',
+                    first_name: 'John',
+                    last_name: 'Doe'
+                }
+            };
+            updateStatus('Mock user set: John Doe');
+            if (window.modernNavbar) {
+                window.modernNavbar.updateUserDisplay();
+            }
+        }
+
+        function testRealUser() {
+            window.mockUser = {
+                id: 'real-user-id',
+                email: 'jane.smith@example.com',
+                profile: {
+                    display_name: 'Jane Smith',
+                    first_name: 'Jane',
+                    last_name: 'Smith'
+                }
+            };
+            updateStatus('Real user set: Jane Smith');
+            if (window.modernNavbar) {
+                window.modernNavbar.updateUserDisplay();
+            }
+        }
+
+        function testLogout() {
+            window.mockUser = null;
+            updateStatus('User logged out');
+            if (window.modernNavbar) {
+                window.modernNavbar.clearUserDisplay();
+            }
+        }
+
+        function testModernNavbarUpdate() {
+            if (window.modernNavbar) {
+                window.modernNavbar.updateUserDisplay();
+                updateStatus('Modern navbar update triggered');
+            } else {
+                updateStatus('Modern navbar not found');
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = `<strong>Status:</strong> ${message} <br><small>Time: ${new Date().toLocaleTimeString()}</small>`;
+        }
+    </script>
+
+    <!-- Load the modern navbar -->
+    <script src="public/js/modern-navbar.js"></script>
+</body>
+</html>
