@@ -699,6 +699,14 @@ class SettingsPage {
               </select>
             </div>
             
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select class="form-input form-select" id="method-currency">
+                <option value="USD" ${method?.currency === 'USD' ? 'selected' : ''}>USD</option>
+                <option value="USDT" ${method?.currency === 'USDT' ? 'selected' : ''}>USDT</option>
+              </select>
+            </div>
+            
             <div id="bank-fields" class="method-fields" style="${method?.type === 'bank' || !method ? '' : 'display: none;'}">
               <div class="form-group">
                 <label class="form-label">Account Name</label>
@@ -777,12 +785,26 @@ class SettingsPage {
   async savePayoutMethod(methodId = '') {
     try {
       const modal = document.querySelector('dialog[open]');
-      const methodType = modal.querySelector('#method-type').value;
+      if (!modal) {
+        window.Notify.error('Modal not found');
+        return;
+      }
+
+      const methodTypeSelect = modal.querySelector('#method-type');
+      const currencySelect = modal.querySelector('#method-currency');
+      
+      if (!methodTypeSelect || !currencySelect) {
+        window.Notify.error('Required form elements not found');
+        return;
+      }
+
+      const methodType = methodTypeSelect.value;
+      const currency = currencySelect.value;
       
       let methodData = {
         method_type: methodType,
         method_name: this.getMethodName(methodType),
-        currency: modal.querySelector('#method-currency').value,
+        currency: currency,
         is_active: true,
         is_default: false
       };
@@ -790,23 +812,46 @@ class SettingsPage {
       // Collect method-specific data
       switch (methodType) {
         case 'bank':
+          const accountName = modal.querySelector('#account-name');
+          const accountNumber = modal.querySelector('#account-number');
+          const routingNumber = modal.querySelector('#routing-number');
+          const bankName = modal.querySelector('#bank-name');
+          
+          if (!accountName || !accountNumber || !routingNumber || !bankName) {
+            window.Notify.error('Bank account form elements not found');
+            return;
+          }
+          
           methodData.details = {
-            account_name: modal.querySelector('#account-name').value,
-            account_number: modal.querySelector('#account-number').value,
-            routing_number: modal.querySelector('#routing-number').value,
-            bank_name: modal.querySelector('#bank-name').value
+            account_name: accountName.value,
+            account_number: accountNumber.value,
+            routing_number: routingNumber.value,
+            bank_name: bankName.value
           };
           break;
         case 'paypal':
+          const paypalEmail = modal.querySelector('#paypal-email');
+          if (!paypalEmail) {
+            window.Notify.error('PayPal form elements not found');
+            return;
+          }
           methodData.details = {
-            email: modal.querySelector('#paypal-email').value,
+            email: paypalEmail.value,
             account_id: 'paypal_' + Date.now()
           };
           break;
         case 'crypto':
+          const cryptoNetwork = modal.querySelector('#crypto-network');
+          const walletAddress = modal.querySelector('#wallet-address');
+          
+          if (!cryptoNetwork || !walletAddress) {
+            window.Notify.error('Cryptocurrency form elements not found');
+            return;
+          }
+          
           methodData.details = {
-            network: modal.querySelector('#crypto-network').value,
-            address: modal.querySelector('#wallet-address').value
+            network: cryptoNetwork.value,
+            address: walletAddress.value
           };
           break;
       }
@@ -855,13 +900,13 @@ class SettingsPage {
 
   validatePayoutMethod(methodData) {
     // Basic validation
-    if (!methodData.type || !methodData.details) {
+    if (!methodData.method_type || !methodData.details) {
       window.Notify.error('Please fill in all required fields');
       return false;
     }
 
     // Type-specific validation
-    switch (methodData.type) {
+    switch (methodData.method_type) {
       case 'bank':
         if (!methodData.details.account_name || !methodData.details.account_number || 
             !methodData.details.routing_number || !methodData.details.bank_name) {
