@@ -1131,10 +1131,10 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
+    <script type="module" src="/assets/js/app-shell.js"></script>
 
     <script type="module" src="/assets/js/pages/app/settings.js"></script>
     <script>
-
         setTimeout(() => {
             console.log('=== SETTINGS DEBUG ===');
             const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
@@ -1147,6 +1147,7 @@
             console.log('AppShell initialized:', !!window.AppShell);
             console.log('API client available:', !!window.API);
             console.log('SettingsPage initialized:', !!window.settingsPage);
+            console.log('AuthService available:', !!window.AuthService);
             
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', () => {
@@ -1154,7 +1155,7 @@
                     document.documentElement.classList.toggle('sidebar-open');
                 });
             }
-        }, 1000);
+        }, 2000); // Increased delay to allow all modules to load
     </script>
 </body>
 </html>
