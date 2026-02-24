@@ -44,6 +44,14 @@ class SettingsPage {
       this.renderPayoutMethods();
       this.loadNotificationPreferences();
       
+      // Re-bind AppShell UI elements after DOM is fully loaded
+      setTimeout(() => {
+        if (window.AppShell && window.AppShell.bindCoreUIEvents) {
+          console.log('Re-binding AppShell UI elements...');
+          window.AppShell.bindCoreUIEvents();
+        }
+      }, 100);
+      
       console.log('Settings page setup complete');
     } catch (error) {
       console.error('Error setting up settings page:', error);
@@ -330,23 +338,45 @@ class SettingsPage {
     const preferences = JSON.parse(localStorage.getItem('notificationPreferences') || '{}');
     
     const defaults = {
-      emailNotifications: true,
-      inappNotifications: true,
-      depositNotifications: true,
-      withdrawalNotifications: true,
-      roiNotifications: true,
-      marketingNotifications: false
+      // Email preferences
+      email_deposits: true,
+      email_withdrawals: true,
+      email_trades: true,
+      email_security: true,
+      email_marketing: false,
+      // Push preferences
+      push_deposits: true,
+      push_withdrawals: true,
+      push_trades: true,
+      push_security: true,
+      push_marketing: false,
+      // In-app preferences
+      inapp_deposits: true,
+      inapp_withdrawals: true,
+      inapp_trades: true,
+      inapp_security: true,
+      inapp_marketing: false,
+      // General preferences
+      quiet_hours_enabled: false,
+      frequency_summary: true
     };
 
     const settings = { ...defaults, ...preferences };
 
-    // Set toggle states
-    document.getElementById('email-notifications').checked = settings.emailNotifications;
-    document.getElementById('inapp-notifications').checked = settings.inappNotifications;
-    document.getElementById('deposit-notifications').checked = settings.depositNotifications;
-    document.getElementById('withdrawal-notifications').checked = settings.withdrawalNotifications;
-    document.getElementById('roi-notifications').checked = settings.roiNotifications;
-    document.getElementById('marketing-notifications').checked = settings.marketingNotifications;
+    // Set checkbox states - check if elements exist before setting
+    const checkboxes = [
+      'email-deposits', 'email-withdrawals', 'email-trades', 'email-security', 'email-marketing',
+      'push-deposits', 'push-withdrawals', 'push-trades', 'push-security', 'push-marketing',
+      'inapp-deposits', 'inapp-withdrawals', 'inapp-trades', 'inapp-security', 'inapp-marketing',
+      'quiet-hours-enabled', 'frequency-summary'
+    ];
+
+    checkboxes.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.checked = settings[id.replace('-', '_')] || false;
+      }
+    });
   }
 
   async saveProfile() {
