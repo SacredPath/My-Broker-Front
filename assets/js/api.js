@@ -38,44 +38,71 @@ class APIClient {
   }
 
   async initSupabase() {
-    try {
-      console.log('[APIClient] Initializing shared Supabase client...');
-      
-      // Use shared Supabase client instance to prevent duplicates
-      if (window.SupabaseClient) {
-        this.supabase = await window.SupabaseClient.getClient();
-        console.log('[APIClient] Using shared Supabase client instance');
+    let retries = 0;
+    const maxRetries = 5;
+    
+    const attemptInit = async () => {
+      try {
+        console.log('[APIClient] Initializing shared Supabase client...');
+        
+        // Wait for SupabaseClient to be available
+        let waitRetries = 0;
+        const maxWaitRetries = 50; // 5 seconds max wait
+        
+        while ((!window.SupabaseClient && !window.supabase) && waitRetries < maxWaitRetries) {
+          console.log(`[APIClient] Waiting for SupabaseClient... (${waitRetries}/${maxWaitRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+          waitRetries++;
+        }
+        
+        // Use shared Supabase client instance to prevent duplicates
+        if (window.SupabaseClient) {
+          // Wait for SupabaseClient to be initialized
+          if (window.SupabaseClient.isInitialized && typeof window.SupabaseClient.getClient === 'function') {
+            this.supabase = await window.SupabaseClient.getClient();
+            console.log('[APIClient] Using shared Supabase client instance');
+          } else {
+            console.warn('[APIClient] SupabaseClient not fully initialized, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return attemptInit();
+          }
+        } else if (window.supabase) {
+          // Fallback to legacy global instance
+          if (window.supabase.isInitialized && typeof window.supabase.getClient === 'function') {
+            this.supabase = await window.supabase.getClient();
+            console.log('[APIClient] Using legacy Supabase client instance');
+          } else {
+            console.warn('[APIClient] Legacy supabase not fully initialized, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return attemptInit();
+          }
+        } else {
+          throw new Error('Supabase client not available after timeout');
+        }
         
         // Test auth immediately
-        const { data: { session } } = await this.supabase.auth.getSession();
-        console.log('[APIClient] Auth test - Session:', session ? 'Found' : 'Not found');
-        if (session?.access_token) {
-          console.log('[APIClient] Auth test - Token available:', session.access_token.substring(0, 20) + '...');
+        if (this.supabase) {
+          const { data: { session } } = await this.supabase.auth.getSession();
+          console.log('[APIClient] Auth test - Session:', session ? 'Found' : 'Not found');
+          if (session?.access_token) {
+            console.log('[APIClient] Auth test - Token available:', session.access_token.substring(0, 20) + '...');
+          }
         }
-      } else if (window.supabase) {
-        // Fallback to legacy global instance
-        this.supabase = await window.supabase.getClient();
-        console.log('[APIClient] Using legacy Supabase client instance');
         
-        // Test auth immediately
-        const { data: { session } } = await this.supabase.auth.getSession();
-        console.log('[APIClient] Auth test - Session:', session ? 'Found' : 'Not found');
-        if (session?.access_token) {
-          console.log('[APIClient] Auth test - Token available:', session.access_token.substring(0, 20) + '...');
+        console.log('[APIClient] Initialized with shared client');
+      } catch (error) {
+        console.error('[APIClient] Init failed:', error);
+        retries++;
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return attemptInit();
+        } else {
+          throw error;
         }
-      } else {
-        // Last resort - wait for SupabaseClient to load
-        console.warn('[APIClient] SupabaseClient not available, retrying...');
-        setTimeout(() => this.initSupabase(), 100);
-        return;
       }
-      
-      console.log('[APIClient] Initialized with shared client');
-    } catch (error) {
-      console.error('[APIClient] Init failed:', error);
-      // Retry on error
-      setTimeout(() => this.initSupabase(), 500);
-    }
+    };
+    
+    return attemptInit();
   }
 
   async initServiceClient() {
@@ -84,24 +111,25 @@ class APIClient {
       
       // Use the shared Supabase client for service operations too
       // This prevents multiple client instances
-      if (window.SupabaseClient) {
+      if (window.SupabaseClient && window.SupabaseClient.isInitialized) {
         this.serviceClient = await window.SupabaseClient.getClient();
         console.log('[APIClient] Using shared Supabase client for service operations');
-      } else if (window.supabase) {
+      } else if (window.supabase && window.supabase.isInitialized) {
         this.serviceClient = await window.supabase.getClient();
         console.log('[APIClient] Using legacy Supabase client for service operations');
       } else {
         // Wait and retry
         console.warn('[APIClient] No Supabase client available for service operations, retrying...');
-        setTimeout(() => this.initServiceClient(), 100);
-        return;
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return this.initServiceClient();
       }
       
       console.log('[APIClient] Service client initialized successfully');
     } catch (error) {
       console.error('[APIClient] Service client init failed:', error);
       // Retry on error
-      setTimeout(() => this.initServiceClient(), 500);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return this.initServiceClient();
     }
   }
 
@@ -835,14 +863,12 @@ class APIClient {
 }
 
 // Only initialize if not already present
-setTimeout(() => {
-  if (!window.API) {
-    window.API = new APIClient();
-    window.APIClient = APIClient;
-    console.log('API Client initialized and made globally available');
-  } else {
-    console.log('API Client already available, skipping delayed initialization');
-  }
-}, 100);
+if (!window.API) {
+  window.API = new APIClient();
+  window.APIClient = APIClient;
+  console.log('API Client initialized and made globally available');
+} else {
+  console.log('API Client already available, skipping delayed initialization');
+}
 
 export default APIClient;

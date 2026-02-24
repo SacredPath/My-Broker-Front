@@ -59,6 +59,13 @@ class SignalsPage {
       // Load app shell components
       this.loadAppShell();
       
+      // Check if API client is properly initialized
+      if (!window.API || !window.API.serviceClient || !window.API.supabase) {
+        console.error('API client not properly initialized, showing error state');
+        this.showErrorState('API client failed to initialize. Please refresh the page.');
+        return;
+      }
+      
       // Load data
       await this.loadUserData();
       await this.loadUserPositions();
@@ -73,9 +80,31 @@ class SignalsPage {
       console.log('Signals page setup complete');
     } catch (error) {
       console.error('Error setting up signals page:', error);
-      if (window.Notify) {
-        window.Notify.error('Failed to load signals');
-      }
+      this.showErrorState('Failed to load signals. Please refresh the page.');
+    }
+  }
+
+  showErrorState(message) {
+    const signalsGrid = document.getElementById('signals-grid');
+    if (signalsGrid) {
+      signalsGrid.innerHTML = `
+        <div class="error-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <h3 style="color: #ef4444; margin: 16px 0 8px 0;">Error Loading Signals</h3>
+          <p style="color: var(--text-secondary);">${message}</p>
+          <button class="btn btn-primary" onclick="window.location.reload()" style="margin-top: 16px;">
+            Refresh Page
+          </button>
+        </div>
+      `;
+    }
+    
+    if (window.Notify) {
+      window.Notify.error(message);
     }
   }
 
@@ -114,6 +143,11 @@ class SignalsPage {
     try {
       console.log('Loading user positions via REST API...');
       
+      // Double-check API client is available
+      if (!window.API || !window.API.serviceClient) {
+        throw new Error('API client not available');
+      }
+      
       // Query signal_purchases table directly
       const { data, error } = await window.API.serviceClient
         .from('signal_purchases')
@@ -130,12 +164,18 @@ class SignalsPage {
     } catch (error) {
       console.error('Failed to load user positions:', error);
       this.userPositions = [];
+      // Don't throw error, just use empty positions
     }
   }
 
   async loadSignals() {
     try {
       console.log('Loading signals from database...');
+      
+      // Double-check API client is available
+      if (!window.API || !window.API.serviceClient) {
+        throw new Error('API client not available');
+      }
       
       // Query trading_signals table directly
       const { data, error } = await window.API.serviceClient
@@ -155,12 +195,18 @@ class SignalsPage {
     } catch (error) {
       console.error('Failed to load signals:', error);
       this.signals = [];
+      // Don't throw error, just use empty signals
     }
   }
 
   async loadUserAccess() {
     try {
       console.log('Loading user signal access from database...');
+      
+      // Double-check API client is available
+      if (!window.API || !window.API.serviceClient) {
+        throw new Error('API client not available');
+      }
       
       // Query signal_access table directly
       const { data, error } = await window.API.serviceClient
@@ -178,6 +224,7 @@ class SignalsPage {
     } catch (error) {
       console.error('Failed to load user access:', error);
       this.userAccess = [];
+      // Don't throw error, just use empty user access
     }
   }
 
