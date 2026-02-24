@@ -50,6 +50,35 @@ class SettingsPage {
           console.log('Re-binding AppShell UI elements...');
           window.AppShell.bindCoreUIEvents();
         }
+        
+        // Manual fallback binding for sidebar toggle
+        const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
+        const sidebar = document.querySelector('[data-role="sidebar"]');
+        const overlay = document.querySelector('[data-role="sidebar-overlay"]');
+        
+        if (sidebarToggle && sidebar && overlay) {
+          console.log('Manual sidebar binding successful');
+          sidebarToggle.addEventListener('click', (e) => {
+            console.log('Manual sidebar toggle clicked');
+            e.preventDefault();
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+            document.documentElement.classList.toggle('sidebar-open');
+          });
+          
+          // Close sidebar when overlay is clicked
+          overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            document.documentElement.classList.remove('sidebar-open');
+          });
+        } else {
+          console.log('Manual sidebar binding failed - elements not found:', {
+            sidebarToggle: !!sidebarToggle,
+            sidebar: !!sidebar,
+            overlay: !!overlay
+          });
+        }
       }, 100);
       
       console.log('Settings page setup complete');
@@ -767,12 +796,28 @@ class SettingsPage {
         return;
       }
 
-      const endpoint = methodId ? 'payout_methods_update' : 'payout_methods_upsert';
-      const profileData = {
-        method_id: methodId,
-        method_data: methodData
-      };
-      const { data, error } = await window.API.updateProfile(this.currentUser.id, profileData);
+      // Add user_id to method data
+      methodData.user_id = this.currentUser.id;
+
+      let result;
+      if (methodId) {
+        // Update existing method
+        result = await window.API.supabase
+          .from('payout_methods')
+          .update(methodData)
+          .eq('id', methodId)
+          .select()
+          .single();
+      } else {
+        // Insert new method
+        result = await window.API.supabase
+          .from('payout_methods')
+          .insert(methodData)
+          .select()
+          .single();
+      }
+
+      const { data, error } = result;
 
       if (error) {
         throw error;
@@ -837,23 +882,31 @@ class SettingsPage {
       const method = this.payoutMethods.find(m => m.id === methodId);
       if (!method) return;
 
-      const { data, error } = await window.API.updateProfile(this.currentUser.id, {
-        method_data: {
-          is_active: !method.is_active
-        }
-      });
+      // Update the payout method in the payout_methods table, not the profiles table
+      const { data, error } = await window.API.supabase
+        .from('payout_methods')
+        .update({ is_active: !method.is_active })
+        .eq('id', methodId)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
-      await this.loadPayoutMethods();
+      // Update local state
+      method.is_active = !method.is_active;
       this.renderPayoutMethods();
+      
+      if (window.Notify) {
+        window.Notify.success(`Payout method ${method.is_active ? 'activated' : 'deactivated'} successfully`);
+      }
 
-      window.Notify.success(`Payout method ${method.is_active ? 'deactivated' : 'activated'} successfully!`);
     } catch (error) {
       console.error('Failed to toggle payout method:', error);
-      window.Notify.error('Failed to update payout method');
+      if (window.Notify) {
+        window.Notify.error('Failed to update payout method');
+      }
     }
   }
 
