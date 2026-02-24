@@ -1,9 +1,28 @@
-// Modern Navbar JavaScript
+// Modern Navbar JavaScript - Icon-Only Navigation with Working Dropdown
 class ModernNavbar {
     constructor() {
         this.isOpen = false;
         this.currentPage = this.getCurrentPage();
-        this.navbarHTML = `<!-- Modern Navigation Bar -->
+        this.init();
+    }
+
+    init() {
+        this.injectNavbar();
+        this.setupEventListeners();
+        this.updateActiveNavigation();
+        this.setupThemeToggle();
+        this.setupNotifications();
+    }
+
+    injectNavbar() {
+        const container = document.getElementById('modern-navbar-container');
+        if (container) {
+            container.innerHTML = this.getNavbarHTML();
+        }
+    }
+
+    getNavbarHTML() {
+        return `<!-- Modern Navigation Bar -->
 <nav class="modern-navbar">
     <div class="navbar-wrapper">
         <!-- Left Section: Brand + Mobile Toggle -->
@@ -19,75 +38,65 @@ class ModernNavbar {
             <h1 class="brand-text">PALANTIR INVESTMENTS</h1>
         </div>
 
-        <!-- Center Section: Navigation -->
+        <!-- Center Section: Icon Navigation -->
         <div class="navbar-center">
             <nav class="nav-menu">
-                <a href="/app/home.html" class="nav-item" data-page="home">
+                <a href="/app/home.html" class="nav-item" data-page="home" title="Home">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
-                    <span>Home</span>
                 </a>
-                <a href="/app/tiers.html" class="nav-item" data-page="tiers">
+                <a href="/app/tiers.html" class="nav-item" data-page="tiers" title="Tiers">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
                     </svg>
-                    <span>Tiers</span>
                 </a>
-                <a href="/app/deposits.html" class="nav-item" data-page="deposits">
+                <a href="/app/deposits.html" class="nav-item" data-page="deposits" title="Deposits">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    <span>Deposits</span>
                 </a>
-                <a href="/app/withdraw.html" class="nav-item" data-page="withdrawals">
+                <a href="/app/withdraw.html" class="nav-item" data-page="withdrawals" title="Withdraw">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 19 19 12 12 5"></polyline>
                     </svg>
-                    <span>Withdraw</span>
                 </a>
-                <a href="/app/convert.html" class="nav-item" data-page="convert">
+                <a href="/app/convert.html" class="nav-item" data-page="convert" title="Convert">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 4 23 10 17 10"></polyline>
                         <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                     </svg>
-                    <span>Convert</span>
                 </a>
-                <a href="/app/signals.html" class="nav-item" data-page="signals">
+                <a href="/app/signals.html" class="nav-item" data-page="signals" title="Signals">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <span>Signals</span>
                 </a>
-                <a href="/app/portfolio.html" class="nav-item" data-page="portfolio">
+                <a href="/app/portfolio.html" class="nav-item" data-page="portfolio" title="Portfolio">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="1" x2="12" y2="23"></line>
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                     </svg>
-                    <span>Portfolio</span>
                 </a>
-                <a href="/app/history.html" class="nav-item" data-page="history">
+                <a href="/app/history.html" class="nav-item" data-page="history" title="History">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
                     </svg>
-                    <span>History</span>
                 </a>
-                <a href="/app/settings.html" class="nav-item" data-page="settings">
+                <a href="/app/settings.html" class="nav-item" data-page="settings" title="Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.54l4.24 4.24M20.46 14.46l-4.24 4.24M7.76 7.76L3.52 3.52"></path>
                     </svg>
-                    <span>Settings</span>
                 </a>
-                <a href="/app/support.html" class="nav-item" data-page="support">
+                <a href="/app/support.html" class="nav-item" data-page="support" title="Support">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <span>Support</span>
                 </a>
             </nav>
         </div>
@@ -116,9 +125,70 @@ class ModernNavbar {
                 </svg>
             </button>
             
-            <div class="user-menu" id="user-menu">
-                <div class="user-avatar">JD</div>
-                <span class="user-name">John Doe</span>
+            <div class="user-dropdown" id="user-dropdown">
+                <div class="user-menu" id="user-menu">
+                    <div class="user-avatar">JD</div>
+                    <span class="user-name">John Doe</span>
+                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+                
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">Account</div>
+                        <a href="/app/profile.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Profile</span>
+                        </a>
+                        <a href="/app/settings.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.54l4.24 4.24M20.46 14.46l-4.24 4.24M7.76 7.76L3.52 3.52"></path>
+                            </svg>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                    
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">Trading</div>
+                        <a href="/app/portfolio.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <span>Portfolio</span>
+                        </a>
+                        <a href="/app/history.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                            </svg>
+                            <span>History</span>
+                        </a>
+                    </div>
+                    
+                    <div class="dropdown-divider"></div>
+                    
+                    <div class="dropdown-section">
+                        <a href="/app/support.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>Support</span>
+                        </a>
+                        <a href="/auth/logout.html" class="dropdown-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 17 21 7"></polyline>
+                            </svg>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -210,22 +280,6 @@ class ModernNavbar {
 
 <!-- Overlay -->
 <div class="nav-overlay" id="nav-overlay"></div>`;
-        this.init();
-    }
-
-    init() {
-        this.injectNavbar();
-        this.setupEventListeners();
-        this.updateActiveNavigation();
-        this.setupThemeToggle();
-        this.setupNotifications();
-    }
-
-    injectNavbar() {
-        const container = document.getElementById('modern-navbar-container');
-        if (container) {
-            container.innerHTML = this.navbarHTML;
-        }
     }
 
     setupEventListeners() {
@@ -248,8 +302,27 @@ class ModernNavbar {
             });
         }
 
+        // User dropdown
+        const userDropdown = document.getElementById('user-dropdown');
+        const userMenu = document.getElementById('user-menu');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+
+        if (userDropdown && userMenu && dropdownMenu) {
+            userMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleUserDropdown();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    this.closeUserDropdown();
+                }
+            });
+        }
+
         // Navigation item clicks
-        const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item');
+        const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item, .dropdown-item');
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 const page = e.currentTarget.dataset.page;
@@ -261,17 +334,11 @@ class ModernNavbar {
                 if (this.isOpen) {
                     this.closeMobileMenu();
                 }
+                
+                // Close user dropdown
+                this.closeUserDropdown();
             });
         });
-
-        // User menu
-        const userMenu = document.getElementById('user-menu');
-        if (userMenu) {
-            userMenu.addEventListener('click', () => {
-                // Toggle user dropdown (to be implemented)
-                console.log('User menu clicked');
-            });
-        }
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -279,33 +346,6 @@ class ModernNavbar {
                 this.closeMobileMenu();
             }
         });
-    }
-
-    setupThemeToggle() {
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
-        }
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-
-    setupNotifications() {
-        const notificationBtn = document.getElementById('notification-btn');
-        if (notificationBtn) {
-            notificationBtn.addEventListener('click', () => {
-                // Toggle notification panel (to be implemented)
-                console.log('Notifications clicked');
-                this.clearNotificationIndicator();
-            });
-        }
     }
 
     toggleMobileMenu() {
@@ -339,6 +379,20 @@ class ModernNavbar {
         this.isOpen = false;
     }
 
+    toggleUserDropdown() {
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        if (dropdownMenu) {
+            dropdownMenu.classList.toggle('show');
+        }
+    }
+
+    closeUserDropdown() {
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        if (dropdownMenu) {
+            dropdownMenu.classList.remove('show');
+        }
+    }
+
     getCurrentPage() {
         const path = window.location.pathname;
         const pageMap = {
@@ -359,7 +413,7 @@ class ModernNavbar {
 
     setActivePage(page) {
         // Remove active class from all items
-        document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
+        document.querySelectorAll('.nav-item, .mobile-nav-item, .dropdown-item').forEach(item => {
             item.classList.remove('active');
         });
 
@@ -375,6 +429,41 @@ class ModernNavbar {
         this.setActivePage(this.currentPage);
     }
 
+    setupThemeToggle() {
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    setupNotifications() {
+        const notificationBtn = document.getElementById('notification-btn');
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', () => {
+                // Toggle notification panel (to be implemented)
+                console.log('Notifications clicked');
+                this.clearNotificationIndicator();
+            });
+        }
+    }
+
+    showNotification() {
+        this.showNotificationIndicator();
+    }
+
+    hideNotifications() {
+        this.clearNotificationIndicator();
+    }
+
     showNotificationIndicator() {
         const indicator = document.getElementById('notification-indicator');
         if (indicator) {
@@ -387,15 +476,6 @@ class ModernNavbar {
         if (indicator) {
             indicator.style.display = 'none';
         }
-    }
-
-    // Public methods
-    showNotification() {
-        this.showNotificationIndicator();
-    }
-
-    hideNotifications() {
-        this.clearNotificationIndicator();
     }
 }
 
