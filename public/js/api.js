@@ -4,32 +4,18 @@
  * Bounded retries (max 1) and user-friendly error handling
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { supabase } from './supabaseClient.js';
 
 class APIClient {
   constructor() {
-    this.supabase = null;
+    this.supabase = supabase.supabase;
     this.keepAliveInterval = null;
     this.requestQueue = new Map();
     this.init();
   }
 
   init() {
-    this.initSupabase();
     this.startKeepAlive();
-  }
-
-  initSupabase() {
-    try {
-      const env = window.__ENV || {};
-      const SUPABASE_URL = env.SUPABASE_URL || "https://ubycoeyutauzjgxbozcm.supabase.co";
-      const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVieWNvZXl1dGF1empneGJvemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MDYyOTIsImV4cCI6MjA4NDk4MjI5Mn0.NUqdlArOGnCUEXuQYummEgsJKHoTk3fUvBarKIagHMM";
-      
-      this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('[APIClient] Initialized');
-    } catch (error) {
-      console.error('[APIClient] Init failed:', error);
-    }
   }
 
   // Direct Supabase REST API calls instead of edge functions
@@ -283,10 +269,67 @@ class APIClient {
     });
   }
 
+  // Withdrawal methods using REST API
+  async getWithdrawalMethods() {
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        return { data: [] };
+      }
+      
+      return await this.fetchSupabase('payout_methods', {
+        filters: { user_id: userId },
+        select: 'id,method_name,method_type,currency,network,address,details,is_default,is_active,min_amount,max_amount,fee_percentage,fixed_fee,processing_time_hours,created_at,updated_at'
+      });
+    } catch (error) {
+      console.error('Failed to fetch withdrawal methods:', error);
+      return { data: [] };
+    }
+  }
+
+  async upsertWithdrawalMethod(methodData) {
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Map the method data to the actual table structure
+      let dataToInsert = {
+        user_id: userId,
+        method_name: this.getMethodName(methodData.method_type),
+        method_type: methodData.method_type,
+        currency: methodData.currency || 'USD',
+        details: methodData.details,
+        is_active: true,
+        is_default: false
+      };
+      
+      return await this.fetchSupabase('payout_methods', {
+        method: 'POST',
+        body: dataToInsert,
+        select: 'id,method_name,method_type,currency,network,address,details,is_default,is_active,min_amount,max_amount,fee_percentage,fixed_fee,processing_time_hours,created_at,updated_at'
+      });
+    } catch (error) {
+      console.error('Failed to upsert withdrawal method:', error);
+      throw error;
+    }
+  }
+
+  getMethodName(methodType) {
+    const names = {
+      bank: 'Bank Account',
+      paypal: 'PayPal',
+      crypto: 'Cryptocurrency'
+    };
+    return names[methodType] || 'Unknown';
+  }
+
   // Deposit methods fetching
   async getDepositMethods() {
     try {
-      const data = await this.fetchSupabase('deposit_methods');
+      const response = await this.fetchSupabase('deposit_methods');
+      const data = response?.data || [];
       return this.transformDepositMethods(data);
     } catch (error) {
       console.error('Failed to fetch deposit methods:', error);
@@ -319,7 +362,8 @@ class APIClient {
   // Balance fetching with canonical mapping
   async fetchBalances() {
     try {
-      const data = await this.fetchSupabase('balances');
+      const response = await this.fetchSupabase('wallet_balances');
+      const data = response?.data || [];
       return this.transformBalanceData(data);
     } catch (error) {
       console.error('Failed to fetch balances:', error);
@@ -328,21 +372,26 @@ class APIClient {
   }
 
   transformBalanceData(data) {
-    if (!data) return [];
-    return data.map(item => ({
-      symbol: item.symbol,
-      amount: item.amount,
-      value: item.usd_value || 0
-    }));
+    if (!data) return {};
+    // Transform wallet_balances to expected format
+    const balances = {};
+    data.forEach(item => {
+      balances[item.currency] = {
+        available: parseFloat(item.available) || 0,
+        total: parseFloat(item.available) || 0
+      };
+    });
+    return balances;
   }
 
   // Deposit request creation
   async createDepositRequest(depositData) {
     try {
-      const data = await this.fetchSupabase('deposit_requests', {
+      const response = await this.fetchSupabase('deposit_requests', {
         method: 'POST',
         body: depositData
       });
+      const data = response?.data || null;
       return this.transformDepositRequest(data);
     } catch (error) {
       console.error('Failed to create deposit request:', error);
@@ -375,6 +424,170 @@ class APIClient {
     return results;
   }
 
+  // KYC related methods
+  async getKYCStatus(userId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('kyc_status, kyc_submitted_at, kyc_reviewed_at, kyc_rejection_reason')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        // If no record found, return default status
+        if (error.code === 'PGRST116') {
+          return {
+            success: true,
+            data: {
+              status: 'not_submitted',
+              submitted_at: null,
+              approved_at: null,
+              rejection_reason: null
+            }
+          };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          status: data.kyc_status || 'not_submitted',
+          submitted_at: data.kyc_submitted_at,
+          approved_at: data.kyc_reviewed_at, // Map reviewed_at to approved_at for consistency
+          rejection_reason: data.kyc_rejection_reason
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get KYC status:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Edge function replacement - use REST API calls instead
+  async fetchEdge(functionName, options = {}) {
+    console.warn(`[API] fetchEdge called for ${functionName} - using REST API instead`);
+    
+    // Map edge functions to REST API calls
+    switch (functionName) {
+      case 'positions_list':
+        return await this.fetchSupabase('user_positions', {
+          ...options,
+          filters: { user_id: await this.getCurrentUserId() }
+        });
+      
+      case 'conversion_quote':
+        // For conversion quotes, return mock data for now
+        return {
+          data: {
+            from_amount: options.body?.from_amount || 0,
+            to_amount: options.body?.from_amount || 0, // 1:1 conversion for now
+            rate: 1,
+            fee: 0.01
+          }
+        };
+      
+      case 'keepalive':
+        return { data: { status: 'ok', timestamp: new Date().toISOString() } };
+      
+      // Withdrawal-related functions - use REST API
+      case 'withdrawal_settings':
+        try {
+          return await this.fetchSupabase('withdrawal_settings', {
+            select: '*',
+            filters: { active: true }
+          });
+        } catch (error) {
+          console.warn('withdrawal_settings table not found, using defaults');
+          return {
+            data: [
+              {
+                id: 1,
+                min_withdrawal: 10,
+                max_withdrawal: 25000,
+                daily_limit: 10000,
+                fee_percent: 0.01,
+                active: true
+              }
+            ]
+          };
+        }
+      
+      case 'user_withdrawal_methods':
+        try {
+          return await this.fetchSupabase('user_withdrawal_methods', {
+            filters: { user_id: await this.getCurrentUserId() }
+          });
+        } catch (error) {
+          console.warn('user_withdrawal_methods table not found, returning empty');
+          return { data: [] };
+        }
+      
+      case 'withdrawal_limits_check':
+        // For now, return default limits
+        return {
+          data: {
+            daily_limit: 10000,
+            daily_used: 0,
+            monthly_limit: 50000,
+            monthly_used: 0,
+            min_withdrawal: 10,
+            max_withdrawal: 25000
+          }
+        };
+      
+      case 'withdraw_list':
+        try {
+          return await this.fetchSupabase('withdrawal_requests', {
+            filters: { user_id: await this.getCurrentUserId() },
+            order: { created_at: 'desc' }
+          });
+        } catch (error) {
+          console.warn('withdrawal_requests table not found, returning empty');
+          return { data: [] };
+        }
+      
+      default:
+        throw new Error(`Unknown edge function: ${functionName}`);
+    }
+  }
+
+  // Get investment tiers list
+  async fetchTiersList() {
+    try {
+      const response = await this.fetchSupabase('investment_tiers', {
+        select: '*',
+        order: { min_amount: 'asc' }
+      });
+      
+      const tiers = response?.data || [];
+      console.log('[API] Tiers loaded from database:', tiers.length, 'items');
+      
+      // Debug: Show field names and values for first tier
+      if (tiers.length > 0) {
+        const firstTier = tiers[0];
+        console.log('[API] First tier fields:', Object.keys(firstTier));
+        console.log('[API] First tier data:', {
+          id: firstTier.id,
+          name: firstTier.name,
+          min_amount: firstTier.min_amount,
+          max_amount: firstTier.max_amount,
+          days: firstTier.days,
+          daily_roi: firstTier.daily_roi,
+          allocation_mix: firstTier.allocation_mix
+        });
+      }
+      
+      return tiers;
+    } catch (error) {
+      console.error('Failed to fetch tiers:', error);
+      return [];
+    }
+  }
+
   // Cleanup method
   destroy() {
     if (this.keepAliveInterval) {
@@ -384,8 +597,10 @@ class APIClient {
   }
 }
 
-// Initialize global API client
-window.API = new APIClient();
+// Initialize global API client (singleton)
+if (!window.API) {
+  window.API = new APIClient();
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
@@ -396,6 +611,7 @@ if (typeof module !== 'undefined' && module.exports) {
 export const {
   fetchSupabase,
   fetchEdge,
+  fetchTiersList,
   getProfile,
   updateProfile,
   fetchBalances,
@@ -403,6 +619,7 @@ export const {
   createDepositRequest,
   getCurrentUserId,
   getPortfolioSnapshot,
+  getKYCStatus,
   verifyEdgeFunctions,
   destroy
 } = APIClient;

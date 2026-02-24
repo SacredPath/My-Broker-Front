@@ -277,9 +277,9 @@ class APIClient {
         return { data: [] };
       }
       
-      return await this.fetchSupabase('withdrawal_methods', {
+      return await this.fetchSupabase('payout_methods', {
         filters: { user_id: userId },
-        select: 'id,method_name,method_type,currency,network,address,bank_name,account_number,routing_number,swift_code,account_holder_name,paypal_email,paypal_business_name,is_default,is_active,min_amount,max_amount,processing_fee_percent,processing_time_hours,created_at,updated_at'
+        select: 'id,method_name,method_type,currency,network,address,details,is_default,is_active,min_amount,max_amount,fee_percentage,fixed_fee,processing_time_hours,created_at,updated_at'
       });
     } catch (error) {
       console.error('Failed to fetch withdrawal methods:', error);
@@ -297,34 +297,18 @@ class APIClient {
       // Map the method data to the actual table structure
       let dataToInsert = {
         user_id: userId,
-        method_name: this.getMethodName(methodData.method),
-        method_type: methodData.method,
-        currency: 'USD', // Default currency
-        is_active: true
+        method_name: this.getMethodName(methodData.method_type),
+        method_type: methodData.method_type,
+        currency: methodData.currency || 'USD',
+        details: methodData.details,
+        is_active: true,
+        is_default: false
       };
-
-      // Add method-specific fields based on the method type
-      switch (methodData.method) {
-        case 'bank':
-          dataToInsert.bank_name = methodData.details.bank_name;
-          dataToInsert.account_number = methodData.details.account_number;
-          dataToInsert.routing_number = methodData.details.routing_number;
-          dataToInsert.account_holder_name = methodData.details.account_name;
-          break;
-        case 'paypal':
-          dataToInsert.paypal_email = methodData.details.email;
-          break;
-        case 'crypto':
-          dataToInsert.network = methodData.details.network;
-          dataToInsert.address = methodData.details.address;
-          dataToInsert.currency = 'USDT'; // Crypto default
-          break;
-      }
       
-      return await this.fetchSupabase('withdrawal_methods', {
+      return await this.fetchSupabase('payout_methods', {
         method: 'POST',
         body: dataToInsert,
-        select: 'id,method_name,method_type,currency,network,address,bank_name,account_number,routing_number,swift_code,account_holder_name,paypal_email,paypal_business_name,is_default,is_active,min_amount,max_amount,processing_fee_percent,processing_time_hours,created_at,updated_at'
+        select: 'id,method_name,method_type,currency,network,address,details,is_default,is_active,min_amount,max_amount,fee_percentage,fixed_fee,processing_time_hours,created_at,updated_at'
       });
     } catch (error) {
       console.error('Failed to upsert withdrawal method:', error);
