@@ -32,40 +32,6 @@
             padding: 20px;
         }
         
-        /* Autohide sidebar for support.html */
-        .side-nav {
-            transform: translateX(-100%) !important;
-        }
-        
-        .side-nav.open {
-            transform: translateX(0) !important;
-        }
-        
-        .app-main {
-            margin-left: 0 !important;
-        }
-        
-        /* Adjust app-main when sidebar is open */
-        .sidebar-open .app-main {
-            margin-left: 280px !important;
-        }
-        
-        /* Mobile menu overlay */
-        .mobile-menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 99;
-        }
-        
-        .mobile-menu-overlay.show {
-            display: block;
-        }
-        
         .support-header {
             text-align: center;
             margin-bottom: 40px;
@@ -232,28 +198,14 @@
     <div id="modern-navbar-container"></div>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <header id="app-topbar" class="app-topbar">
-            <div class="container">
-                <div class="topbar-content">
-                    <div class="topbar-left">
-                        <button class="mobile-menu-toggle" data-action="sidebar-toggle">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                            </svg>
-                        </button>
-                        <div class="app-logo">
-                            <h1>PALANTIR INVESTMENTS</h1>
-                        </div>
-                        <nav class="desktop-nav">
-                            <a href="/app/home.html" class="nav-link" data-page="home">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            
-            <section class="support-grid">
+    <main class="app-main">
+        <div class="container">
+            <header class="support-header">
+                <h1>Support Center</h1>
+                <p>Get help with your trading account and platform questions</p>
+            </header>
+        
+        <section class="support-grid">
                 <div class="support-card">
                     <div class="support-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -261,163 +213,127 @@
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-            </nav>
-        </aside>
-
-        <!-- Mobile Menu Overlay -->
-        <div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
-
-        <!-- Notification Panel -->
-        <div id="notification-panel" class="notification-panel">
-            <div class="notification-header">
-                <h3>Notifications</h3>
-                <button id="close-notifications" class="close-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="notification-list" id="notification-list">
-                <!-- Notifications will be populated here -->
-            </div>
-        </div>
-    </div>
-    
-    <main class="support-container">
-        <header class="support-header">
-            <h1>Support Center</h1>
-            <p>Get help with your trading account and platform questions</p>
-        </header>
-        
-        <section class="support-grid">
-            <div class="support-card">
-                <div class="support-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
+                    </div>
+                    <h3 class="support-title">FAQ</h3>
+                    <p class="support-description">Find answers to commonly asked questions about trading, deposits, and account management.</p>
+                    <a href="#faq" class="support-action">View FAQ →</a>
                 </div>
-                <h3 class="support-title">FAQ</h3>
-                <p class="support-description">Find answers to commonly asked questions about trading, deposits, and account management.</p>
-                <a href="#faq" class="support-action">View FAQ →</a>
-            </div>
-            
-            <div class="support-card">
-                <div class="support-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
+                
+                <div class="support-card">
+                    <div class="support-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="support-title">Email Support</h3>
+                    <p class="support-description">Get in touch with our support team via email for detailed assistance.</p>
+                    <a href="mailto:support@optionshareinvest.online" class="support-action">Email Us →</a>
                 </div>
-                <h3 class="support-title">Email Support</h3>
-                <p class="support-description">Get in touch with our support team via email for detailed assistance.</p>
-                <a href="mailto:support@optionshareinvest.online" class="support-action">Email Us →</a>
-            </div>
-            
-            <div class="support-card">
-                <div class="support-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
+                
+                <div class="support-card">
+                    <div class="support-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="support-title">Live Chat</h3>
+                    <p class="support-description">Chat with our support team in real-time for immediate assistance.</p>
+                    <a href="#" class="support-action" onclick="alert('Live chat coming soon!')">Start Chat →</a>
                 </div>
-                <h3 class="support-title">Live Chat</h3>
-                <p class="support-description">Chat with our support team in real-time for immediate assistance.</p>
-                <a href="#" class="support-action" onclick="alert('Live chat coming soon!')">Start Chat →</a>
-            </div>
-        </section>
+            </section>
         
         <section id="faq" class="faq-section">
-            <h2 style="margin-bottom: 24px;">Frequently Asked Questions</h2>
-            
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <span>How do I deposit funds?</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                <h2 style="margin-bottom: 24px;">Frequently Asked Questions</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>How do I deposit funds?</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="faq-answer">
+                        You can deposit funds by navigating to the Deposits page in your dashboard. We support bank transfers, credit/debit cards, and cryptocurrency deposits.
+                    </div>
                 </div>
-                <div class="faq-answer">
-                    You can deposit funds by navigating to the Deposits page in your dashboard. We support bank transfers, credit/debit cards, and cryptocurrency deposits.
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>How long do withdrawals take?</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="faq-answer">
+                        Withdrawal times vary by method: Bank transfers take 3-5 business days, cryptocurrency withdrawals are usually processed within 1-2 hours.
+                    </div>
                 </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <span>How long do withdrawals take?</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Is my account secure?</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="faq-answer">
+                        Yes, we use industry-standard encryption and two-factor authentication to protect your account and funds.
+                    </div>
                 </div>
-                <div class="faq-answer">
-                    Withdrawal times vary by method: Bank transfers take 3-5 business days, cryptocurrency withdrawals are usually processed within 1-2 hours.
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <span>Is my account secure?</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </div>
-                <div class="faq-answer">
-                    Yes, we use industry-standard encryption and two-factor authentication to protect your account and funds.
-                </div>
-            </div>
-        </section>
+            </section>
         
         <section class="contact-form">
-            <h2 style="margin-bottom: 24px;">Contact Us</h2>
-            
-            <!-- User Info Display -->
-            <div id="user-info" style="background: var(--background); padding: 16px; border-radius: 8px; margin-bottom: 24px; display: none;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
-                        <span id="user-initials">U</span>
+                <h2 style="margin-bottom: 24px;">Contact Us</h2>
+                
+                <!-- User Info Display -->
+                <div id="user-info" style="background: var(--background); padding: 16px; border-radius: 8px; margin-bottom: 24px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;" id="user-name">Loading...</div>
+                            <div style="color: var(--text-secondary); font-size: 14px;" id="user-email">Loading...</div>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-weight: 600;" id="user-name">Loading...</div>
-                        <div style="color: var(--text-secondary); font-size: 14px;" id="user-email">Loading...</div>
+                </div>
+                
+                <form id="support-form">
+                    <div class="form-group">
+                        <label class="form-label" for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" class="form-input" placeholder="Brief description of your issue" required>
                     </div>
-                </div>
-            </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="priority">Priority</label>
+                        <select id="priority" name="priority" class="form-input">
+                            <option value="low">Low - General question</option>
+                            <option value="normal" selected>Normal - Account issue</option>
+                            <option value="high">High - Trading problem</option>
+                            <option value="urgent">Urgent - Security/Financial issue</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="message">Message</label>
+                        <textarea id="message" name="message" class="form-textarea" placeholder="Please provide detailed information about your issue..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </section>
             
-            <form id="support-form">
-                <div class="form-group">
-                    <label class="form-label" for="subject">Subject</label>
-                    <input type="text" id="subject" name="subject" class="form-input" placeholder="Brief description of your issue" required>
+            <!-- Ticket History -->
+            <section id="ticket-history" style="margin-top: 40px; display: none;">
+                <h2 style="margin-bottom: 24px;">Your Support Tickets</h2>
+                <div id="tickets-container">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+                        No support tickets found.
+                    </p>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="priority">Priority</label>
-                    <select id="priority" name="priority" class="form-input">
-                        <option value="low">Low - General question</option>
-                        <option value="normal" selected>Normal - Account issue</option>
-                        <option value="high">High - Trading problem</option>
-                        <option value="urgent">Urgent - Security/Financial issue</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="message">Message</label>
-                    <textarea id="message" name="message" class="form-textarea" placeholder="Please provide detailed information about your issue..." required></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Send Message</button>
-            </form>
-        </section>
-        
-        <!-- Ticket History -->
-        <section id="ticket-history" style="margin-top: 40px; display: none;">
-            <h2 style="margin-bottom: 24px;">Your Support Tickets</h2>
-            <div id="tickets-container">
-                <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
-                    No support tickets found.
-                </p>
-            </div>
-        </section>
+            </section>
+        </div>
     </main>
     
     <!-- Scripts -->
@@ -430,89 +346,6 @@
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/pages/app/support.js"></script>
-    <script>
-        // Support Page Sidebar Autohide Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
-            
-            console.log('=== SUPPORT SIDEBAR AUTOHIDE INIT ===');
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
-            
-            // Autohide sidebar by default
-            if (sidebar) {
-                sidebar.classList.add('hidden');
-                console.log('Sidebar autohidden by default');
-            }
-            
-            // Toggle sidebar function
-            function toggleSidebar() {
-                if (sidebar) {
-                    sidebar.classList.toggle('open');
-                    document.documentElement.classList.toggle('sidebar-open');
-                    
-                    if (overlay) {
-                        overlay.classList.toggle('show');
-                    }
-                    
-                    console.log('Sidebar toggled, open state:', sidebar.classList.contains('open'));
-                }
-            }
-            
-            // Close sidebar function
-            function closeSidebar() {
-                if (sidebar) {
-                    sidebar.classList.remove('open');
-                    document.documentElement.classList.remove('sidebar-open');
-                    
-                    if (overlay) {
-                        overlay.classList.remove('show');
-                    }
-                    
-                    console.log('Sidebar closed');
-                }
-            }
-            
-            // Sidebar toggle click handler
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleSidebar();
-                });
-            }
-            
-            // Overlay click to close
-            if (overlay) {
-                overlay.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    closeSidebar();
-                });
-            }
-            
-            // Close sidebar on escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeSidebar();
-                }
-            });
-            
-            // Close sidebar when clicking outside
-            document.addEventListener('click', function(e) {
-                if (sidebar && sidebar.classList.contains('open')) {
-                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                        closeSidebar();
-                    }
-                }
-            });
-            
-            console.log('Support sidebar autohide functionality initialized');
-        });
-    </script>
     <script>
         function toggleFAQ(element) {
             const faqItem = element.parentElement;
