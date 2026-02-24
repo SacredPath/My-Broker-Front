@@ -81,16 +81,16 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 6px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 14px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
 }
 
 .nav-item:hover {
@@ -107,8 +107,8 @@
 }
 
 .nav-item svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -409,14 +409,14 @@
   }
   
   .nav-item {
-    width: 32px;
-    height: 32px;
-    padding: 4px;
+    width: 40px;
+    height: 40px;
+    padding: 6px;
   }
   
   .nav-item svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
   
   .brand-text {
@@ -466,14 +466,14 @@
   }
   
   .nav-item {
-    width: 32px;
-    height: 32px;
-    padding: 4px;
+    width: 36px;
+    height: 36px;
+    padding: 5px;
   }
   
   .nav-item svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 }
 
