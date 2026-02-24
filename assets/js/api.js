@@ -4,11 +4,19 @@
 
 class APIClient {
   constructor() {
+    console.log('[APIClient] Constructor called');
     this.supabase = null;
     this.serviceClient = null;
     this.initialized = false;
     this.initPromise = null;
-    this.initPromise = this.init();
+    
+    console.log('[APIClient] Starting initialization in constructor...');
+    this.initPromise = this.init().catch(error => {
+      console.error('[APIClient] Constructor initialization failed:', error);
+      // Don't rethrow, just log the error
+    });
+    
+    console.log('[APIClient] Constructor completed, initPromise set:', !!this.initPromise);
   }
 
   async init() {
@@ -843,12 +851,18 @@ class APIClient {
 }
 
 // Only initialize if not already present
+console.log('[APIClient] Checking if API client should be created...');
+console.log('[APIClient] window.API exists:', !!window.API);
+
 if (!window.API) {
+  console.log('[APIClient] Creating new API client...');
   window.API = new APIClient();
   window.APIClient = APIClient;
-  console.log('API Client initialized and made globally available');
+  console.log('[APIClient] API Client created and made globally available');
+  console.log('[APIClient] window.API after creation:', !!window.API);
+  console.log('[APIClient] window.API.initPromise after creation:', !!window.API?.initPromise);
 } else {
-  console.log('API Client already available, skipping delayed initialization');
+  console.log('[APIClient] API Client already available, skipping delayed initialization');
 }
 
 export default APIClient;
