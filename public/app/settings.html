@@ -30,9 +30,13 @@
     <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
-    <link rel="stylesheet" href="/css/app-shell.css">
     <link rel="stylesheet" href="/assets/css/ui.css">
     <link rel="stylesheet" href="/assets/css/notifications.css">
     <link rel="stylesheet" href="/assets/css/pwa.css">
@@ -578,10 +582,10 @@
     </style>
 </head>
 <body>
-    <!-- App Shell Components -->
-    <div id="app-shell-container">
-        <!-- Top Navigation Bar -->
-        <header id="app-topbar" class="app-topbar">
+    <!-- Modern Navbar -->
+    <div id="modern-navbar-container">
+    <!-- Main Content -->
+
             <div class="container">
                 <div class="topbar-content">
                     <div class="topbar-left">
@@ -696,7 +700,7 @@
             </div>
         </header>
 
-        <!-- Mobile Bottom Navigation -->
+
         <nav id="mobile-nav" class="mobile-nav">
             <a href="/app/home.html" class="mobile-nav-link" data-page="home">Home</a>
             <a href="/app/tiers.html" class="mobile-nav-link" data-page="tiers">Tiers</a>
@@ -705,7 +709,7 @@
             <a href="/app/more.html" class="mobile-nav-link" data-page="more">More</a>
         </nav>
 
-        <!-- Side Navigation -->
+
         <aside id="side-nav" class="side-nav" data-role="sidebar">
             <div class="side-nav-header">
                 <div class="side-nav-logo">
@@ -734,10 +738,10 @@
             </nav>
         </aside>
 
-        <!-- Mobile Menu Overlay -->
+
         <div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
 
-        <!-- Notification Panel -->
+
         <div id="notification-panel" class="notification-panel">
             <div class="notification-header">
                 <h3>Notifications</h3>
@@ -750,7 +754,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="app-main">
+    <main class="main-content">
         <div class="container">
             <!-- Header -->
             <section class="settings-header">
@@ -1127,10 +1131,10 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
-    <script type="module" src="/assets/js/app-shell.js"></script>
+
     <script type="module" src="/assets/js/pages/app/settings.js"></script>
     <script>
-        // Debug script to check settings functionality
+
         setTimeout(() => {
             console.log('=== SETTINGS DEBUG ===');
             const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
