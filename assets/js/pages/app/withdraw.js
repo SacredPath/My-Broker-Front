@@ -751,7 +751,8 @@ class WithdrawPage {
       if (!balance || balance.available > 0) {
         const option = document.createElement('option');
         option.value = currency;
-        option.textContent = `${currency} (Available: ${currency === 'USD' ? '$' : '₮'}${this.formatMoney(balance.available, currency === 'USDT' ? 6 : 2)})`;
+        const availableAmount = balance ? balance.available : 0;
+        option.textContent = `${currency} (Available: ${currency === 'USD' ? '$' : '₮'}${this.formatMoney(availableAmount, currency === 'USDT' ? 6 : 2)})`;
         currencySelect.appendChild(option);
       }
     });
