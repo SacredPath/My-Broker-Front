@@ -281,15 +281,8 @@ class ModernNavbar {
         const userMenu = document.getElementById('user-menu');
         const dropdownMenu = document.getElementById('main-dropdown-menu');
 
-        console.log('User dropdown elements found:', {
-            userDropdown: !!userDropdown,
-            userMenu: !!userMenu,
-            dropdownMenu: !!dropdownMenu
-        });
-
         if (userDropdown && userMenu && dropdownMenu) {
             userMenu.addEventListener('click', (e) => {
-                console.log('User menu clicked');
                 e.stopPropagation();
                 this.toggleUserDropdown();
             });
@@ -299,12 +292,6 @@ class ModernNavbar {
                 if (!userDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
                     this.closeUserDropdown();
                 }
-            });
-        } else {
-            console.error('User dropdown elements not found:', {
-                userDropdown: !!userDropdown,
-                userMenu: !!userMenu,
-                dropdownMenu: !!dropdownMenu
             });
         }
 
@@ -367,50 +354,41 @@ class ModernNavbar {
     }
 
     toggleUserDropdown() {
-        console.log('toggleUserDropdown called');
         const dropdownMenu = document.getElementById('main-dropdown-menu');
-        console.log('dropdownMenu found:', !!dropdownMenu);
-        
         if (dropdownMenu) {
             const isVisible = dropdownMenu.classList.contains('show');
-            console.log('Dropdown currently visible:', isVisible);
             
             if (isVisible) {
                 dropdownMenu.classList.remove('show');
-                console.log('Dropdown hidden');
+                this.resetDropdownStyles(dropdownMenu);
             } else {
                 dropdownMenu.classList.add('show');
-                // Force visibility with !important to override CSS classes
-                dropdownMenu.style.setProperty('opacity', '1', 'important');
-                dropdownMenu.style.setProperty('visibility', 'visible', 'important');
-                dropdownMenu.style.setProperty('transform', 'translateY(0)', 'important');
-                dropdownMenu.style.setProperty('display', 'block', 'important');
-                console.log('Dropdown shown with !important styles');
+                this.forceDropdownVisible(dropdownMenu);
             }
-            
-            // Log the computed styles for debugging
-            const styles = window.getComputedStyle(dropdownMenu);
-            console.log('Dropdown styles:', {
-                opacity: styles.opacity,
-                visibility: styles.visibility,
-                transform: styles.transform,
-                display: styles.display
-            });
-        } else {
-            console.error('main-dropdown-menu element not found');
         }
+    }
+
+    forceDropdownVisible(dropdownMenu) {
+        // Force visibility to override any CSS issues
+        dropdownMenu.style.setProperty('opacity', '1', 'important');
+        dropdownMenu.style.setProperty('visibility', 'visible', 'important');
+        dropdownMenu.style.setProperty('transform', 'translateY(0)', 'important');
+        dropdownMenu.style.setProperty('display', 'block', 'important');
+    }
+
+    resetDropdownStyles(dropdownMenu) {
+        // Reset forced styles when hiding
+        dropdownMenu.style.removeProperty('opacity');
+        dropdownMenu.style.removeProperty('visibility');
+        dropdownMenu.style.removeProperty('transform');
+        dropdownMenu.style.removeProperty('display');
     }
 
     closeUserDropdown() {
         const dropdownMenu = document.getElementById('main-dropdown-menu');
         if (dropdownMenu) {
             dropdownMenu.classList.remove('show');
-            // Reset all inline styles including !important ones
-            dropdownMenu.style.removeProperty('opacity');
-            dropdownMenu.style.removeProperty('visibility');
-            dropdownMenu.style.removeProperty('transform');
-            dropdownMenu.style.removeProperty('display');
-            console.log('Dropdown closed and styles reset');
+            this.resetDropdownStyles(dropdownMenu);
         }
     }
 
@@ -523,10 +501,8 @@ class ModernNavbar {
             
             // Try different auth service methods
             if (window.AuthService && window.AuthService.getCurrentUserWithProfile) {
-                console.log('Using AuthService.getCurrentUserWithProfile');
                 user = await window.AuthService.getCurrentUserWithProfile();
             } else if (window.AuthStateManager && window.AuthStateManager.getCurrentUser) {
-                console.log('Using AuthStateManager.getCurrentUser');
                 const currentUser = window.AuthStateManager.getCurrentUser();
                 if (currentUser) {
                     user = {
@@ -535,18 +511,14 @@ class ModernNavbar {
                     };
                 }
             } else {
-                console.warn('No auth services available for user display');
                 this.clearUserDisplay();
                 return;
             }
 
             if (!user) {
-                console.log('No user found, clearing display');
                 this.clearUserDisplay();
                 return;
             }
-
-            console.log('User found for display:', user.email);
 
             // Get display name from profile or email
             const displayName = user.profile?.display_name || 
@@ -559,16 +531,10 @@ class ModernNavbar {
             
             if (userAvatar) {
                 userAvatar.textContent = displayName.charAt(0).toUpperCase();
-                console.log('Updated avatar:', displayName.charAt(0).toUpperCase());
-            } else {
-                console.warn('navbar-user-avatar element not found');
             }
             
             if (userName) {
                 userName.textContent = displayName;
-                console.log('Updated user name:', displayName);
-            } else {
-                console.warn('navbar-user-name element not found');
             }
 
         } catch (error) {
@@ -598,10 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait for auth services to be available, then update user display
     const waitForAuthServices = () => {
         if (window.AuthService || window.AuthStateManager) {
-            console.log('Auth services available, updating user display');
             window.modernNavbar.updateUserDisplay();
         } else {
-            console.log('Auth services not yet available, retrying in 100ms');
             setTimeout(waitForAuthServices, 100);
         }
     };
