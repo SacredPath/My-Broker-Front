@@ -40,13 +40,15 @@ class PortfolioPage {
   }
 
   async setupPage() {
-    // Initialize app shell FIRST - this handles all sidebar and theme functionality
-    if (window.AppShell) {
-      window.AppShell.initShell();
-    }
+    console.log('Portfolio page initializing...');
     
     // Setup portfolio-specific UI elements
     this.setupPortfolioUI();
+    
+    // Initialize modern navbar functionality
+    if (window.ModernNavbar) {
+      window.ModernNavbar.init();
+    }
     
     // Check if API client is available
     if (!this.api) {
