@@ -327,6 +327,8 @@
   }
   
   .navbar-right {
+    display: flex;
+    align-items: center;
     gap: 8px;
   }
   
@@ -372,7 +374,9 @@
   }
   
   .navbar-right {
-    gap: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .nav-action {
