@@ -167,7 +167,6 @@ class SettingsPage {
     };
 
     // Populate form fields with database data
-    document.getElementById('display-name').value = profile.display_name || '';
     document.getElementById('first-name').value = profile.first_name || '';
     document.getElementById('last-name').value = profile.last_name || '';
     document.getElementById('email').value = this.currentUser.email || '';
