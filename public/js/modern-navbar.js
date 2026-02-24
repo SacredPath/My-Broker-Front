@@ -47,33 +47,10 @@ class ModernNavbar {
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </a>
-                <a href="/app/tiers.html" class="nav-item" data-page="tiers" title="Tiers">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                    </svg>
-                </a>
                 <a href="/app/deposits.html" class="nav-item" data-page="deposits" title="Deposits">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </a>
-                <a href="/app/withdraw.html" class="nav-item" data-page="withdrawals" title="Withdraw">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 19 19 12 12 5"></polyline>
-                    </svg>
-                </a>
-                <a href="/app/convert.html" class="nav-item" data-page="convert" title="Convert">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                    </svg>
-                </a>
-                <a href="/app/signals.html" class="nav-item" data-page="signals" title="Signals">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
                 </a>
                 <a href="/app/portfolio.html" class="nav-item" data-page="portfolio" title="Portfolio">
@@ -82,20 +59,16 @@ class ModernNavbar {
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                     </svg>
                 </a>
-                <a href="/app/history.html" class="nav-item" data-page="history" title="History">
+                <a href="/app/signals.html" class="nav-item" data-page="signals" title="Signals">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
                 </a>
                 <a href="/app/settings.html" class="nav-item" data-page="settings" title="Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.54l4.24 4.24M20.46 14.46l-4.24 4.24M7.76 7.76L3.52 3.52"></path>
-                    </svg>
-                </a>
-                <a href="/app/support.html" class="nav-item" data-page="support" title="Support">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </a>
             </nav>
@@ -223,6 +196,12 @@ class ModernNavbar {
         
         <div class="mobile-nav-section">
             <div class="mobile-nav-title">Trading</div>
+            <a href="/app/tiers.html" class="mobile-nav-item" data-page="tiers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                </svg>
+                <span>Tiers</span>
+            </a>
             <a href="/app/deposits.html" class="mobile-nav-item" data-page="deposits">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -250,12 +229,6 @@ class ModernNavbar {
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
                 <span>Signals</span>
-            </a>
-            <a href="/app/tiers.html" class="mobile-nav-item" data-page="tiers">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                </svg>
-                <span>Tiers</span>
             </a>
         </div>
         
