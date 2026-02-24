@@ -25,10 +25,32 @@ class SignalsPage {
   async init() {
     console.log('Signals page initializing...');
     
+    // Wait for API client to be ready
+    await this.waitForAPIClient();
+    
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.setupPage());
     } else {
       this.setupPage();
+    }
+  }
+
+  async waitForAPIClient() {
+    let retries = 0;
+    const maxRetries = 50; // 5 seconds max wait
+    
+    while ((!window.API || !window.API.initialized) && retries < maxRetries) {
+      console.log(`Waiting for API client... (${retries}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      retries++;
+    }
+    
+    if (!window.API || !window.API.initialized) {
+      console.error('API client failed to initialize within timeout');
+    } else {
+      console.log('API client is ready');
+      // Ensure we wait for the initialization promise
+      await window.API.waitForInitialization();
     }
   }
 
@@ -90,11 +112,13 @@ class SignalsPage {
 
   async loadUserPositions() {
     try {
+      console.log('Loading user positions via REST API...');
+      
       // Query signal_purchases table directly
       const { data, error } = await window.API.serviceClient
         .from('signal_purchases')
         .select('*')
-        .eq('user_id', window.API.getCurrentUserId())
+        .eq('user_id', await window.API.getCurrentUserId())
         .eq('status', 'active');
 
       if (error) {
@@ -111,6 +135,8 @@ class SignalsPage {
 
   async loadSignals() {
     try {
+      console.log('Loading signals from database...');
+      
       // Query trading_signals table directly
       const { data, error } = await window.API.serviceClient
         .from('trading_signals')
@@ -134,11 +160,13 @@ class SignalsPage {
 
   async loadUserAccess() {
     try {
+      console.log('Loading user signal access from database...');
+      
       // Query signal_access table directly
       const { data, error } = await window.API.serviceClient
         .from('signal_access')
         .select('*')
-        .eq('user_id', window.API.getCurrentUserId())
+        .eq('user_id', await window.API.getCurrentUserId())
         .gt('expires_at', new Date().toISOString());
 
       if (error) {

@@ -8,13 +8,25 @@ class APIClient {
     this.serviceClient = null;
     this.initialized = false;
     this.initPromise = null;
-    this.init();
+    this.initPromise = this.init();
   }
 
-  init() {
-    this.initSupabase();
-    this.initServiceClient();
+  async init() {
+    // Initialize clients in sequence to ensure proper dependencies
+    await this.initSupabase();
+    await this.initServiceClient();
     this.startKeepAlive();
+    this.initialized = true;
+    console.log('[APIClient] Fully initialized');
+  }
+
+  async waitForInitialization() {
+    if (this.initialized) {
+      return;
+    }
+    if (this.initPromise) {
+      await this.initPromise;
+    }
   }
 
   getDevelopmentUrl() {
@@ -61,6 +73,8 @@ class APIClient {
       console.log('[APIClient] Initialized with shared client');
     } catch (error) {
       console.error('[APIClient] Init failed:', error);
+      // Retry on error
+      setTimeout(() => this.initSupabase(), 500);
     }
   }
 
@@ -77,13 +91,17 @@ class APIClient {
         this.serviceClient = await window.supabase.getClient();
         console.log('[APIClient] Using legacy Supabase client for service operations');
       } else {
-        console.warn('[APIClient] No Supabase client available for service operations');
+        // Wait and retry
+        console.warn('[APIClient] No Supabase client available for service operations, retrying...');
+        setTimeout(() => this.initServiceClient(), 100);
         return;
       }
       
       console.log('[APIClient] Service client initialized successfully');
     } catch (error) {
       console.error('[APIClient] Service client init failed:', error);
+      // Retry on error
+      setTimeout(() => this.initServiceClient(), 500);
     }
   }
 
