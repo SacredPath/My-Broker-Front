@@ -3,25 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Premium Deposits - Exchange Trading Platform</title>
+    <title>Premium Deposits - Broker Trading Platform</title>
     <meta name="description" content="Institutional-grade deposit processing with instant funding and advanced security">
-    
-    <!-- SEO Meta Tags -->
-    <meta name="keywords" content="deposits, funding, cryptocurrency, instant funding, exchange, secure deposits">
-    <meta name="robots" content="noindex, nofollow">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Premium Deposits - Exchange Trading Platform">
-    <meta property="og:description" content="Institutional-grade deposit processing with instant funding and advanced security">
-    <meta property="og:image" content="https://exchange.example.com/social-share-image.svg">
-    <meta property="og:site_name" content="Exchange">
-    
-    <!-- Twitter Card -->
-    <meta property="twitter:card" content="summary">
-    <meta property="twitter:title" content="Premium Deposits - Exchange Trading Platform">
-    <meta property="twitter:description" content="Institutional-grade deposit processing with instant funding and advanced security">
-    <meta property="twitter:image" content="https://exchange.example.com/social-share-image.svg">
     
     <!-- Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg">
@@ -34,6 +17,7 @@
     <link rel="stylesheet" href="/css/modern-navbar.css">
     <script src="/js/modern-navbar.js" defer></script>
     
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
     <link rel="stylesheet" href="/css/app-shell.css">
@@ -53,10 +37,10 @@
         .hero-section {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 60px 40px;
+            padding: 30px 20px;
             border-radius: 16px;
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             position: relative;
             overflow: hidden;
         }
@@ -78,9 +62,9 @@
         }
         
         .hero-title {
-            font-size: 2.5em;
+            font-size: 1.25em;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
             background: linear-gradient(45deg, #ffffff 0%, #f0f0f0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -88,29 +72,29 @@
         }
         
         .hero-subtitle {
-            font-size: 1.2em;
-            margin-bottom: 32px;
+            font-size: 0.6em;
+            margin-bottom: 16px;
             opacity: 0.9;
         }
         
         .hero-features {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 32px;
+            margin-bottom: 16px;
         }
         
         .hero-feature {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.1em;
+            gap: 6px;
+            font-size: 0.55em;
         }
         
         .feature-icon {
-            width: 24px;
-            height: 24px;
+            width: 12px;
+            height: 12px;
             opacity: 0.9;
         }
         
@@ -266,64 +250,90 @@
         
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
         }
         
         .stat-item {
             text-align: center;
-            padding: 20px;
+            padding: 10px;
             background: var(--surface);
             border-radius: 12px;
             border: 1px solid var(--border);
         }
         
         .stat-number {
-            font-size: 2em;
+            font-size: 1em;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         
         .stat-label {
-            font-size: 0.9em;
             color: var(--text-secondary);
+            font-size: 7px;
+        }
+        
+        /* Mobile Responsive - Further reduce sizes on mobile */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 15px 10px;
+                margin-bottom: 10px;
+            }
+            
+            .hero-title {
+                font-size: 0.8em;
+                margin-bottom: 4px;
+            }
+            
+            .hero-subtitle {
+                font-size: 0.4em;
+                margin-bottom: 8px;
+            }
+            
+            .hero-features {
+                gap: 10px;
+                margin-bottom: 8px;
+            }
+            
+            .hero-feature {
+                gap: 3px;
+                font-size: 0.3em;
+            }
+            
+            .feature-icon {
+                width: 8px;
+                height: 8px;
+            }
+            
+            .stats-row {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 5px;
+                margin: 10px 0;
+            }
+            
+            .stat-item {
+                padding: 6px;
+            }
+            
+            .stat-number {
+                font-size: 0.6em;
+                margin-bottom: 2px;
+            }
+            
+            .stat-label {
+                font-size: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Modern Navbar -->
     <div id="modern-navbar-container"></div>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- App Shell Components -->
-        <div id="app-shell-container">
-            <!-- ... -->
-        </div>
-        
-        <!-- Mobile Menu Overlay -->
-        <div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
 
-        <!-- Notification Panel -->
-        <div id="notification-panel" class="notification-panel">
-            <div class="notification-header">
-                <!-- ... -->
-                <button id="close-notifications" class="close-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="notification-list" id="notification-list">
-                <!-- Notifications will be populated here -->
-            </div>
-        </div>
-    </div>
-    
-    <main class="app-main with-mobile-nav">
+    <!-- Main Content -->
+    <main class="main-content with-mobile-nav">
         <div class="deposits-container">
             <!-- Hero Section -->
             <section class="hero-section">
@@ -353,7 +363,7 @@
             </section>
             
             <!-- Stats Row -->
-            <div class="stats-row">
+            <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">$2.5B+</div>
                     <div class="stat-label">Total Processed</div>
@@ -371,18 +381,6 @@
                     <div class="stat-label">Supported Countries</div>
                 </div>
             </div>
-            
-            <header>
-                <h1>Choose Your Deposit Method</h1>
-                <p>Select from our premium funding options designed for maximum efficiency and security</p>
-            </header>
-        
-        <noscript>
-            <div style="background: var(--surface, #1a1a1a); border: 1px solid var(--border, #333); border-radius: 8px; padding: 20px; margin: 20px 0;">
-                <h3>JavaScript Required</h3>
-                <p>JavaScript is required for full deposit functionality. Please enable JavaScript in your browser settings.</p>
-            </div>
-        </noscript>
         
         <div id="js-fallback-message" style="background: var(--surface, #1a1a1a); border: 1px solid var(--border, #333); border-radius: 8px; padding: 20px; margin: 20px 0;">
             <p><strong>If this page stays blank, refresh or check that assets are served correctly.</strong></p>
@@ -436,8 +434,7 @@
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
-    <script type="module" src="/src/js/app-shell.js"></script>
-    <script type="module" src="/assets/js/pages/app/deposits.js"></script>
+    <script type="module" src="/assets/js/pages/app/deposits.js?v=1.1"></script>
     <script>
         // Hide fallback message when JS loads successfully
         document.addEventListener('DOMContentLoaded', function() {

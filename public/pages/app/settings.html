@@ -30,6 +30,11 @@
     <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
     <link rel="stylesheet" href="/css/app-shell.css">
@@ -208,6 +213,11 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: none;
+        }
+        
+        .settings-section.active {
+            display: block;
         }
         
         .settings-section::before {
@@ -573,10 +583,10 @@
     </style>
 </head>
 <body>
-    <!-- App Shell Components -->
-    <div id="app-shell-container">
-        <!-- Top Navigation Bar -->
-        <header id="app-topbar" class="app-topbar">
+    <!-- Modern Navbar -->
+    <div id="modern-navbar-container">
+    <!-- Main Content -->
+
             <div class="container">
                 <div class="topbar-content">
                     <div class="topbar-left">
@@ -691,7 +701,7 @@
             </div>
         </header>
 
-        <!-- Mobile Bottom Navigation -->
+
         <nav id="mobile-nav" class="mobile-nav">
             <a href="/app/home.html" class="mobile-nav-link" data-page="home">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -730,7 +740,6 @@
             </a>
         </nav>
 
-        <!-- Side Navigation -->
         <aside id="side-nav" class="side-nav" data-role="sidebar">
             <div class="side-nav-header">
                 <div class="side-nav-logo">
@@ -759,10 +768,8 @@
             </nav>
         </aside>
 
-        <!-- Mobile Menu Overlay -->
         <div id="mobile-menu-overlay" class="mobile-menu-overlay" data-role="sidebar-overlay"></div>
 
-        <!-- Notification Panel -->
         <div id="notification-panel" class="notification-panel">
             <div class="notification-header">
                 <h3>Notifications</h3>
@@ -775,61 +782,8 @@
     </div>
 
     <!-- Main Content -->
-    <main class="app-main with-mobile-nav">
+    <main class="main-content with-mobile-nav">
         <div class="container">
-            <!-- Premium Hero Section -->
-            <section class="settings-hero">
-                <h1 class="hero-title">Premium Account Settings</h1>
-                <p class="hero-subtitle">Access advanced account controls with enhanced security and premium features</p>
-                
-                <div class="hero-features">
-                    <div class="hero-feature">
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
-                        </svg>
-                        <span>Advanced Controls</span>
-                    </div>
-                    <div class="hero-feature">
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8z"/>
-                        </svg>
-                        <span>Enhanced Security</span>
-                    </div>
-                    <div class="hero-feature">
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 11H3v2m0-13V6a2 2 0 112 2h-2V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                        </svg>
-                        <span>Premium Features</span>
-                    </div>
-                </div>
-                
-                <div class="premium-badges">
-                    <span class="premium-badge">Advanced Security</span>
-                    <span class="premium-badge">Premium Features</span>
-                    <span class="premium-badge">Priority Support</span>
-                </div>
-            </section>
-            
-            <!-- Stats Row -->
-            <div class="stats-row">
-                <div class="stat-item">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Security Score</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">24/7</div>
-                    <div class="stat-label">Monitoring</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number"><1s</div>
-                    <div class="stat-label">Response Time</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">99.9%</div>
-                    <div class="stat-label">Uptime</div>
-                </div>
-            </div>
-            
             <!-- Header -->
             <section class="settings-header">
                 <h1>Settings</h1>
@@ -1206,29 +1160,70 @@
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/app-shell.js"></script>
+
     <script type="module" src="/assets/js/pages/app/settings.js"></script>
     <script>
-        // Debug script to check settings functionality
         setTimeout(() => {
             console.log('=== SETTINGS DEBUG ===');
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
             
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
+            // Check all potential sidebar toggle selectors
+            const sidebarToggle1 = document.querySelector('[data-action="sidebar-toggle"]');
+            const sidebarToggle2 = document.querySelector('.mobile-menu-toggle');
+            const sidebarToggle3 = document.querySelector('button[data-action="sidebar-toggle"]');
+            
+            // Check all potential sidebar selectors  
+            const sidebar1 = document.querySelector('[data-role="sidebar"]');
+            const sidebar2 = document.querySelector('#side-nav');
+            const sidebar3 = document.querySelector('.side-nav');
+            
+            // Check all potential overlay selectors
+            const overlay1 = document.querySelector('[data-role="sidebar-overlay"]');
+            const overlay2 = document.querySelector('#mobile-menu-overlay');
+            const overlay3 = document.querySelector('.mobile-menu-overlay');
+            
+            console.log('Sidebar toggle found:', {
+                '[data-action="sidebar-toggle"]': !!sidebarToggle1,
+                '.mobile-menu-toggle': !!sidebarToggle2,
+                'button[data-action="sidebar-toggle"]': !!sidebarToggle3
+            });
+            
+            console.log('Sidebar found:', {
+                '[data-role="sidebar"]': !!sidebar1,
+                '#side-nav': !!sidebar2,
+                '.side-nav': !!sidebar3
+            });
+            
+            console.log('Overlay found:', {
+                '[data-role="sidebar-overlay"]': !!overlay1,
+                '#mobile-menu-overlay': !!overlay2,
+                '.mobile-menu-overlay': !!overlay3
+            });
+            
             console.log('AppShell initialized:', !!window.AppShell);
             console.log('API client available:', !!window.API);
             console.log('SettingsPage initialized:', !!window.settingsPage);
+            console.log('AuthService available:', !!window.AuthService);
             
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    console.log('Manual toggle clicked');
-                    document.documentElement.classList.toggle('sidebar-open');
+            // Check if AppShell has found the elements
+            if (window.AppShell) {
+                console.log('AppShell internal state:', {
+                    sidebarToggles: window.AppShell.sidebarToggles?.length || 0,
+                    sidebar: !!window.AppShell.sidebar,
+                    overlay: !!window.AppShell.overlay
                 });
             }
-        }, 1000);
+            
+            // Try to bind manually if elements exist but aren't working
+            if (sidebarToggle1 && sidebar1 && overlay1) {
+                console.log('Elements found, attempting manual bind...');
+                sidebarToggle1.addEventListener('click', () => {
+                    console.log('Manual toggle clicked');
+                    document.documentElement.classList.toggle('sidebar-open');
+                    sidebar1.classList.toggle('open');
+                    overlay1.classList.toggle('open');
+                });
+            }
+        }, 3000); // Increased delay further
     </script>
 </body>
 </html>

@@ -3,29 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Premium Withdrawals - Exchange Trading Platform</title>
+    <title>Premium Withdrawals - Broker Trading Platform</title>
     <meta name="description" content="Institutional-grade withdrawal processing with instant payouts and advanced security">
-    
-    <!-- SEO Meta Tags -->
-    <meta name="keywords" content="withdrawals, payouts, cryptocurrency, instant withdrawal, exchange, secure withdrawals">
-    <meta name="robots" content="noindex, nofollow">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Premium Withdrawals - Exchange Trading Platform">
-    <meta property="og:description" content="Institutional-grade withdrawal processing with instant payouts and advanced security">
-    <meta property="og:image" content="https://exchange.example.com/social-share-image.svg">
-    <meta property="og:site_name" content="Exchange">
-    
-    <!-- Modern Navbar -->
-    <link rel="stylesheet" href="/css/modern-navbar.css">
-    <script src="/js/modern-navbar.js" defer></script>
-    
-    <!-- Twitter Card -->
-    <meta property="twitter:card" content="summary">
-    <meta property="twitter:title" content="Premium Withdrawals - Exchange Trading Platform">
-    <meta property="twitter:description" content="Institutional-grade withdrawal processing with instant payouts and advanced security">
-    <meta property="twitter:image" content="https://exchange.example.com/social-share-image.svg">
     
     <!-- Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg">
@@ -34,6 +13,11 @@
     <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="/css/ui-kit.css">
     <link rel="stylesheet" href="/css/pages.css">
     <link rel="stylesheet" href="/css/app-shell.css">
@@ -1020,7 +1004,29 @@
     <script type="module" src="/assets/js/money.js"></script>
     <script type="module" src="/assets/js/api.js"></script>
     <script type="module" src="/assets/js/balance-service.js"></script>
-    <script type="module" src="/assets/js/app-shell.js"></script>
     <script type="module" src="/assets/js/pages/app/withdraw.js"></script>
+    <script>
+        // Debug script to check withdraw functionality
+        setTimeout(() => {
+            console.log('=== WITHDRAW DEBUG ===');
+            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
+            const sidebar = document.querySelector('[data-role="sidebar"]');
+            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
+            
+            console.log('Sidebar toggle found:', !!sidebarToggle);
+            console.log('Sidebar found:', !!sidebar);
+            console.log('Overlay found:', !!overlay);
+            console.log('AppShell initialized:', !!window.AppShell);
+            console.log('API client available:', !!window.API);
+            console.log('WithdrawPage initialized:', !!window.withdrawPage);
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    console.log('Manual toggle clicked');
+                    document.documentElement.classList.toggle('sidebar-open');
+                });
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
