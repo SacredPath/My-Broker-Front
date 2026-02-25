@@ -253,7 +253,8 @@ class TiersPage {
 
     // Set modal title
     modalTitle.textContent = this.selectedTier.name;
-    modalSubtitle.textContent = `${this.selectedTier.days} days at ${(this.selectedTier.daily_roi * 100).toFixed(1)}% daily ROI`;
+    const tierDays = this.selectedTier.days || this.selectedTier.investment_period_days || 0;
+    modalSubtitle.textContent = `${tierDays} days at ${(this.selectedTier.daily_roi * 100).toFixed(1)}% daily ROI`;
 
     // Generate summary
     const userTotalEquity = this.calculateTotalEquity();
