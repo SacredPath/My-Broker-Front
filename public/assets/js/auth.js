@@ -246,6 +246,7 @@ class AuthService {
       // Prepare comprehensive profile data
       const fullProfileData = {
         id: userId,
+        user_id: userId, // Add missing user_id field (NOT NULL, no default)
         email: profileData.email || '',
         display_name: profileData.displayName || '',
         first_name: profileData.firstName || '',
