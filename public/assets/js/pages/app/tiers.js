@@ -1,6 +1,6 @@
 /**
- * Tiers Page Controller
- * Handles tier display, upgrade logic, and investment flows
+ * Strategies Page Controller
+ * Handles strategy display, investment logic, and user flows
  */
 
 // Import shared app initializer
@@ -16,7 +16,7 @@ class TiersPage {
   }
 
   async init() {
-    console.log('Tiers page initializing...');
+    console.log('Strategies page initializing...');
     
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.setupPage());
@@ -40,11 +40,11 @@ class TiersPage {
       this.renderTiers();
       this.setupModal();
       
-      console.log('Tiers page setup complete');
+      console.log('Strategies page setup complete');
     } catch (error) {
-      console.error('Error setting up tiers page:', error);
+      console.error('Error setting up strategies page:', error);
       if (window.Notify) {
-        window.Notify.error('Failed to load investment tiers');
+        window.Notify.error('Failed to load investment strategies');
       }
     }
   }
@@ -103,19 +103,92 @@ class TiersPage {
 
   async loadTiers() {
     try {
-      // Use canonical tiers list from server
-      this.tiers = await window.API.fetchTiersList();
+      // Use investment strategies data
+      const strategiesData = [
+        {
+          "id": 1,
+          "name": "Global Equities Strategy",
+          "description": "Diversified global equity portfolio with exposure to developed and emerging markets.",
+          "asset_class": "Public Markets – Equities",
+          "min_amount": "150.00000000",
+          "max_amount": "1000.00000000",
+          "investment_period_days": 3,
+          "daily_roi": "0.10000000",
+          "sort_order": 0,
+          "is_active": true,
+          "features": null,
+          "allocation_mix": null
+        },
+        {
+          "id": 2,
+          "name": "Exchange-Traded Funds (ETF) Strategy",
+          "description": "Indexed and thematic ETFs providing diversified exposure to various market segments.",
+          "asset_class": "Indexed & Thematic ETFs",
+          "min_amount": "1000.01000000",
+          "max_amount": "10000.00000000",
+          "investment_period_days": 7,
+          "daily_roi": "0.06430000",
+          "sort_order": 0,
+          "is_active": true,
+          "features": null,
+          "allocation_mix": null
+        },
+        {
+          "id": 3,
+          "name": "Digital Assets & DeFi Strategy",
+          "description": "Digital assets and blockchain protocol investments for high-growth potential.",
+          "asset_class": "Digital Assets / Blockchain Protocols",
+          "min_amount": "10000.01000000",
+          "max_amount": "20000.00000000",
+          "investment_period_days": 14,
+          "daily_roi": "0.03570000",
+          "sort_order": 0,
+          "is_active": true,
+          "features": null,
+          "allocation_mix": null
+        },
+        {
+          "id": 4,
+          "name": "Real Assets – Real Estate Strategy",
+          "description": "Private real estate investments with stable income and capital appreciation.",
+          "asset_class": "Private Real Estate",
+          "min_amount": "20000.01000000",
+          "max_amount": "50000.00000000",
+          "investment_period_days": 30,
+          "daily_roi": "0.03330000",
+          "sort_order": 0,
+          "is_active": true,
+          "features": null,
+          "allocation_mix": null
+        },
+        {
+          "id": 5,
+          "name": "Commodities & Natural Resources Strategy",
+          "description": "Precious metals and energy commodities for inflation hedging and diversification.",
+          "asset_class": "Precious Metals & Energy",
+          "min_amount": "50000.01000000",
+          "max_amount": "10000000.00000000",
+          "investment_period_days": 365,
+          "daily_roi": "0.03330000",
+          "sort_order": 0,
+          "is_active": true,
+          "features": null,
+          "allocation_mix": null
+        }
+      ];
+      
+      this.tiers = strategiesData.filter(strategy => strategy.is_active);
       
       if (!this.tiers.length) {
-        this.renderEmptyState('No tiers available');
+        this.renderEmptyState('No strategies available');
         return;
       }
       
       this.renderTiers();
       this.updateStats();
     } catch (error) {
-      console.error('Failed to load tiers:', error);
-      this.renderErrorState('Failed to load tiers');
+      console.error('Failed to load strategies:', error);
+      this.renderErrorState('Failed to load strategies');
     }
   }
 
@@ -128,7 +201,7 @@ class TiersPage {
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
         </svg>
-        <h3>No tiers available</h3>
+        <h3>No strategies available</h3>
         <p>${message}</p>
       </div>
     `;
@@ -145,7 +218,7 @@ class TiersPage {
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
         </svg>
-        <h3>Failed to load tiers</h3>
+        <h3>Failed to load strategies</h3>
         <p>${message}</p>
         <button class="btn btn-primary" onclick="window.location.reload()">Retry</button>
       </div>
@@ -159,8 +232,8 @@ class TiersPage {
     if (this.tiers.length === 0) {
       tiersGrid.innerHTML = `
         <div class="tiers-header">
-          <h1>Investment Tiers</h1>
-          <p>Loading investment tiers...</p>
+          <h1>Investment Strategies</h1>
+          <p>Loading investment strategies...</p>
         </div>
       `;
       return;
@@ -169,51 +242,53 @@ class TiersPage {
     const userTotalEquity = this.calculateTotalEquity();
     const currentTierId = this.getCurrentTierId();
 
-    tiersGrid.innerHTML = this.tiers.map(tier => {
-      const isCurrentTier = tier.id === currentTierId;
-      const isEligible = userTotalEquity >= tier.min_amount;
-      
-      // Handle missing data gracefully
-      const tierName = tier.name || `Tier ${tier.id}`;
-      const tierDays = tier.days || tier.investment_period_days || 0;
-      const tierDailyRoi = tier.daily_roi || 0;
-      
-      return `
-        <div class="tier-card ${isCurrentTier ? 'current' : ''}" data-tier-id="${tier.id}">
-          <div class="tier-header">
-            <div class="tier-name">${tierName}</div>
-            <div class="tier-range">
-              $${this.formatMoney(tier.min_amount)}${tier.max_amount ? ` - $${this.formatMoney(tier.max_amount)}` : '+'}
-            </div>
-          </div>
+    tiersGrid.innerHTML = `
+      <div class="tiers-header">
+        <h1>Investment Strategies</h1>
+        <p>Choose from our professionally managed investment strategies</p>
+      </div>
+      <div class="tiers-grid">
+        ${this.tiers.map(strategy => {
+          const isCurrentTier = strategy.id === currentTierId;
+          const isEligible = userTotalEquity >= parseFloat(strategy.min_amount);
           
-          <div class="tier-stats">
-            <div class="tier-stat">
-              <div class="tier-stat-value">${tierDays}</div>
-              <div class="tier-stat-label">Days</div>
-            </div>
-            <div class="tier-stat">
-              <div class="tier-stat-value">${(tierDailyRoi * 100).toFixed(1)}%</div>
-              <div class="tier-stat-label">Daily ROI</div>
-            </div>
-          </div>
-          
-          <div class="tier-allocations">
-            <h4>Allocation Mix</h4>
-            ${tier.allocation_mix ? Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
-              <div class="allocation-item">
-                <span class="allocation-asset">${asset}</span>
-                <span class="allocation-percentage">${percentage}%</span>
+          return `
+            <div class="tier-card ${isCurrentTier ? 'current' : ''}" data-tier-id="${strategy.id}">
+              <div class="tier-header">
+                <div class="tier-name">${strategy.name}</div>
+                <div class="tier-asset-class">${strategy.asset_class}</div>
+                <div class="tier-range">
+                  $${this.formatMoney(parseFloat(strategy.min_amount))}${strategy.max_amount ? ` - $${this.formatMoney(parseFloat(strategy.max_amount))}` : '+'}
+                </div>
               </div>
-            `).join('') : '<div class="allocation-item"><span class="allocation-asset">Standard allocation</span></div>'}
-          </div>
-          
-          <button class="tier-action" onclick="window.tiersPage.openTierModal(${tier.id})">
-            ${isCurrentTier ? 'View Details' : (isEligible ? 'Upgrade' : 'View Details')}
-          </button>
-        </div>
-      `;
-    }).join('');
+              
+              <div class="tier-description">
+                <p>${strategy.description}</p>
+              </div>
+              
+              <div class="tier-stats">
+                <div class="tier-stat">
+                  <div class="tier-stat-value">${strategy.investment_period_days}</div>
+                  <div class="tier-stat-label">Days</div>
+                </div>
+                <div class="tier-stat">
+                  <div class="tier-stat-value">${(parseFloat(strategy.daily_roi) * 100).toFixed(2)}%</div>
+                  <div class="tier-stat-label">Daily ROI</div>
+                </div>
+                <div class="tier-stat">
+                  <div class="tier-stat-value">${((parseFloat(strategy.daily_roi) * 100) * strategy.investment_period_days).toFixed(1)}%</div>
+                  <div class="tier-stat-label">Total ROI</div>
+                </div>
+              </div>
+              
+              <button class="tier-action" onclick="window.tiersPage.openTierModal(${strategy.id})">
+                ${isCurrentTier ? 'View Details' : (isEligible ? 'Invest Now' : 'View Details')}
+              </button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
   }
 
   calculateTotalEquity() {
@@ -240,8 +315,8 @@ class TiersPage {
     return currentTierId;
   }
 
-  async openTierModal(tierId) {
-    this.selectedTier = this.tiers.find(t => t.id === tierId);
+  async openTierModal(strategyId) {
+    this.selectedTier = this.tiers.find(t => t.id === strategyId);
     if (!this.selectedTier) return;
 
     const modal = document.getElementById('tier-modal');
@@ -253,26 +328,40 @@ class TiersPage {
 
     // Set modal title
     modalTitle.textContent = this.selectedTier.name;
-    const tierDays = this.selectedTier.days || this.selectedTier.investment_period_days || 0;
-    modalSubtitle.textContent = `${tierDays} days at ${(this.selectedTier.daily_roi * 100).toFixed(1)}% daily ROI`;
+    modalSubtitle.textContent = `${this.selectedTier.asset_class} • ${this.selectedTier.investment_period_days} days at ${(parseFloat(this.selectedTier.daily_roi) * 100).toFixed(2)}% daily ROI`;
 
     // Generate summary
     const userTotalEquity = this.calculateTotalEquity();
     const currentTierId = this.getCurrentTierId();
     const isCurrentTier = this.selectedTier.id === currentTierId;
-    const isEligible = userTotalEquity >= this.selectedTier.min_amount;
+    const isEligible = userTotalEquity >= parseFloat(this.selectedTier.min_amount);
 
     let summaryHTML = `
+      <div class="strategy-description">
+        <p>${this.selectedTier.description}</p>
+      </div>
       <div class="summary-row">
         <span class="summary-label">Your Total Equity</span>
         <span class="summary-value highlight">$${this.formatMoney(userTotalEquity)}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Tier Minimum</span>
-        <span class="summary-value">$${this.formatMoney(this.selectedTier.min_amount)}</span>
+        <span class="summary-label">Strategy Minimum</span>
+        <span class="summary-value">$${this.formatMoney(parseFloat(this.selectedTier.min_amount))}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Current Tier</span>
+        <span class="summary-label">Investment Period</span>
+        <span class="summary-value">${this.selectedTier.investment_period_days} days</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Expected Daily Return</span>
+        <span class="summary-value highlight">${(parseFloat(this.selectedTier.daily_roi) * 100).toFixed(2)}%</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Expected Total Return</span>
+        <span class="summary-value highlight">${((parseFloat(this.selectedTier.daily_roi) * 100) * this.selectedTier.investment_period_days).toFixed(1)}%</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Current Strategy</span>
         <span class="summary-value">${this.tiers.find(t => t.id === currentTierId)?.name || 'None'}</span>
       </div>
     `;

@@ -1311,3 +1311,252 @@
     margin-left: auto;
   }
 }
+
+/* Investment Strategies Page Styles */
+.tiers-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.tiers-header h1 {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.tiers-header p {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.tier-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.tier-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+}
+
+.tier-card.current {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--primary-light) 100%);
+}
+
+.tier-header {
+  margin-bottom: 16px;
+}
+
+.tier-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.tier-asset-class {
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.tier-range {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.tier-description {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--surface-light);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.tier-description p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.tier-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tier-stat {
+  text-align: center;
+  padding: 16px;
+  background: var(--surface-light);
+  border-radius: 8px;
+}
+
+.tier-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.tier-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tier-action {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tier-action:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.tier-card.current .tier-action {
+  background: var(--success);
+}
+
+.tier-card.current .tier-action:hover {
+  background: var(--success-dark);
+}
+
+/* Strategy Description in Modal */
+.strategy-description {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--surface-light);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary);
+}
+
+.strategy-description p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Empty and Error States */
+.empty-state, .error-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state svg, .error-state svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3, .error-state h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.empty-state p, .error-state p {
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tiers-header h1 {
+    font-size: 32px;
+  }
+  
+  .tiers-header p {
+    font-size: 16px;
+  }
+  
+  .tiers-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .tier-card {
+    padding: 20px;
+  }
+  
+  .tier-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  
+  .tier-stat {
+    padding: 12px;
+  }
+  
+  .tier-stat-value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tier-card {
+    padding: 16px;
+  }
+  
+  .tier-name {
+    font-size: 18px;
+  }
+  
+  .tier-stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .tier-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    padding: 8px 12px;
+  }
+  
+  .tier-stat-value {
+    font-size: 18px;
+    margin-bottom: 0;
+  }
+  
+  .tier-stat-label {
+    font-size: 11px;
+    margin-bottom: 0;
+  }
+}
