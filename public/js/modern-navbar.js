@@ -55,7 +55,7 @@ class ModernNavbar {
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                 </a>
-                <a href="/app/tiers.html" class="nav-item" data-page="tiers" title="Investment Tiers">
+                <a href="/app/tiers.html" class="nav-item" data-page="tiers" title="Investment Strategies">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
                     </svg>
@@ -213,7 +213,7 @@ class ModernNavbar {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
                 </svg>
-                <span>Tiers</span>
+                <span>Strategies</span>
             </a>
             <a href="/app/deposits.html" class="mobile-nav-item" data-page="deposits">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
