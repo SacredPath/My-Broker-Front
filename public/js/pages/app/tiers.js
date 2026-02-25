@@ -157,7 +157,7 @@ class StrategiesPage {
       
       // Handle missing data gracefully
       const strategyName = strategy.name || `Strategy ${strategy.id}`;
-      const strategyDays = strategy.days || strategy.investment_period_days || 0;
+      const strategyDays = strategy.investment_period_days || 0;
       const strategyDailyRoi = strategy.daily_roi || 0;
       
       return `
@@ -235,7 +235,7 @@ class StrategiesPage {
 
     // Set modal title
     modalTitle.textContent = this.selectedStrategy.name;
-    modalSubtitle.textContent = `${this.selectedStrategy.days} days at ${(this.selectedStrategy.daily_roi * 100).toFixed(1)}% daily ROI`;
+    modalSubtitle.textContent = `${this.selectedStrategy.investment_period_days} days at ${(this.selectedStrategy.daily_roi * 100).toFixed(1)}% daily ROI`;
 
     // Generate summary
     const userTotalEquity = this.calculateTotalEquity();
