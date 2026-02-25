@@ -217,11 +217,12 @@ class APIClient {
         throw new Error('Service client not initialized');
       }
 
+      // investment_tiers is a global table - no user filtering needed
       const response = await this.serviceClient
-        .from('tiers')
+        .from('investment_tiers')
         .select('*')
-        .eq('user_id', userId)
-        .single();
+        .eq('is_active', true)
+        .order('sort_order');
 
       return this.mapTiersList(response);
     } catch (error) {
@@ -487,7 +488,8 @@ class APIClient {
   mapTiersList(response) {
     if (!response) return [];
     
-    return response.tiers || [];
+    // Response from investment_tiers table is direct array, not nested
+    return Array.isArray(response) ? response : [];
   }
 
   mapInvestPreview(response) {
