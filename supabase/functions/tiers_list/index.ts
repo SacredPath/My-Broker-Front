@@ -29,28 +29,29 @@ serve(async (req: Request) => {
     
     const supabase = adminClient();
     
-    // Get all tiers (read-only)
-    const { data: tiers, error: tiersError } = await supabase
-      .from("tiers")
+    // Get all strategies (read-only)
+    const { data: strategies, error: strategiesError } = await supabase
+      .from("investment_strategies")
       .select(`
         id,
-        tier_name,
-        min_amount_usd,
-        max_amount_usd,
-        maturity_days,
-        daily_roi_pct,
-        allocation,
+        name,
+        min_amount,
+        max_amount,
+        investment_period_days,
+        daily_roi,
+        allocation_mix,
+        asset_class,
         created_at,
         updated_at
       `)
-      .order("id", { ascending: true });
+      .order("sort_order", { ascending: true });
 
-    if (tiersError) {
-      console.error('Tiers list error:', tiersError);
+    if (strategiesError) {
+      console.error('Strategies list error:', strategiesError);
       return fail(500, { 
         ok: false, 
         error: "DATABASE_ERROR", 
-        detail: "Failed to fetch tiers" 
+        detail: "Failed to fetch strategies" 
       });
     }
     
@@ -97,18 +98,18 @@ serve(async (req: Request) => {
     const investedUSD = (positions || []).reduce((sum, p) => sum + parseFloat(p.principal_usd), 0);
     const totalEquityUSD = availableBalanceUSD + investedUSD;
     
-    // Determine user's current tier (highest tier among active positions)
-    const activePositionTiers = (positions || []).map(p => p.tier_id);
-    const currentTierId = activePositionTiers.length > 0 ? Math.max(...activePositionTiers) : null;
+    // Determine user's current strategy (highest strategy among active positions)
+    const activePositionStrategies = (positions || []).map(p => p.tier_id);
+    const currentStrategyId = activePositionStrategies.length > 0 ? Math.max(...activePositionStrategies) : null;
     
-    // Enhance tiers with user-specific information
-    const enhancedTiers = (tiers || []).map(tier => {
-      const tierId = tier.id;
-      const minAmount = parseFloat(tier.min_amount_usd);
-      const maxAmount = parseFloat(tier.max_amount_usd);
+    // Enhance strategies with user-specific information
+    const enhancedStrategies = (strategies || []).map(strategy => {
+      const strategyId = strategy.id;
+      const minAmount = parseFloat(strategy.min_amount);
+      const maxAmount = parseFloat(strategy.max_amount);
       
-      // Check if user is currently in this tier
-      const isCurrentTier = currentTierId === tierId;
+      // Check if user is currently in this strategy
+      const isCurrentStrategy = currentStrategyId === strategyId;
       
       // Check eligibility based on total equity
       const isEligible = totalEquityUSD >= minAmount && totalEquityUSD <= maxAmount;
@@ -123,34 +124,35 @@ serve(async (req: Request) => {
         excess = totalEquityUSD - maxAmount;
       }
       
-      // Count active positions in this tier
-      const activePositionsInTier = (positions || []).filter(p => p.tier_id === tierId).length;
+      // Count active positions in this strategy
+      const activePositionsInStrategy = (positions || []).filter(p => p.tier_id === strategyId).length;
       
       return {
-        id: tier.id,
-        name: tier.tier_name,
-        level: tier.id,
+        id: strategy.id,
+        name: strategy.name,
+        level: strategy.id,
         min_balance_usd: minAmount,
         max_balance_usd: maxAmount,
-        maturity_days: tier.maturity_days,
-        daily_roi_percent: parseFloat(tier.daily_roi_pct),
-        allocation: tier.allocation,
+        maturity_days: strategy.investment_period_days,
+        daily_roi_percent: parseFloat(strategy.daily_roi) * 100,
+        allocation: strategy.allocation_mix,
+        asset_class: strategy.asset_class,
         
         // User-specific data
-        is_current: isCurrentTier,
+        is_current: isCurrentStrategy,
         is_eligible: isEligible,
         shortfall_usd: shortfall,
         excess_usd: excess,
-        active_positions_count: activePositionsInTier,
+        active_positions_count: activePositionsInStrategy,
         
         // Timestamps
-        created_at: tier.created_at,
-        updated_at: tier.updated_at
+        created_at: strategy.created_at,
+        updated_at: strategy.updated_at
       };
     });
     
     // Sort by level (ascending)
-    enhancedTiers.sort((a, b) => a.level - b.level);
+    enhancedStrategies.sort((a, b) => a.level - b.level);
 
     return ok({
       ok: true,
@@ -160,21 +162,21 @@ serve(async (req: Request) => {
       user_equity_usd: totalEquityUSD,
       available_balance_usd: availableBalanceUSD,
       invested_usd: investedUSD,
-      current_tier_id: currentTierId,
+      current_tier_id: currentStrategyId,
       
-      // Enhanced tiers list
-      tiers: enhancedTiers,
+      // Enhanced strategies list
+      strategies: enhancedStrategies,
       
       // Summary
-      total_tiers: enhancedTiers.length,
-      eligible_tiers_count: enhancedTiers.filter(t => t.is_eligible).length,
+      total_strategies: enhancedStrategies.length,
+      eligible_strategies_count: enhancedStrategies.filter(s => s.is_eligible).length,
       
       // Timestamp
       last_updated: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Tiers list error:', error);
+    console.error('Strategies list error:', error);
     return fail(500, { 
       ok: false, 
       error: "SERVER_ERROR", 

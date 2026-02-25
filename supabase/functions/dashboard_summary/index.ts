@@ -60,10 +60,10 @@ serve(async (req: Request) => {
         matures_at,
         last_accrued_at,
         tier_id,
-        tiers!inner (
-          tier_name,
-          daily_roi_pct,
-          maturity_days
+        investment_strategies!inner (
+          name,
+          daily_roi,
+          investment_period_days
         )
       `)
       .eq("user_id", user.id)
@@ -115,8 +115,8 @@ serve(async (req: Request) => {
         
         if (lastAccrued >= todayStartUTC) {
           // Simple approximation: assume linear accrual throughout the day
-          const tier = pos.tiers as any;
-          const dailyRoiRate = parseFloat(tier.daily_roi_pct) / 100;
+          const strategy = pos.investment_strategies as any;
+          const dailyRoiRate = parseFloat(strategy.daily_roi);
           const dailyRoiAmount = principal * dailyRoiRate;
           
           // Calculate proportion of day's ROI that was accrued today

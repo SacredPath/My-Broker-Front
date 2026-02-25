@@ -43,17 +43,17 @@ serve(async (req: Request) => {
       return err(req, 'POSITION_NOT_FOUND', 404, 'Active position not found');
     }
     
-    // Get tier details for validation
-    const { data: tier } = await supabase
-      .from("tiers")
-      .select("max_amount_usd")
+    // Get strategy details for validation
+    const { data: strategy } = await supabase
+      .from("investment_strategies")
+      .select("max_amount")
       .eq("id", position.tier_id)
       .single();
     
-    // Check if new total would exceed tier max
+    // Check if new total would exceed strategy max
     const newTotal = position.principal_usd + validatedAmount;
-    if (tier && newTotal > tier.max_amount_usd) {
-      return err(req, 'EXCEEDS_TIER_LIMIT', 400, 'Upgrade would exceed tier maximum');
+    if (strategy && newTotal > strategy.max_amount) {
+      return err(req, 'EXCEEDS_STRATEGY_LIMIT', 400, 'Upgrade would exceed strategy maximum');
     }
     
     // Check user balance (accept both USD and USDT)
