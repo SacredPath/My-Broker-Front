@@ -49,24 +49,6 @@ class TiersPage {
     }
   }
 
-  loadAppShell() {
-    const shellContainer = document.getElementById('app-shell-container');
-    if (shellContainer) {
-      fetch('/src/components/app-shell.html')
-        .then(response => response.text())
-        .then(html => {
-          shellContainer.innerHTML = html;
-          
-          if (window.AppShell) {
-            window.AppShell.setupShell();
-          }
-        })
-        .catch(error => {
-          console.error('Failed to load app shell:', error);
-        });
-    }
-  }
-
   async loadUserData() {
     try {
       // Get current user and positions
@@ -156,6 +138,16 @@ class TiersPage {
     const tiersGrid = document.getElementById('tiers-grid');
     if (!tiersGrid) return;
 
+    if (this.tiers.length === 0) {
+      tiersGrid.innerHTML = `
+        <div class="tiers-header">
+          <h1>Investment Tiers</h1>
+          <p>Loading investment tiers...</p>
+        </div>
+      `;
+      return;
+    }
+
     const userTotalEquity = this.calculateTotalEquity();
     const currentTierId = this.getCurrentTierId();
 
@@ -163,10 +155,15 @@ class TiersPage {
       const isCurrentTier = tier.id === currentTierId;
       const isEligible = userTotalEquity >= tier.min_amount;
       
+      // Handle missing data gracefully
+      const tierName = tier.name || `Tier ${tier.id}`;
+      const tierDays = tier.days || tier.investment_period_days || 0;
+      const tierDailyRoi = tier.daily_roi || 0;
+      
       return `
         <div class="tier-card ${isCurrentTier ? 'current' : ''}" data-tier-id="${tier.id}">
           <div class="tier-header">
-            <div class="tier-name">${tier.name}</div>
+            <div class="tier-name">${tierName}</div>
             <div class="tier-range">
               $${this.formatMoney(tier.min_amount)}${tier.max_amount ? ` - $${this.formatMoney(tier.max_amount)}` : '+'}
             </div>
@@ -174,23 +171,23 @@ class TiersPage {
           
           <div class="tier-stats">
             <div class="tier-stat">
-              <div class="tier-stat-value">${tier.days}</div>
+              <div class="tier-stat-value">${tierDays}</div>
               <div class="tier-stat-label">Days</div>
             </div>
             <div class="tier-stat">
-              <div class="tier-stat-value">${(tier.daily_roi * 100).toFixed(1)}%</div>
+              <div class="tier-stat-value">${(tierDailyRoi * 100).toFixed(1)}%</div>
               <div class="tier-stat-label">Daily ROI</div>
             </div>
           </div>
           
           <div class="tier-allocations">
             <h4>Allocation Mix</h4>
-            ${Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
+            ${tier.allocation_mix ? Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
               <div class="allocation-item">
                 <span class="allocation-asset">${asset}</span>
                 <span class="allocation-percentage">${percentage}%</span>
               </div>
-            `).join('')}
+            `).join('') : '<div class="allocation-item"><span class="allocation-asset">Standard allocation</span></div>'}
           </div>
           
           <button class="tier-action" onclick="window.tiersPage.openTierModal(${tier.id})">
@@ -324,6 +321,12 @@ class TiersPage {
     `;
 
     shortfallSection.style.display = 'block';
+    
+    // Show the modal - fix: use the modal variable that was already defined
+    const modal = document.getElementById('tier-modal');
+    if (modal) {
+      modal.style.display = 'block';
+    }
   }
 
   async showConversionPreview(shortfall) {
@@ -344,9 +347,14 @@ class TiersPage {
         throw error;
       }
 
+      // Check if data and quote exist
+      if (!data || !data.quote) {
+        throw new Error('Invalid quote response');
+      }
+
       const quote = data.quote;
-      const usdtAmount = quote.from_amount;
-      const fee = quote.total_fees;
+      const usdtAmount = quote.from_amount || shortfall; // Fallback to shortfall if from_amount is missing
+      const fee = quote.total_fees || 0; // Fallback to 0 if total_fees is missing
 
       conversionPreview.innerHTML = `
         <div class="conversion-row">
@@ -421,8 +429,13 @@ class TiersPage {
         throw error;
       }
 
+      // Check if data and quote exist
+      if (!data || !data.quote) {
+        throw new Error('Invalid quote response');
+      }
+
       const quote = data.quote;
-      const usdtAmount = quote.from_amount;
+      const usdtAmount = quote.from_amount || Math.ceil(shortfall / 0.99); // Fallback calculation
 
       // Redirect to deposit with prefilled amount
       const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
@@ -519,7 +532,9 @@ class TiersPage {
 
   closeModal() {
     const modal = document.getElementById('tier-modal');
-    modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+    }
   }
 
   formatMoney(amount, precision = 2) {
@@ -530,6 +545,77 @@ class TiersPage {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision
     });
+  }
+
+  // Setup modal functionality
+  setupModal() {
+    const modal = document.getElementById('tier-modal');
+    const closeButtons = modal?.querySelectorAll('.modal-close, [onclick*="closeModal"]');
+    
+    if (closeButtons) {
+      closeButtons.forEach(button => {
+        button.addEventListener('click', () => this.closeModal());
+      });
+    }
+    
+    // Close modal on overlay click
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    });
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal?.style.display !== 'none') {
+        this.closeModal();
+      }
+    });
+  }
+
+  // Update tier statistics and display
+  updateStats() {
+    const statsContainer = document.getElementById('tier-stats');
+    if (!statsContainer) return;
+
+    const userTotalEquity = this.calculateTotalEquity();
+    const currentTierId = this.getCurrentTierId();
+    const currentTier = this.tiers.find(t => t.id === currentTierId);
+
+    let statsHTML = '';
+    
+    if (currentTier) {
+      const tierName = currentTier.name || `Tier ${currentTier.id}`;
+      const tierDays = currentTier.days || currentTier.investment_period_days || 0;
+      const tierDailyRoi = currentTier.daily_roi || 0;
+      
+      statsHTML = `
+        <div class="current-tier-stats">
+          <h3>Current Tier: ${tierName}</h3>
+          <div class="stat-row">
+            <span class="stat-label">Daily ROI:</span>
+            <span class="stat-value">${(tierDailyRoi * 100).toFixed(1)}%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Investment Period:</span>
+            <span class="stat-value">${tierDays} days</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Your Equity:</span>
+            <span class="stat-value">$${this.formatMoney(userTotalEquity)}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      statsHTML = `
+        <div class="no-tier-stats">
+          <h3>No Active Investment</h3>
+          <p>You haven't started any investment tier yet.</p>
+        </div>
+      `;
+    }
+
+    statsContainer.innerHTML = statsHTML;
   }
 
   // Cleanup method

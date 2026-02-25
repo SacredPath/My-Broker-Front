@@ -340,8 +340,11 @@ class TiersPage {
 
     shortfallSection.style.display = 'block';
     
-    // Show the modal
-    modal.style.display = 'block';
+    // Show the modal - fix: use the modal variable that was already defined
+    const modal = document.getElementById('tier-modal');
+    if (modal) {
+      modal.style.display = 'block';
+    }
   }
 
   async showConversionPreview(shortfall) {
@@ -362,9 +365,14 @@ class TiersPage {
         throw error;
       }
 
+      // Check if data and quote exist
+      if (!data || !data.quote) {
+        throw new Error('Invalid quote response');
+      }
+
       const quote = data.quote;
-      const usdtAmount = quote.from_amount;
-      const fee = quote.total_fees;
+      const usdtAmount = quote.from_amount || shortfall; // Fallback to shortfall if from_amount is missing
+      const fee = quote.total_fees || 0; // Fallback to 0 if total_fees is missing
 
       conversionPreview.innerHTML = `
         <div class="conversion-row">
@@ -439,8 +447,13 @@ class TiersPage {
         throw error;
       }
 
+      // Check if data and quote exist
+      if (!data || !data.quote) {
+        throw new Error('Invalid quote response');
+      }
+
       const quote = data.quote;
-      const usdtAmount = quote.from_amount;
+      const usdtAmount = quote.from_amount || Math.ceil(shortfall / 0.99); // Fallback calculation
 
       // Redirect to deposit with prefilled amount
       const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
@@ -537,7 +550,9 @@ class TiersPage {
 
   closeModal() {
     const modal = document.getElementById('tier-modal');
-    modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+    }
   }
 
   formatMoney(amount, precision = 2) {
@@ -574,13 +589,6 @@ class TiersPage {
         this.closeModal();
       }
     });
-  }
-
-  closeModal() {
-    const modal = document.getElementById('tier-modal');
-    if (modal) {
-      modal.style.display = 'none';
-    }
   }
 
   // Update tier statistics and display
