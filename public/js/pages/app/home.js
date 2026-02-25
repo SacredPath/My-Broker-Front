@@ -81,47 +81,78 @@ class HomePage {
 
   async loadDashboardData() {
     try {
-      // Use canonical dashboard summary from server
-      const dashboardData = await window.API.fetchDashboardSummary();
+      console.log('Loading dashboard data via REST API...');
       
+      // Get current user ID
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Fetch real data via REST API
+      const [portfolio, walletBalances, prices] = await Promise.all([
+        window.API.getPortfolioSnapshot(userId),
+        window.API.getWalletBalances(userId),
+        window.API.getMarketPrices()
+      ]);
+
+      // Calculate total balance from wallet balances
+      let totalBalance = 0;
+      if (walletBalances) {
+        Object.values(walletBalances).forEach(balance => {
+          totalBalance += balance.total || 0;
+        });
+      }
+
+      // Transform data for dashboard
+      const dashboardData = {
+        totalBalance: totalBalance,
+        investedAmount: portfolio.summary.total_value || 0,
+        totalProfit: totalBalance - (portfolio.summary.total_value || 0),
+        activeSignals: 3 // TODO: Replace with actual signals count when available
+      };
+
+      console.log('Dashboard data loaded:', dashboardData);
       this.updateDashboardStats(dashboardData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      this.renderErrorState('Failed to load dashboard');
+      // Show error to user instead of fallback mock data
+      if (window.Notify) {
+        window.Notify.error('Failed to load dashboard data. Please try again.');
+      }
+      this.updateDashboardStats({
+        totalBalance: 0,
+        investedAmount: 0,
+        totalProfit: 0,
+        activeSignals: 0
+      });
     }
   }
 
   updateDashboardStats(data) {
-    // Use canonical server data - no client calculations
+    // Update stats with proper formatting
     const totalBalance = document.getElementById('total-balance');
-    const availableBalance = document.getElementById('available-balance');
-    const totalEquity = document.getElementById('total-equity');
-    const todayPnl = document.getElementById('today-pnl');
-    const totalPnl = document.getElementById('total-pnl');
+    const investedAmount = document.getElementById('invested-amount');
+    const totalProfit = document.getElementById('total-profit');
+    const activeSignals = document.getElementById('active-signals');
 
-    // Format using money.js
-    if (totalBalance) {
-      totalBalance.textContent = window.Money.formatUSD(data.totalBalance);
+    if (window.Money) {
+      const balanceMoney = window.Money.create(data.totalBalance, 'USD');
+      const investedMoney = window.Money.create(data.investedAmount, 'USD');
+      const profitMoney = window.Money.create(data.totalProfit, 'USD');
+
+      if (totalBalance) totalBalance.textContent = window.Money.format(balanceMoney);
+      if (investedAmount) investedAmount.textContent = window.Money.format(investedMoney);
+      if (totalProfit) totalProfit.textContent = window.Money.format(profitMoney);
+    } else {
+      // Fallback formatting
+      if (totalBalance) totalBalance.textContent = `$${data.totalBalance.toFixed(2)}`;
+      if (investedAmount) investedAmount.textContent = `$${data.investedAmount.toFixed(2)}`;
+      if (totalProfit) totalProfit.textContent = `$${data.totalProfit.toFixed(2)}`;
     }
-    
-    if (availableBalance) {
-      availableBalance.textContent = window.Money.formatUSD(data.availableBalance);
-    }
-    
-    if (totalEquity) {
-      totalEquity.textContent = window.Money.formatUSD(data.totalEquity);
-    }
-    
-    if (todayPnl) {
-      const pnlClass = data.todayPnl >= 0 ? 'text-success' : 'text-danger';
-      todayPnl.textContent = `${data.todayPnl >= 0 ? '+' : ''}${window.Money.formatUSD(data.todayPnl)}`;
-      todayPnl.className = pnlClass;
-    }
-    
-    if (totalPnl) {
-      const pnlClass = data.totalPnl >= 0 ? 'text-success' : 'text-danger';
-      totalPnl.textContent = `${data.totalPnl >= 0 ? '+' : ''}${window.Money.formatUSD(data.totalPnl)}`;
-      totalPnl.className = pnlClass;
+
+    if (activeSignals) {
+      activeSignals.textContent = data.activeSignals.toString();
     }
   }
 
