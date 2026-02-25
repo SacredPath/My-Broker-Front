@@ -372,14 +372,34 @@ class TiersPage {
         // Nested data structure
         quote = data.data;
       } else {
-        // No valid quote data - use fallback values
-        console.warn('No valid conversion quote data, using fallback');
-        quote = {
-          from_amount: shortfall,
-          to_amount: shortfall,
-          rate: 1,
-          fee: 0.01
-        };
+        // No valid quote data - show error to user
+        console.warn('No valid conversion quote data available');
+        const errorMessage = data?.error || 'Conversion service unavailable';
+        if (window.Notify) {
+          window.Notify.error(errorMessage);
+        }
+        conversionPreview.innerHTML = `
+          <div class="conversion-row">
+            <span class="conversion-label">Error:</span>
+            <span class="conversion-value" style="color: var(--error);">${errorMessage}</span>
+          </div>
+        `;
+        return;
+      }
+
+      // Check for conversion errors
+      if (quote.error) {
+        console.warn('Conversion error:', quote.error);
+        if (window.Notify) {
+          window.Notify.error(quote.error);
+        }
+        conversionPreview.innerHTML = `
+          <div class="conversion-row">
+            <span class="conversion-label">Error:</span>
+            <span class="conversion-value" style="color: var(--error);">${quote.error}</span>
+          </div>
+        `;
+        return;
       }
 
       // For tiers page debugging: if we get mock data with 0 values, calculate proper conversion
@@ -480,14 +500,24 @@ class TiersPage {
         // Nested data structure
         quote = data.data;
       } else {
-        // No valid quote data - use fallback calculation
-        console.warn('No valid conversion quote data, using fallback calculation');
-        const rate = 0.99;
-        const fee = Math.max(shortfall * 0.01, 1);
-        const usdtAmount = Math.ceil((shortfall + fee) / rate);
-        
-        // Redirect to deposit with prefilled amount
-        const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+        // No valid quote data - show error and redirect without amount
+        console.warn('No valid conversion quote data available');
+        const errorMessage = data?.error || 'Conversion service unavailable';
+        if (window.Notify) {
+          window.Notify.error(errorMessage);
+        }
+        const depositUrl = `/app/deposits.html?currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+        window.location.href = depositUrl;
+        return;
+      }
+
+      // Check for conversion errors
+      if (quote.error) {
+        console.warn('Conversion error:', quote.error);
+        if (window.Notify) {
+          window.Notify.error(quote.error);
+        }
+        const depositUrl = `/app/deposits.html?currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
         window.location.href = depositUrl;
         return;
       }
