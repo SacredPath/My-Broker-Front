@@ -209,24 +209,24 @@ class APIClient {
     }
   }
 
-  async fetchTiersList() {
+  async fetchStrategiesList() {
     try {
-      console.log('[APIClient] Getting tiers list via REST API...');
+      console.log('[APIClient] Getting strategies list via REST API...');
       
       if (!this.serviceClient) {
         throw new Error('Service client not initialized');
       }
 
-      // investment_tiers is a global table - no user filtering needed
+      // investment_strategies is a global table - no user filtering needed
       const response = await this.serviceClient
-        .from('investment_tiers')
+        .from('investment_strategies')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
 
-      return this.mapTiersList(response);
+      return this.mapStrategiesList(response);
     } catch (error) {
-      console.error('Failed to fetch tiers list:', error);
+      console.error('Failed to fetch strategies list:', error);
       throw error;
     }
   }
@@ -485,10 +485,10 @@ class APIClient {
     return response.positions || [];
   }
 
-  mapTiersList(response) {
+  mapStrategiesList(response) {
     if (!response) return [];
     
-    // Response from investment_tiers table is direct array, not nested
+    // Response from investment_strategies table is direct array, not nested
     return Array.isArray(response) ? response : [];
   }
 

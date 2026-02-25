@@ -1,22 +1,22 @@
 /**
- * Tiers Page Controller
- * Handles tier display, upgrade logic, and investment flows
+ * Strategies Page Controller
+ * Handles strategy display, upgrade logic, and investment flows
  */
 
 // Import shared app initializer
 import '/assets/js/_shared/app_init.js';
 
-class TiersPage {
+class StrategiesPage {
   constructor() {
-    this.tiers = [];
+    this.strategies = [];
     this.userPositions = [];
     this.currentUser = null;
-    this.selectedTier = null;
+    this.selectedStrategy = null;
     this.init();
   }
 
   async init() {
-    console.log('Tiers page initializing...');
+    console.log('Strategies page initializing...');
     
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.setupPage());
@@ -34,17 +34,17 @@ class TiersPage {
       
       // Load data
       await this.loadUserData();
-      await this.loadTiers();
+      await this.loadStrategies();
       
       // Setup UI
-      this.renderTiers();
+      this.renderStrategies();
       this.setupModal();
       
-      console.log('Tiers page setup complete');
+      console.log('Strategies page setup complete');
     } catch (error) {
-      console.error('Error setting up tiers page:', error);
+      console.error('Error setting up strategies page:', error);
       if (window.Notify) {
-        window.Notify.error('Failed to load investment tiers');
+        window.Notify.error('Failed to load investment strategies');
       }
     }
   }
@@ -83,21 +83,21 @@ class TiersPage {
     }
   }
 
-  async loadTiers() {
+  async loadStrategies() {
     try {
-      // Use canonical tiers list from server
-      this.tiers = await window.API.fetchTiersList();
+      // Use canonical strategies list from server
+      this.strategies = await window.API.fetchStrategiesList();
       
-      if (!this.tiers.length) {
-        this.renderEmptyState('No tiers available');
+      if (!this.strategies.length) {
+        this.renderEmptyState('No strategies available');
         return;
       }
       
-      this.renderTiers();
+      this.renderStrategies();
       this.updateStats();
     } catch (error) {
-      console.error('Failed to load tiers:', error);
-      this.renderErrorState('Failed to load tiers');
+      console.error('Failed to load strategies:', error);
+      this.renderErrorState('Failed to load strategies');
     }
   }
 
@@ -110,7 +110,7 @@ class TiersPage {
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
         </svg>
-        <h3>No tiers available</h3>
+        <h3>No strategies available</h3>
         <p>${message}</p>
       </div>
     `;
@@ -127,62 +127,62 @@ class TiersPage {
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
         </svg>
-        <h3>Failed to load tiers</h3>
+        <h3>Failed to load strategies</h3>
         <p>${message}</p>
         <button class="btn btn-primary" onclick="window.location.reload()">Retry</button>
       </div>
     `;
   }
 
-  renderTiers() {
+  renderStrategies() {
     const tiersGrid = document.getElementById('tiers-grid');
     if (!tiersGrid) return;
 
-    if (this.tiers.length === 0) {
+    if (this.strategies.length === 0) {
       tiersGrid.innerHTML = `
         <div class="tiers-header">
-          <h1>Investment Tiers</h1>
-          <p>Loading investment tiers...</p>
+          <h1>Investment Strategies</h1>
+          <p>Loading investment strategies...</p>
         </div>
       `;
       return;
     }
 
     const userTotalEquity = this.calculateTotalEquity();
-    const currentTierId = this.getCurrentTierId();
+    const currentStrategyId = this.getCurrentStrategyId();
 
-    tiersGrid.innerHTML = this.tiers.map(tier => {
-      const isCurrentTier = tier.id === currentTierId;
-      const isEligible = userTotalEquity >= tier.min_amount;
+    tiersGrid.innerHTML = this.strategies.map(strategy => {
+      const isCurrentStrategy = strategy.id === currentStrategyId;
+      const isEligible = userTotalEquity >= strategy.min_amount;
       
       // Handle missing data gracefully
-      const tierName = tier.name || `Tier ${tier.id}`;
-      const tierDays = tier.days || tier.investment_period_days || 0;
-      const tierDailyRoi = tier.daily_roi || 0;
+      const strategyName = strategy.name || `Strategy ${strategy.id}`;
+      const strategyDays = strategy.days || strategy.investment_period_days || 0;
+      const strategyDailyRoi = strategy.daily_roi || 0;
       
       return `
-        <div class="tier-card ${isCurrentTier ? 'current' : ''}" data-tier-id="${tier.id}">
+        <div class="tier-card ${isCurrentStrategy ? 'current' : ''}" data-tier-id="${strategy.id}">
           <div class="tier-header">
-            <div class="tier-name">${tierName}</div>
+            <div class="tier-name">${strategyName}</div>
             <div class="tier-range">
-              $${this.formatMoney(tier.min_amount)}${tier.max_amount ? ` - $${this.formatMoney(tier.max_amount)}` : '+'}
+              $${this.formatMoney(strategy.min_amount)}${strategy.max_amount ? ` - $${this.formatMoney(strategy.max_amount)}` : '+'}
             </div>
           </div>
           
           <div class="tier-stats">
             <div class="tier-stat">
-              <div class="tier-stat-value">${tierDays}</div>
+              <div class="tier-stat-value">${strategyDays}</div>
               <div class="tier-stat-label">Days</div>
             </div>
             <div class="tier-stat">
-              <div class="tier-stat-value">${(tierDailyRoi * 100).toFixed(1)}%</div>
+              <div class="tier-stat-value">${(strategyDailyRoi * 100).toFixed(1)}%</div>
               <div class="tier-stat-label">Daily ROI</div>
             </div>
           </div>
           
           <div class="tier-allocations">
             <h4>Allocation Mix</h4>
-            ${tier.allocation_mix ? Object.entries(tier.allocation_mix).map(([asset, percentage]) => `
+            ${strategy.allocation_mix ? Object.entries(strategy.allocation_mix).map(([asset, percentage]) => `
               <div class="allocation-item">
                 <span class="allocation-asset">${asset}</span>
                 <span class="allocation-percentage">${percentage}%</span>
@@ -190,8 +190,8 @@ class TiersPage {
             `).join('') : '<div class="allocation-item"><span class="allocation-asset">Standard allocation</span></div>'}
           </div>
           
-          <button class="tier-action" onclick="window.tiersPage.openTierModal(${tier.id})">
-            ${isCurrentTier ? 'View Details' : (isEligible ? 'Upgrade' : 'View Details')}
+          <button class="tier-action" onclick="window.strategiesPage.openStrategyModal(${strategy.id})">
+            ${isCurrentStrategy ? 'View Details' : (isEligible ? 'Upgrade' : 'View Details')}
           </button>
         </div>
       `;
@@ -205,26 +205,26 @@ class TiersPage {
       .reduce((total, pos) => total + pos.amount, 0);
   }
 
-  getCurrentTierId() {
-    // Get the highest tier the user qualifies for based on total equity
+  getCurrentStrategyId() {
+    // Get the highest strategy the user qualifies for based on total equity
     const totalEquity = this.calculateTotalEquity();
     
-    // Find the highest tier user qualifies for
-    let currentTierId = 1;
-    for (const tier of this.tiers.sort((a, b) => a.id - b.id)) {
-      if (totalEquity >= tier.min_amount) {
-        currentTierId = tier.id;
+    // Find the highest strategy user qualifies for
+    let currentStrategyId = 1;
+    for (const strategy of this.strategies.sort((a, b) => a.id - b.id)) {
+      if (totalEquity >= strategy.min_amount) {
+        currentStrategyId = strategy.id;
       } else {
         break;
       }
     }
     
-    return currentTierId;
+    return currentStrategyId;
   }
 
-  async openTierModal(tierId) {
-    this.selectedTier = this.tiers.find(t => t.id === tierId);
-    if (!this.selectedTier) return;
+  async openStrategyModal(strategyId) {
+    this.selectedStrategy = this.strategies.find(s => s.id === strategyId);
+    if (!this.selectedStrategy) return;
 
     const modal = document.getElementById('tier-modal');
     const modalTitle = document.getElementById('modal-tier-name');
@@ -234,14 +234,14 @@ class TiersPage {
     const modalActions = document.getElementById('modal-actions');
 
     // Set modal title
-    modalTitle.textContent = this.selectedTier.name;
-    modalSubtitle.textContent = `${this.selectedTier.days} days at ${(this.selectedTier.daily_roi * 100).toFixed(1)}% daily ROI`;
+    modalTitle.textContent = this.selectedStrategy.name;
+    modalSubtitle.textContent = `${this.selectedStrategy.days} days at ${(this.selectedStrategy.daily_roi * 100).toFixed(1)}% daily ROI`;
 
     // Generate summary
     const userTotalEquity = this.calculateTotalEquity();
-    const currentTierId = this.getCurrentTierId();
-    const isCurrentTier = this.selectedTier.id === currentTierId;
-    const isEligible = userTotalEquity >= this.selectedTier.min_amount;
+    const currentStrategyId = this.getCurrentStrategyId();
+    const isCurrentStrategy = this.selectedStrategy.id === currentStrategyId;
+    const isEligible = userTotalEquity >= this.selectedStrategy.min_amount;
 
     let summaryHTML = `
       <div class="summary-row">
@@ -249,18 +249,18 @@ class TiersPage {
         <span class="summary-value highlight">$${this.formatMoney(userTotalEquity)}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Tier Minimum</span>
-        <span class="summary-value">$${this.formatMoney(this.selectedTier.min_amount)}</span>
+        <span class="summary-label">Strategy Minimum</span>
+        <span class="summary-value">$${this.formatMoney(this.selectedStrategy.min_amount)}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Current Tier</span>
-        <span class="summary-value">${this.tiers.find(t => t.id === currentTierId)?.name || 'None'}</span>
+        <span class="summary-label">Current Strategy</span>
+        <span class="summary-value">${this.strategies.find(s => s.id === currentStrategyId)?.name || 'None'}</span>
       </div>
     `;
 
-    if (isCurrentTier) {
+    if (isCurrentStrategy) {
       // Show current position details
-      const currentPosition = this.userPositions.find(pos => pos.tier_id === currentTierId);
+      const currentPosition = this.userPositions.find(pos => pos.tier_id === currentStrategyId);
       if (currentPosition) {
         summaryHTML += `
           <div class="summary-row">
@@ -640,14 +640,14 @@ class TiersPage {
 
   // Cleanup method
   destroy() {
-    console.log('Tiers page cleanup');
+    console.log('Strategies page cleanup');
   }
 }
 
 // Initialize page controller
-window.tiersPage = new TiersPage();
+window.strategiesPage = new StrategiesPage();
 
 // Export for potential testing
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = TiersPage;
+  module.exports = StrategiesPage;
 }

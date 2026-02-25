@@ -555,35 +555,35 @@ class APIClient {
     }
   }
 
-  // Get investment tiers list
-  async fetchTiersList() {
+  // Get investment strategies list
+  async fetchStrategiesList() {
     try {
-      const response = await this.fetchSupabase('investment_tiers', {
+      const response = await this.fetchSupabase('investment_strategies', {
         select: '*',
         order: { min_amount: 'asc' }
       });
       
-      const tiers = response?.data || [];
-      console.log('[API] Tiers loaded from database:', tiers.length, 'items');
+      const strategies = response?.data || [];
+      console.log('[API] Strategies loaded from database:', strategies.length, 'items');
       
-      // Debug: Show field names and values for first tier
-      if (tiers.length > 0) {
-        const firstTier = tiers[0];
-        console.log('[API] First tier fields:', Object.keys(firstTier));
-        console.log('[API] First tier data:', {
-          id: firstTier.id,
-          name: firstTier.name,
-          min_amount: firstTier.min_amount,
-          max_amount: firstTier.max_amount,
-          days: firstTier.days,
-          daily_roi: firstTier.daily_roi,
-          allocation_mix: firstTier.allocation_mix
+      // Debug: Show field names and values for first strategy
+      if (strategies.length > 0) {
+        const firstStrategy = strategies[0];
+        console.log('[API] First strategy fields:', Object.keys(firstStrategy));
+        console.log('[API] First strategy data:', {
+          id: firstStrategy.id,
+          name: firstStrategy.name,
+          min_amount: firstStrategy.min_amount,
+          max_amount: firstStrategy.max_amount,
+          days: firstStrategy.days,
+          daily_roi: firstStrategy.daily_roi,
+          allocation_mix: firstStrategy.allocation_mix
         });
       }
       
-      return tiers;
+      return strategies;
     } catch (error) {
-      console.error('Failed to fetch tiers:', error);
+      console.error('Failed to fetch strategies:', error);
       return [];
     }
   }
@@ -611,7 +611,7 @@ if (typeof module !== 'undefined' && module.exports) {
 export const {
   fetchSupabase,
   fetchEdge,
-  fetchTiersList,
+  fetchStrategiesList,
   getProfile,
   updateProfile,
   fetchBalances,
