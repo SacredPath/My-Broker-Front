@@ -402,16 +402,12 @@ class TiersPage {
         return;
       }
 
-      // For tiers page debugging: if we get mock data with 0 values, calculate proper conversion
-      let usdtAmount = quote.from_amount || shortfall;
+      // Use the calculated conversion values directly
+      let usdtAmount = quote.from_amount;
       let fee = quote.fee || quote.total_fees || 0;
       
-      if (usdtAmount === 0 && shortfall > 0) {
-        // Mock data detected - calculate proper conversion for tiers page
-        const rate = 0.99; // USDT to USD with small spread
-        fee = Math.max(shortfall * 0.01, 1); // 1% fee, minimum $1
-        usdtAmount = Math.ceil((shortfall + fee) / rate);
-      }
+      // No need for mock data detection - using real database calculations
+      // The conversion API now returns proper calculated values
 
       conversionPreview.innerHTML = `
         <div class="conversion-row">
@@ -522,15 +518,20 @@ class TiersPage {
         return;
       }
 
-      // For tiers page debugging: calculate proper conversion if mock data detected
+      // Use calculated conversion values directly
       let usdtAmount;
       if (quote && quote.from_amount > 0) {
         usdtAmount = quote.from_amount;
       } else {
-        // Mock data detected - calculate proper conversion for tiers page
-        const rate = 0.99; // USDT to USD with small spread
-        const fee = Math.max(shortfall * 0.01, 1); // 1% fee, minimum $1
-        usdtAmount = Math.ceil((shortfall + fee) / rate);
+        // No valid conversion data - redirect without amount
+        console.warn('No valid conversion quote data available');
+        const errorMessage = data?.error || 'Conversion service unavailable';
+        if (window.Notify) {
+          window.Notify.error(errorMessage);
+        }
+        const depositUrl = `/app/deposits.html?currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+        window.location.href = depositUrl;
+        return;
       }
 
       // Redirect to deposit with prefilled amount
