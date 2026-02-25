@@ -81,16 +81,25 @@ class HomePage {
       }
 
       // Fetch real data via REST API
-      const [portfolio, prices] = await Promise.all([
+      const [portfolio, walletBalances, prices] = await Promise.all([
         this.api.getPortfolioSnapshot(userId),
+        this.api.getWalletBalances(userId),
         this.api.getMarketPrices()
       ]);
 
+      // Calculate total balance from wallet balances
+      let totalBalance = 0;
+      if (walletBalances) {
+        Object.values(walletBalances).forEach(balance => {
+          totalBalance += balance.total || 0;
+        });
+      }
+
       // Transform data for dashboard
       const dashboardData = {
-        totalBalance: portfolio.summary.total_balance || 0,
+        totalBalance: totalBalance,
         investedAmount: portfolio.summary.total_value || 0,
-        totalProfit: (portfolio.summary.total_balance || 0) - (portfolio.summary.total_value || 0),
+        totalProfit: totalBalance - (portfolio.summary.total_value || 0),
         activeSignals: 3 // TODO: Replace with actual signals count when available
       };
 

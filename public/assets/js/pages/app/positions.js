@@ -87,8 +87,20 @@ class PositionsPage {
 
   async loadPositions() {
     try {
-      // Use canonical positions list from server
-      this.positions = await window.API.fetchPositionsList();
+      // Get current user ID first
+      const userId = await window.API.getCurrentUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Load both positions and wallet balances
+      const [positions, walletBalances] = await Promise.all([
+        window.API.fetchPositionsList(userId),
+        window.API.getWalletBalances(userId)
+      ]);
+      
+      this.positions = positions;
+      this.walletBalances = walletBalances;
       
       if (!this.positions.length) {
         this.renderEmptyState('No positions found');
@@ -354,14 +366,21 @@ class PositionsPage {
 
     if (!totalValue || !totalROI || !availableROI || !activePositions) return;
 
-    const total = this.positions.reduce((sum, pos) => sum + pos.principal, 0);
+    // Calculate total balance from wallet balances (same as home page)
+    let totalBalance = 0;
+    if (this.walletBalances) {
+      Object.values(this.walletBalances).forEach(balance => {
+        totalBalance += balance.total || 0;
+      });
+    }
+
     const roi = this.positions.reduce((sum, pos) => sum + pos.accrued_roi, 0);
     const available = this.positions
       .filter(pos => pos.status === 'matured')
       .reduce((sum, pos) => sum + pos.accrued_roi, 0);
     const active = this.positions.filter(pos => pos.status === 'active').length;
 
-    totalValue.textContent = `$${this.formatMoney(total)}`;
+    totalValue.textContent = `$${this.formatMoney(totalBalance)}`;
     totalROI.textContent = `$${this.formatMoney(roi)}`;
     availableROI.textContent = `$${this.formatMoney(available)}`;
     activePositions.textContent = active.toString();
