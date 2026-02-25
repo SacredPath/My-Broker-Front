@@ -575,7 +575,7 @@ class APIClient {
           name: firstStrategy.name,
           min_amount: firstStrategy.min_amount,
           max_amount: firstStrategy.max_amount,
-          days: firstStrategy.days,
+          days: firstStrategy.investment_period_days,
           daily_roi: firstStrategy.daily_roi,
           allocation_mix: firstStrategy.allocation_mix
         });
