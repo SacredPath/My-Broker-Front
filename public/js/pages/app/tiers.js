@@ -347,12 +347,20 @@ class TiersPage {
         throw error;
       }
 
-      // Check if data and quote exist
-      if (!data || !data.quote) {
-        throw new Error('Invalid quote response');
+      // Debug: Log actual response structure
+      console.log('Conversion API response:', data);
+
+      // Handle different response structures
+      let quote;
+      if (data && data.quote) {
+        quote = data.quote;
+      } else if (data && data.from_amount) {
+        // Direct quote response
+        quote = data;
+      } else {
+        throw new Error('Invalid quote response - expected structure not found');
       }
 
-      const quote = data.quote;
       const usdtAmount = quote.from_amount || shortfall; // Fallback to shortfall if from_amount is missing
       const fee = quote.total_fees || 0; // Fallback to 0 if total_fees is missing
 
@@ -429,12 +437,24 @@ class TiersPage {
         throw error;
       }
 
-      // Check if data and quote exist
-      if (!data || !data.quote) {
-        throw new Error('Invalid quote response');
+      // Debug: Log actual response structure
+      console.log('Conversion API response (handleTopUp):', data);
+
+      // Handle different response structures
+      let quote;
+      if (data && data.quote) {
+        quote = data.quote;
+      } else if (data && data.from_amount) {
+        // Direct quote response
+        quote = data;
+      } else {
+        // Use fallback calculation if API response is invalid
+        const usdtAmount = Math.ceil(shortfall / 0.99);
+        const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
+        window.location.href = depositUrl;
+        return;
       }
 
-      const quote = data.quote;
       const usdtAmount = quote.from_amount || Math.ceil(shortfall / 0.99); // Fallback calculation
 
       // Redirect to deposit with prefilled amount
