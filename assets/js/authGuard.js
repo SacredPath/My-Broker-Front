@@ -246,9 +246,9 @@ class AuthGuard {
       sessionStorage.removeItem('intendedDestination');
       window.location.href = intendedDestination;
     } else {
-      // Stay on current page instead of redirecting to home
-      console.log('AuthGuard: Staying on current page:', window.location.pathname);
-      // No redirect needed - user stays on current page
+      // Always redirect to home on successful login
+      console.log('AuthGuard: Redirecting to home page');
+      window.location.href = '/app/home.html';
     }
   }
 
