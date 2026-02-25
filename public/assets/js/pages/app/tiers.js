@@ -312,8 +312,8 @@ class TiersPage {
       this.showCurrentTierOptions();
     }
 
-    // Show modal
-    modal.style.display = 'flex';
+    // Show modal using the correct CSS class approach
+    modal.classList.add('active');
   }
 
   showShortfallOptions() {
@@ -339,12 +339,6 @@ class TiersPage {
     `;
 
     shortfallSection.style.display = 'block';
-    
-    // Show the modal - fix: use the modal variable that was already defined
-    const modal = document.getElementById('tier-modal');
-    if (modal) {
-      modal.style.display = 'block';
-    }
   }
 
   async showConversionPreview(shortfall) {
@@ -571,7 +565,7 @@ class TiersPage {
   closeModal() {
     const modal = document.getElementById('tier-modal');
     if (modal) {
-      modal.style.display = 'none';
+      modal.classList.remove('active');
     }
   }
 
@@ -605,7 +599,7 @@ class TiersPage {
     
     // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal?.style.display !== 'none') {
+      if (e.key === 'Escape' && modal?.classList.contains('active')) {
         this.closeModal();
       }
     });
