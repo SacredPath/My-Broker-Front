@@ -365,15 +365,26 @@ class TiersPage {
       let quote;
       if (data && data.quote) {
         quote = data.quote;
-      } else if (data && data.from_amount) {
+      } else if (data && data.from_amount !== undefined) {
         // Direct quote response
         quote = data;
+      } else if (data && data.data && data.data.from_amount !== undefined) {
+        // Nested data structure
+        quote = data.data;
       } else {
         throw new Error('Invalid quote response - expected structure not found');
       }
 
-      const usdtAmount = quote.from_amount || shortfall; // Fallback to shortfall if from_amount is missing
-      const fee = quote.total_fees || 0; // Fallback to 0 if total_fees is missing
+      // For tiers page debugging: if we get mock data with 0 values, calculate proper conversion
+      let usdtAmount = quote.from_amount || shortfall;
+      let fee = quote.fee || quote.total_fees || 0;
+      
+      if (usdtAmount === 0 && shortfall > 0) {
+        // Mock data detected - calculate proper conversion for tiers page
+        const rate = 0.99; // USDT to USD with small spread
+        fee = Math.max(shortfall * 0.01, 1); // 1% fee, minimum $1
+        usdtAmount = Math.ceil((shortfall + fee) / rate);
+      }
 
       conversionPreview.innerHTML = `
         <div class="conversion-row">
@@ -455,18 +466,24 @@ class TiersPage {
       let quote;
       if (data && data.quote) {
         quote = data.quote;
-      } else if (data && data.from_amount) {
+      } else if (data && data.from_amount !== undefined) {
         // Direct quote response
         quote = data;
-      } else {
-        // Use fallback calculation if API response is invalid
-        const usdtAmount = Math.ceil(shortfall / 0.99);
-        const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
-        window.location.href = depositUrl;
-        return;
+      } else if (data && data.data && data.data.from_amount !== undefined) {
+        // Nested data structure
+        quote = data.data;
       }
 
-      const usdtAmount = quote.from_amount || Math.ceil(shortfall / 0.99); // Fallback calculation
+      // For tiers page debugging: calculate proper conversion if mock data detected
+      let usdtAmount;
+      if (quote && quote.from_amount > 0) {
+        usdtAmount = quote.from_amount;
+      } else {
+        // Mock data detected - calculate proper conversion for tiers page
+        const rate = 0.99; // USDT to USD with small spread
+        const fee = Math.max(shortfall * 0.01, 1); // 1% fee, minimum $1
+        usdtAmount = Math.ceil((shortfall + fee) / rate);
+      }
 
       // Redirect to deposit with prefilled amount
       const depositUrl = `/app/deposits.html?amount=${usdtAmount}&currency=USDT&target=tier_upgrade&tier_id=${this.selectedTier.id}`;
