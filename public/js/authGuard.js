@@ -28,6 +28,11 @@ class AuthGuard {
       roles: []
     });
 
+    this.protectedRoutes.set('/app/tiers.html', {
+      requireAuth: true,
+      roles: []
+    });
+
     // Backoffice routes (support role)
     this.protectedRoutes.set('/src/pages/admin/support.html', {
       requireAuth: true,
@@ -242,6 +247,10 @@ class AuthGuard {
       console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
       sessionStorage.removeItem('intendedDestination');
       window.location.href = intendedDestination;
+    } else {
+      // Stay on current page instead of redirecting to home
+      console.log('AuthGuard: Staying on current page:', window.location.pathname);
+      // No redirect needed - user stays on current page
     }
   }
 
