@@ -28,7 +28,7 @@ class ModernNavbar {
 <nav class="modern-navbar">
     <div class="navbar-wrapper">
         <!-- Left Section: Brand + Mobile Toggle -->
-        <div class="navbar-brand">
+        <a href="/app/home.html" class="navbar-brand" style="text-decoration: none; color: inherit;">
             <button class="mobile-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -36,9 +36,9 @@ class ModernNavbar {
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
-            <div class="brand-logo">PI</div>
+            <div class="brand-logo">DOGE</div>
 <h1 class="brand-text">DOGE INITIATIVE</h1>
-        </div>
+        </a>
 
         <!-- Center Section: Icon Navigation -->
         <div class="navbar-center">

@@ -29,6 +29,17 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.navbar-brand:hover {
+  transform: translateY(-1px);
+}
+
+.navbar-brand:hover .brand-text {
+  color: var(--primary);
 }
 
 .brand-logo {
