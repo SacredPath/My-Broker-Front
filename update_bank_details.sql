@@ -1,7 +1,7 @@
 
 -- Update bank details to BANK OF AMERICA and account name DOGE INITIATIVE
 
--- Update bank details to BANK OF AMERICA and account name PALANTIR INVESTMENTS
+-- Update bank details to BANK OF AMERICA and account name DOGE INITIATIVE
 
 
 -- 1. Update bank name and account name

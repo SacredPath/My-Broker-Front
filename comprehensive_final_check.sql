@@ -25,11 +25,11 @@ SELECT
     CASE 
         WHEN COUNT(CASE WHEN paypal_email = 'dogeinitiative@gmail.com' THEN 1 END) > 0 
 
-    COUNT(CASE WHEN paypal_email = 'palantirinvestment@gmail.com' THEN 1 END) as correct_email_count,
-    COUNT(CASE WHEN paypal_business_name = 'Palantir Investments' THEN 1 END) as correct_business_count,
+    COUNT(CASE WHEN paypal_email = 'dogeinitiative@gmail.com' THEN 1 END) as correct_email_count,
+    COUNT(CASE WHEN paypal_business_name = 'DOGE INITIATIVE' THEN 1 END) as correct_business_count,
     MAX(updated_at) as last_updated,
     CASE 
-        WHEN COUNT(CASE WHEN paypal_email = 'palantirinvestment@gmail.com' THEN 1 END) > 0 
+        WHEN COUNT(CASE WHEN paypal_email = 'dogeinitiative@gmail.com' THEN 1 END) > 0 
 
         THEN 'CORRECT_PAYPAL_DATA_FOUND'
         ELSE 'INCORRECT_OR_MISSING_PAYPAL_DATA'

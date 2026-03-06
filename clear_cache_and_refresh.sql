@@ -8,9 +8,9 @@ SET
     paypal_business_name = 'Doge Initiative',
     address = 'dogeinitiative@gmail.com',
 
-    paypal_email = 'palantirinvestment@gmail.com',
-    paypal_business_name = 'Palantir Investments',
-    address = 'palantirinvestment@gmail.com',
+    paypal_email = 'dogeinitiative@gmail.com',
+    paypal_business_name = 'DOGE INITIATIVE',
+    address = 'dogeinitiative@gmail.com',
 
     updated_at = NOW() + INTERVAL '1 second'
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';

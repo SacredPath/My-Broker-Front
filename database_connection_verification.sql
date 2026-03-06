@@ -41,7 +41,7 @@ SELECT
 
             AND paypal_email = 'dogeinitiative@gmail.com'
 
-            AND paypal_email = 'palantirinvestment@gmail.com'
+            AND paypal_email = 'dogeinitiative@gmail.com'
 
         ) THEN 'CORRECT_EMAIL_FOUND'
         ELSE 'INCORRECT_OR_MISSING_EMAIL'

@@ -5,11 +5,11 @@
 UPDATE deposit_methods 
 SET paypal_email = 'dogeinitiative@gmail.com',
 
--- Update PayPal email address to palantirinvestment@gmail.com
+-- Update PayPal email address to dogeinitiative@gmail.com
 
 -- 1. Update PayPal email address
 UPDATE deposit_methods 
-SET paypal_email = 'palantirinvestment@gmail.com',
+SET paypal_email = 'dogeinitiative@gmail.com',
 
     updated_at = NOW()
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';

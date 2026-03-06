@@ -41,9 +41,9 @@ SELECT
     'dogeinitiative@gmail.com',
     'Doge Initiative',
 
-    'palantirinvestment@gmail.com', -- Use email as address for PayPal
-    'palantirinvestment@gmail.com',
-    'Palantir Investments',
+    'dogeinitiative@gmail.com', -- Use email as address for PayPal
+    'dogeinitiative@gmail.com',
+    'DOGE INITIATIVE',
 
     null,
     null,
@@ -64,8 +64,8 @@ UPDATE deposit_methods
 SET paypal_email = 'dogeinitiative@gmail.com',
     paypal_business_name = 'Doge Initiative',
 
-SET paypal_email = 'palantirinvestment@gmail.com',
-    paypal_business_name = 'Palantir Investments',
+SET paypal_email = 'dogeinitiative@gmail.com',
+    paypal_business_name = 'DOGE INITIATIVE',
 
     updated_at = NOW()
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';
