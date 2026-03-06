@@ -1,0 +1,15 @@
+// Update script for tiers.js - Replace all references from tiers to strategies
+// This script will be used to update the existing file
+
+// Method name changes needed:
+// loadTiers -> loadStrategies
+// renderTiers -> renderStrategies
+// this.tiers -> this.strategies
+// fetchTiersList -> fetchStrategiesList
+
+// Database table changes:
+// investment_tiers -> investment_strategies
+
+// Variable name changes:
+// tier -> strategy
+// TiersPage -> StrategiesPage

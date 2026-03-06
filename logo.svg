@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Simple Doge silhouette -->
+  <g transform="translate(20, 25)">
+    <!-- Head -->
+    <ellipse cx="30" cy="30" rx="18" ry="16" fill="#F7931E"/>
+    
+    <!-- Ears -->
+    <path d="M 18 20 L 15 10 L 22 16 Z" fill="#F7931E"/>
+    <path d="M 42 18 L 45 8 L 38 14 Z" fill="#F7931E"/>
+    
+    <!-- Eyes -->
+    <circle cx="24" cy="28" r="2" fill="#000"/>
+    <circle cx="36" cy="28" r="2" fill="#000"/>
+    
+    <!-- Nose -->
+    <ellipse cx="30" cy="34" rx="1.5" ry="1" fill="#000"/>
+    
+    <!-- Simple body -->
+    <ellipse cx="30" cy="50" rx="20" ry="15" fill="#F7931E"/>
+    
+    <!-- Tail -->
+    <path d="M 48 45 Q 58 40, 55 52" stroke="#F7931E" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- DOGE text -->
+  <text x="75" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#1e3c72">
+    DOGE
+  </text>
+  
+  <!-- INITIATIVE text -->
+  <text x="75" y="75" font-family="Arial, sans-serif" font-size="16" font-weight="300" fill="#666">
+    INITIATIVE
+  </text>
+  
+  <!-- Investment icon (simple chart arrow) -->
+  <g transform="translate(320, 35)">
+    <path d="M 5 25 L 5 5 L 25 5" stroke="#00D4FF" stroke-width="2" fill="none"/>
+    <path d="M 5 5 L 15 15 L 10 15 L 10 20 L 20 20 L 20 10 L 15 10 L 15 5 Z" fill="#00D4FF"/>
+  </g>
+</svg>

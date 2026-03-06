@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home - Broker Trading Platform</title>
+    <meta name="description" content="Your trading dashboard and portfolio overview">
+    <meta name="theme-color" content="#00D4AA">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Broker">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+    
+    <link rel="shortcut icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Modern Navbar -->
+    <link rel="stylesheet" href="/css/modern-navbar.css">
+    <script src="/js/modern-navbar.js" defer></script>
+    
+    <!-- Existing Styles -->
+    <link rel="stylesheet" href="/css/ui-kit.css">
+    <link rel="stylesheet" href="/css/pages.css">
+    <link rel="stylesheet" href="/css/app-shell.css">
+    <link rel="stylesheet" href="/assets/css/ui.css">
+    <link rel="stylesheet" href="/assets/css/notifications.css">
+    <link rel="stylesheet" href="/css/pwa.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .hype-badges {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .hype-badge {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .welcome-section h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, var(--primary) 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        
+        .stat-change.positive {
+            background: linear-gradient(90deg, var(--success) 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .recent-activity.collapsed .activity-list {
+            display: none;
+        }
+        
+        .toggle-activity {
+            min-width: 60px;
+        }
+        
+        .recent-activity:not(.collapsed) .toggle-text::after {
+            content: " Hide";
+        }
+        
+        .recent-activity.collapsed .toggle-text::after {
+            content: " Show";
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Navbar -->
+    <div id="modern-navbar-container"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1>Welcome to DOGE INITIATIVE</h1>
+                    <p class="welcome-subtitle">Your premium trading platform for professional investors</p>
+                    <div class="welcome-actions">
+                        <button class="btn btn-primary">Get Started</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Stats -->
+            <section class="quick-stats">
+                <h2 class="section-title">Portfolio Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <div class="stat-value">$125,430</div>
+                            <div class="stat-label">Total Balance</div>
+                            <div class="stat-change positive">+12.5%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <div class="stat-value">$23,450</div>
+                            <div class="stat-label">Today's Profit</div>
+                            <div class="stat-change positive">+8.3%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-content">
+                            <div class="stat-value">142</div>
+                            <div class="stat-label">Active Trades</div>
+                            <div class="stat-change positive">+15</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <div class="stat-value">94.2%</div>
+                            <div class="stat-label">Success Rate</div>
+                            <div class="stat-change positive">+2.1%</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+                <h2 class="section-title">Quick Actions</h2>
+                <div class="actions-grid">
+                    <div class="action-card">
+                        <div class="action-icon deposit">💵</div>
+                        <div class="action-title">Deposit</div>
+                        <div class="action-description">Add funds to your account</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon withdraw">💸</div>
+                        <div class="action-title">Withdraw</div>
+                        <div class="action-description">Withdraw your earnings</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon convert">🔄</div>
+                        <div class="action-title">Convert</div>
+                        <div class="action-description">Exchange currencies instantly</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon signals">📊</div>
+                        <div class="action-title">Signals</div>
+                        <div class="action-description">View trading signals</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="recent-activity">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <button class="btn btn-ghost toggle-activity">
+                        <span class="toggle-text">Show</span>
+                    </button>
+                </div>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon deposit">💵</div>
+                        <div class="activity-details">
+                            <div class="activity-title">Deposit Received</div>
+                            <div class="activity-description">Bitcoin deposit confirmed</div>
+                            <div class="activity-time">2 hours ago</div>
+                        </div>
+                        <div class="activity-amount positive">+$5,000</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon trade">📈</div>
+                        <div class="activity-details">
+                            <div class="activity-title">Trade Executed</div>
+                            <div class="activity-description">BTC/USD long position</div>
+                            <div class="activity-time">4 hours ago</div>
+                        </div>
+                        <div class="activity-amount positive">+$1,250</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon signal">📊</div>
+                        <div class="activity-details">
+                            <div class="activity-title">Signal Followed</div>
+                            <div class="activity-description">ETH buy signal executed</div>
+                            <div class="activity-time">6 hours ago</div>
+                        </div>
+                        <div class="activity-amount positive">+$750</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
