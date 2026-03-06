@@ -162,13 +162,13 @@ class ModernNavbar {
                             </svg>
                             <span>Support</span>
                         </a>
-                        <a href="/login.html" class="dropdown-item">
+                        <button class="dropdown-item" id="navbar-logout-btn" data-action="logout" type="button">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 17 21 7"></polyline>
                             </svg>
                             <span>Logout</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -333,6 +333,33 @@ class ModernNavbar {
                 this.closeMobileMenu();
             }
         });
+
+        // Handle logout button click
+        const logoutBtn = document.getElementById('navbar-logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    // Close dropdown
+                    this.closeUserDropdown();
+                    
+                    // Perform logout
+                    if (window.AuthService) {
+                        await window.AuthService.logout();
+                    }
+                    
+                    // Redirect to login
+                    window.location.href = '/login.html';
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                    if (window.Notify) {
+                        window.Notify.error('Logout failed');
+                    }
+                }
+            });
+        }
     }
 
     toggleMobileMenu() {
