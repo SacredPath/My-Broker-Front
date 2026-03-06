@@ -1,5 +1,5 @@
 /**
- * Global Error Boundary for Exchange Trading Platform
+ * Global Error Boundary for DOGE INITIATIVE Investment Platform
  */
 
 class ErrorBoundary {

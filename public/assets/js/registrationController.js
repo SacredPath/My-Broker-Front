@@ -374,7 +374,7 @@ collectCurrentStepData() {
                     <div style="font-weight: 600; margin-bottom: 8px;">📋 Summary</div>
                     <div style="font-size: 14px; color: var(--text-secondary);">
                         Please review all information above before creating your account. 
-                        Your account will require verification by the Back Office before you can start trading.
+                        Your account will require verification by the Back Office before you can start investing.
                     </div>
                 </div>
             </div>

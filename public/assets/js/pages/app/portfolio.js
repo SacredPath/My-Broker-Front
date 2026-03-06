@@ -68,7 +68,7 @@ class PortfolioPage {
       this.renderPortfolio();
       this.renderAllocationChart();
       this.renderPositionsTable();
-      this.setupTradingViewWidget();
+      this.setupInvestingViewWidget();
       this.startPriceUpdates();
       
       console.log('Portfolio page setup complete');
@@ -489,20 +489,20 @@ class PortfolioPage {
     }).join('');
   }
 
-  setupTradingViewWidget() {
-    const container = document.getElementById('tradingview-widget-container');
+  setupInvestingViewWidget() {
+    const container = document.getElementById('investingview-widget-container');
     if (!container) return;
 
-    // Create TradingView widget for major indices
-    container.innerHTML = '<div class="tradingview-widget-container"><div id="tradingview_widget"></div></div>';
+    // Create InvestingView widget for major indices
+    container.innerHTML = '<div class="investingview-widget-container"><div id="investingview_widget"></div></div>';
 
-    // TRADINGVIEW 403 FIX: Wrap widget initialization in its own try/catch
+    // INVESTINGVIEW 403 FIX: Wrap widget initialization in its own try/catch
     setTimeout(() => {
       try {
-        if (window.TradingView) {
+        if (window.InvestingView) {
           // DEFENSIVE CONFIG: Ensure all required properties are valid
           const config = {
-            container_id: "tradingview_widget",
+            container_id: "investingview_widget",
             width: "100%",
             height: 400,
             symbol: "BINANCE:BTCUSDT",
@@ -527,19 +527,19 @@ class PortfolioPage {
           
           // Validate configuration before creating widget
           if (!config.container_id || !config.symbol) {
-            console.error('Invalid TradingView configuration: missing required properties');
-            container.innerHTML = '<div class="widget-unavailable">TradingView widget configuration error</div>';
+            console.error('Invalid InvestingView configuration: missing required properties');
+            container.innerHTML = '<div class="widget-unavailable">InvestingView widget configuration error</div>';
             return;
           }
           
-          new window.TradingView.widget(config);
+          new window.InvestingView.widget(config);
         } else {
-          console.warn('TradingView widget not available');
-          container.innerHTML = '<div class="widget-unavailable">TradingView widget unavailable</div>';
+          console.warn('InvestingView widget not available');
+          container.innerHTML = '<div class="widget-unavailable">InvestingView widget unavailable</div>';
         }
-      } catch (tradingViewError) {
-        console.error('TradingView widget initialization failed:', tradingViewError);
-        container.innerHTML = '<div class="widget-unavailable">TradingView widget temporarily unavailable</div>';
+      } catch (investingViewError) {
+        console.error('InvestingView widget initialization failed:', investingViewError);
+        container.innerHTML = '<div class="widget-unavailable">InvestingView widget temporarily unavailable</div>';
       }
     }, 1000);
   }
