@@ -23,12 +23,67 @@ class AuthGuard {
   // Define protected routes and their requirements
   setupProtectedRoutes() {
     // User-protected routes
-    this.protectedRoutes.set('/src/pages/dashboard.html', {
+    this.protectedRoutes.set('/app/home.html', {
       requireAuth: true,
       roles: []
     });
 
     this.protectedRoutes.set('/app/tiers.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/deposits.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/portfolio.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/settings.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/profile.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/signals.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/convert.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/withdraw.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/history.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/positions.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/kyc.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/support.html', {
       requireAuth: true,
       roles: []
     });
@@ -233,7 +288,7 @@ class AuthGuard {
     // If currently on a protected route, redirect to home
     const requirements = this.getCurrentRouteRequirements();
     if (requirements.requireAuth) {
-      window.location.href = '/src/pages/index.html';
+      window.location.href = '/app/home.html';
     }
   }
 

@@ -104,7 +104,7 @@ class AuthCallbackPage {
     if (homeBtn) {
       homeBtn.addEventListener('click', () => {
         // Redirect to home page
-        window.location.href = '/src/pages/index.html';
+        window.location.href = '/app/home.html';
       });
     }
   }

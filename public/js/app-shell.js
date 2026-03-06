@@ -472,7 +472,7 @@ class AppShell {
     try {
       await window.AuthService.logout();
       // Redirect to login page
-      window.location.href = '/src/pages/login.html';
+      window.location.href = '/login.html';
     } catch (error) {
       console.error('Logout error:', error);
       // Use new toast system

@@ -222,7 +222,7 @@ class AuthService {
 
       // Redirect to home page
       setTimeout(() => {
-        window.location.href = '/src/pages/index.html';
+        window.location.href = '/app/home.html';
       }, 1000);
 
       return { success: true };

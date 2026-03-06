@@ -164,7 +164,7 @@ class IndexPage {
 
     if (getStartedBtn) {
       getStartedBtn.addEventListener('click', () => {
-        window.location.href = '/src/pages/dashboard.html';
+        window.location.href = '/app/home.html';
       });
     }
 
