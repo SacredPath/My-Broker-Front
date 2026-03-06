@@ -3,9 +3,15 @@
 -- 1. Force update PayPal with timestamp to trigger cache invalidation
 UPDATE deposit_methods 
 SET 
+<<<<<<< HEAD
     paypal_email = 'dogeinitiative@gmail.com',
     paypal_business_name = 'Doge Initiative',
     address = 'dogeinitiative@gmail.com',
+=======
+    paypal_email = 'palantirinvestment@gmail.com',
+    paypal_business_name = 'Palantir Investments',
+    address = 'palantirinvestment@gmail.com',
+>>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
     updated_at = NOW() + INTERVAL '1 second'
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';
 

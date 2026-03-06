@@ -36,9 +36,15 @@ SELECT
     'PayPal Payment',
     'USD',
     null,
+<<<<<<< HEAD
     'dogeinitiative@gmail.com', -- Use email as address for PayPal
     'dogeinitiative@gmail.com',
     'Doge Initiative',
+=======
+    'palantirinvestment@gmail.com', -- Use email as address for PayPal
+    'palantirinvestment@gmail.com',
+    'Palantir Investments',
+>>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
     null,
     null,
     null,
@@ -54,8 +60,13 @@ WHERE NOT EXISTS (
 
 -- 3. Update PayPal email if method exists
 UPDATE deposit_methods 
+<<<<<<< HEAD
 SET paypal_email = 'dogeinitiative@gmail.com',
     paypal_business_name = 'Doge Initiative',
+=======
+SET paypal_email = 'palantirinvestment@gmail.com',
+    paypal_business_name = 'Palantir Investments',
+>>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
     updated_at = NOW()
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';
 

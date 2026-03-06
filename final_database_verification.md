@@ -35,7 +35,12 @@
 
 ### **Expected Result**:
 Frontend will connect to correct database and show:
+<<<<<<< HEAD
 - **Email**: `dogeinitiative@gmail.com`
 - **Business**: `Doge Initiative`
+=======
+- **Email**: `palantirinvestment@gmail.com`
+- **Business**: `Palantir Investments`
+>>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
 
 ## 🎉 **DATABASE MIGRATION COMPLETE**

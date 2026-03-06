@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
   "name": "DOGE INITIATIVE",
   "short_name": "DOGE INITIATIVE",
+=======
+  "name": "PALANTIR INVESTMENTS",
+  "short_name": "PALANTIR",
+>>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
   "description": "Professional trading platform with real-time portfolio management and investment opportunities",
   "start_url": "/",
   "display": "standalone",
@@ -12,7 +17,7 @@
   "categories": ["finance", "business", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -26,7 +31,7 @@
       "url": "/app/home.html",
       "icons": [
         {
-          "src": "/icons/icon.svg",
+          "src": "/logo.svg",
           "sizes": "any",
           "type": "image/svg+xml"
         }
@@ -39,7 +44,7 @@
       "url": "/app/portfolio.html",
       "icons": [
         {
-          "src": "/icons/icon.svg",
+          "src": "/logo.svg",
           "sizes": "any",
           "type": "image/svg+xml"
         }
@@ -52,7 +57,7 @@
       "url": "/app/deposits.html",
       "icons": [
         {
-          "src": "/icons/icon.svg",
+          "src": "/logo.svg",
           "sizes": "any",
           "type": "image/svg+xml"
         }
@@ -65,7 +70,7 @@
       "url": "/app/withdraw.html",
       "icons": [
         {
-          "src": "/icons/icon.svg",
+          "src": "/logo.svg",
           "sizes": "any",
           "type": "image/svg+xml"
         }
