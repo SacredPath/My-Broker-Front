@@ -31,6 +31,76 @@ class AuthGuard {
       roles: []
     });
 
+    this.protectedRoutes.set('/app/deposits.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/portfolio.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/settings.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/profile.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/signals.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/convert.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/withdraw.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/history.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/positions.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/kyc.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/support.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/more.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/signal_detail.html', {
+      requireAuth: true,
+      roles: []
+    });
+
+    this.protectedRoutes.set('/app/tier-details.html', {
+      requireAuth: true,
+      roles: []
+    });
+
     // Backoffice routes (support role)
     this.protectedRoutes.set('/admin/support.html', {
       requireAuth: true,
@@ -158,9 +228,6 @@ class AuthGuard {
 
   // Redirect to login page
   redirectToLogin() {
-    // Store intended destination
-    sessionStorage.setItem('intendedDestination', window.location.pathname + window.location.search);
-    
     // Show notification if available
     if (window.Notify) {
       window.Notify.warning('Please sign in to continue');
@@ -171,7 +238,7 @@ class AuthGuard {
     
     return { 
       allowed: false, 
-      reason: 'not_authenticated',
+      reason: 'redirect_to_login',
       redirect: '/login.html'
     };
   }
@@ -237,19 +304,15 @@ class AuthGuard {
     console.log('AuthGuard: User signed in');
     console.log('AuthGuard: Current pathname:', window.location.pathname);
     
-    // Check if there's an intended destination
-    const intendedDestination = sessionStorage.getItem('intendedDestination');
-    console.log('AuthGuard: Intended destination:', intendedDestination);
-    
-    if (intendedDestination && intendedDestination !== window.location.pathname) {
-      console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
-      sessionStorage.removeItem('intendedDestination');
-      window.location.href = intendedDestination;
-    } else {
-      // Always redirect to home on successful login
-      console.log('AuthGuard: Redirecting to home page');
-      window.location.href = '/app/home.html';
+    // Prevent redirect loops - if already on home page, don't redirect
+    if (window.location.pathname === '/app/home.html') {
+      console.log('AuthGuard: Already on home page, no redirect needed');
+      return;
     }
+    
+    // Always redirect to home on successful login
+    console.log('AuthGuard: Redirecting to home page');
+    window.location.href = '/app/home.html';
   }
 
   // Add new protected route
