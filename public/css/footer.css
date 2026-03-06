@@ -316,10 +316,15 @@
     }
     
     .back-to-top {
-        bottom: 80px;
+        bottom: 24px;
         right: 16px;
         width: 40px;
         height: 40px;
+    }
+    
+    /* Hide footer on mobile when bottom navigation is present */
+    .modern-footer {
+        display: none !important;
     }
 }
 
