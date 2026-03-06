@@ -392,5 +392,17 @@
     <script type="module" src="/assets/js/notify.js"></script>
     <script type="module" src="/assets/js/components.js"></script>
     <script type="module" src="/loginController.js"></script>
+    
+    <!-- Modern Footer -->
+    <link rel="stylesheet" href="/css/footer.css">
+    <div id="footer-container"></div>
+    <script src="/js/footer.js"></script>
+    <script>
+        fetch('/components/footer.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('footer-container').innerHTML = html;
+            });
+    </script>
 </body>
 </html>

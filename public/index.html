@@ -187,8 +187,21 @@
 
         </div>
 
+    <!-- Modern Footer -->
+    <link rel="stylesheet" href="/css/footer.css">
+    <div id="footer-container"></div>
+    
     <!-- Scripts -->
     <script src="/assets/js/env.js"></script>
     <script src="/assets/js/_shared/theme.js"></script>
+    <script src="/js/footer.js"></script>
+    <script>
+        // Load footer component
+        fetch('/components/footer.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('footer-container').innerHTML = html;
+            });
+    </script>
 </body>
 </html>

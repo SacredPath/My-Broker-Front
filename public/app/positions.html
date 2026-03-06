@@ -542,5 +542,18 @@
 <!-- Mobile Bottom Navigation -->
 <div id="mobile-bottom-nav-container"></div>
 <script src="/js/mobile-bottom-nav.js"></script>
+
+    <!-- Modern Footer -->
+    <link rel="stylesheet" href="/css/footer.css">
+    <div id="footer-container"></div>
+    <script src="/js/footer.js"></script>
+    <script>
+        fetch('/components/footer.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('footer-container').innerHTML = html;
+            });
+    </script>
+
 </body>
 </html>
