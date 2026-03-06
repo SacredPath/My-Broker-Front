@@ -1,9 +1,9 @@
 -- Create missing triggers for settings and KYC pages
 -- These are needed for proper functionality of settings and KYC workflows
 
--- =====================================================
+-- ====
 -- 1. KYC APPLICATIONS TABLE AND TRIGGERS
--- =====================================================
+-- ====
 
 -- Create kyc_applications table if it doesn't exist
 DO $$
@@ -83,9 +83,9 @@ CREATE TRIGGER trigger_kyc_status_change
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_kyc_status_change();
 
--- =====================================================
+-- ====
 -- 2. SETTINGS TABLE AND TRIGGERS
--- =====================================================
+-- ====
 
 -- Create settings table if it doesn't exist
 DO $$
@@ -156,9 +156,9 @@ CREATE TRIGGER trigger_settings_change
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_settings_change();
 
--- =====================================================
+-- ====
 -- 3. KYC STATUS TABLE (Optional - for status tracking)
--- =====================================================
+-- ====
 
 -- Create kyc_status table if it doesn't exist
 DO $$
@@ -190,9 +190,9 @@ CREATE TRIGGER handle_kyc_status_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_updated_at();
 
--- =====================================================
+-- ====
 -- 4. RLS POLICIES FOR SECURITY
--- =====================================================
+-- ====
 
 -- Enable RLS on all tables
 ALTER TABLE public.kyc_applications ENABLE ROW LEVEL SECURITY;
@@ -232,9 +232,9 @@ CREATE POLICY "Users can view own KYC status" ON public.kyc_status
 CREATE POLICY "Service role full access to KYC status" ON public.kyc_status
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
--- =====================================================
+-- ====
 -- 5. GRANT PERMISSIONS
--- =====================================================
+-- ====
 
 -- KYC Applications permissions
 GRANT SELECT, INSERT, UPDATE ON public.kyc_applications TO authenticated;
@@ -248,9 +248,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.settings TO service_role;
 GRANT SELECT ON public.kyc_status TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.kyc_status TO service_role;
 
--- =====================================================
+-- ====
 -- 6. VERIFY CREATION
--- =====================================================
+-- ====
 
 SELECT 
     'KYC Applications Table' as object_name,

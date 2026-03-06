@@ -16,21 +16,21 @@ FROM deposit_methods
 WHERE method_type = 'paypal' OR method_name LIKE '%PayPal%'
 ORDER BY updated_at DESC;
 
-<<<<<<< HEAD
+
 -- 2. Update PayPal email to dogeinitiative@gmail.com
 UPDATE deposit_methods 
 SET 
     paypal_email = 'dogeinitiative@gmail.com',
     paypal_business_name = 'Doge Initiative',
     address = 'dogeinitiative@gmail.com',
-=======
+
 -- 2. Update PayPal email to palantirinvestment@gmail.com
 UPDATE deposit_methods 
 SET 
     paypal_email = 'palantirinvestment@gmail.com',
     paypal_business_name = 'Palantir Investments',
     address = 'palantirinvestment@gmail.com',
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
     updated_at = NOW()
 WHERE method_type = 'paypal' OR method_name LIKE '%PayPal%';
 

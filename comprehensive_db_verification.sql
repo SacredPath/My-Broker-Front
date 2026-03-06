@@ -2,9 +2,9 @@
 -- Trading Platform Database Schema Verification
 -- Run this in Supabase SQL Editor to verify all tables, columns, functions, and triggers
 
--- ========================================
+-- =====
 -- 1. ALL TABLES IN PUBLIC SCHEMA
--- ========================================
+-- =====
 SELECT 
     'PUBLIC_TABLES' as verification_type,
     table_name,
@@ -20,9 +20,9 @@ FROM information_schema.tables
 WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
 ORDER BY table_category, table_name;
 
--- ========================================
+-- =====
 -- 2. ALL COLUMNS WITH DETAILED INFO
--- ========================================
+-- =====
 SELECT 
     'COLUMNS_DETAIL' as verification_type,
     table_name,
@@ -38,9 +38,9 @@ FROM information_schema.columns
 WHERE table_schema = 'public'
 ORDER BY table_name, ordinal_position;
 
--- ========================================
+-- =====
 -- 3. PRIMARY KEYS
--- ========================================
+-- =====
 SELECT 
     'PRIMARY_KEYS' as verification_type,
     tc.table_name,
@@ -55,9 +55,9 @@ WHERE
     AND tc.table_schema = 'public'
 ORDER BY tc.table_name;
 
--- ========================================
+-- =====
 -- 4. FOREIGN KEY RELATIONSHIPS
--- ========================================
+-- =====
 SELECT 
     'FOREIGN_KEYS' as verification_type,
     tc.table_name,
@@ -77,9 +77,9 @@ WHERE
     AND tc.table_schema = 'public'
 ORDER BY tc.table_name, tc.constraint_name;
 
--- ========================================
+-- =====
 -- 5. ALL INDEXES
--- ========================================
+-- =====
 SELECT 
     'INDEXES' as verification_type,
     tablename,
@@ -89,9 +89,9 @@ FROM pg_indexes
 WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
 
--- ========================================
+-- =====
 -- 6. ALL FUNCTIONS
--- ========================================
+-- =====
 SELECT 
     'FUNCTIONS' as verification_type,
     routine_name,
@@ -107,9 +107,9 @@ WHERE
     AND routine_type = 'FUNCTION'
 ORDER BY routine_name;
 
--- ========================================
+-- =====
 -- 7. ALL TRIGGERS
--- ========================================
+-- =====
 SELECT 
     'TRIGGERS' as verification_type,
     trigger_name,
@@ -124,9 +124,9 @@ WHERE
     trigger_schema = 'public'
 ORDER BY event_object_table, trigger_name;
 
--- ========================================
+-- =====
 -- 8. CHECK CONSTRAINTS
--- ========================================
+-- =====
 SELECT 
     'CHECK_CONSTRAINTS' as verification_type,
     tc.table_name,
@@ -140,9 +140,9 @@ WHERE
     AND tc.table_schema = 'public'
 ORDER BY tc.table_name, tc.constraint_name;
 
--- ========================================
+-- =====
 -- 9. UNIQUE CONSTRAINTS
--- ========================================
+-- =====
 SELECT 
     'UNIQUE_CONSTRAINTS' as verification_type,
     tc.table_name,
@@ -157,9 +157,9 @@ WHERE
     AND tc.table_schema = 'public'
 ORDER BY tc.table_name, tc.constraint_name;
 
--- ========================================
+-- =====
 -- 10. RLS POLICIES
--- ========================================
+-- =====
 SELECT 
     'RLS_POLICIES' as verification_type,
     tablename,
@@ -173,9 +173,9 @@ FROM pg_policies
 WHERE schemaname = 'public'
 ORDER BY tablename, policyname;
 
--- ========================================
+-- =====
 -- 11. TABLE SIZES AND ROW COUNTS
--- ========================================
+-- =====
 SELECT 
     'TABLE_STATS' as verification_type,
     relname AS tablename,
@@ -190,9 +190,9 @@ SELECT
 FROM pg_stat_user_tables
 ORDER BY relname;
 
--- ========================================
+-- =====
 -- 12. ENUM TYPES
--- ========================================
+-- =====
 SELECT 
     'ENUM_TYPES' as verification_type,
     t.typname AS type_name,
@@ -206,9 +206,9 @@ WHERE
     AND n.nspname = 'public'
 ORDER BY type_name, sort_order;
 
--- ========================================
+-- =====
 -- 13. VIEWS
--- ========================================
+-- =====
 SELECT 
     'VIEWS' as verification_type,
     table_name,
@@ -220,9 +220,9 @@ WHERE
     table_schema = 'public'
 ORDER BY table_name;
 
--- ========================================
+-- =====
 -- 14. SEQUENCES
--- ========================================
+-- =====
 SELECT 
     'SEQUENCES' as verification_type,
     sequence_name,
@@ -237,9 +237,9 @@ WHERE
     sequence_schema = 'public'
 ORDER BY sequence_name;
 
--- ========================================
+-- =====
 -- 15. EXPECTED CORE TABLES VERIFICATION
--- ========================================
+-- =====
 SELECT 
     'EXPECTED_TABLES_CHECK' as verification_type,
     expected_table,
@@ -268,9 +268,9 @@ FROM (VALUES
 ) AS t(expected_table)
 ORDER BY expected_table;
 
--- ========================================
+-- =====
 -- 16. CRITICAL BUSINESS LOGIC VERIFICATION
--- ========================================
+-- =====
 
 -- Check if handle_updated_at function exists (used by multiple tables)
 SELECT 
@@ -308,9 +308,9 @@ SELECT
         ELSE 'MISSING'
     END as status;
 
--- ========================================
+-- =====
 -- 17. SUPABASE AUTH SCHEMA TABLES
--- ========================================
+-- =====
 SELECT 
     'AUTH_TABLES' as verification_type,
     table_name,
@@ -319,9 +319,9 @@ FROM information_schema.tables
 WHERE table_schema = 'auth' AND table_type = 'BASE TABLE'
 ORDER BY table_name;
 
--- ========================================
+-- =====
 -- 18. SUMMARY REPORT
--- ========================================
+-- =====
 SELECT 
     'SUMMARY' as verification_type,
     'Total Public Tables' as metric,
@@ -356,9 +356,9 @@ SELECT
 FROM pg_policies 
 WHERE schemaname = 'public';
 
--- ========================================
+-- =====
 -- VERIFICATION COMPLETE
--- ========================================
+-- =====
 -- Review the output above to ensure:
 -- 1. All expected tables exist
 -- 2. All columns have correct data types and constraints

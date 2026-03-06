@@ -2,9 +2,9 @@
 -- Run this in Supabase SQL Editor
 -- Copy-paste the entire script at once
 
--- =====================================================
+-- ====
 -- 1. TABLES STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES STATUS ===' as section;
 SELECT 
     table_name,
@@ -24,9 +24,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. FUNCTIONS STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS STATUS ===' as section;
 SELECT 
     routine_name,
@@ -44,9 +44,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 3. TRIGGERS STATUS
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS STATUS ===' as section;
 SELECT 
     trigger_name,
@@ -69,9 +69,9 @@ FROM (VALUES
 ) AS t(trigger_name)
 ORDER BY trigger_name;
 
--- =====================================================
+-- ====
 -- 4. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 SELECT 
     tablename,
@@ -85,9 +85,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 5. SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 SELECT 
     'Tables' as component,
@@ -135,9 +135,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 6. CRITICAL MISSING ITEMS
--- =====================================================
+-- ====
 SELECT '=== CRITICAL MISSING ITEMS ===' as section;
 SELECT 
     CASE 

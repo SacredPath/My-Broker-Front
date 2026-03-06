@@ -2,9 +2,9 @@
 -- Verifies all tables, columns, roles, triggers, functions are deployed
 -- Trading Platform Database Deployment Status
 
--- =====================================================
+-- ====
 -- 1. TABLES DEPLOYMENT STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES DEPLOYMENT STATUS ===' as section;
 
 SELECT 
@@ -46,9 +46,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. COLUMNS VERIFICATION FOR CRITICAL TABLES
--- =====================================================
+-- ====
 SELECT '=== CRITICAL TABLES COLUMN VERIFICATION ===' as section;
 
 -- Profiles table columns
@@ -117,9 +117,9 @@ SELECT
 FROM information_schema.columns 
 WHERE table_schema = 'public' AND table_name = 'investment_tiers';
 
--- =====================================================
+-- ====
 -- 3. FUNCTIONS DEPLOYMENT STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS DEPLOYMENT STATUS ===' as section;
 
 SELECT 
@@ -158,9 +158,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 4. TRIGGERS DEPLOYMENT STATUS
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS DEPLOYMENT STATUS ===' as section;
 
 SELECT 
@@ -195,9 +195,9 @@ FROM (VALUES
 ) AS t(trigger_name)
 ORDER BY trigger_name;
 
--- =====================================================
+-- ====
 -- 5. ROLES AND PERMISSIONS
--- =====================================================
+-- ====
 SELECT '=== ROLES AND PERMISSIONS ===' as section;
 
 -- Check for custom roles
@@ -216,9 +216,9 @@ FROM pg_roles
 WHERE rolname NOT LIKE 'pg_%'
 ORDER BY rolname;
 
--- =====================================================
+-- ====
 -- 6. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 
 SELECT 
@@ -235,9 +235,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 7. INDEXES STATUS
--- =====================================================
+-- ====
 SELECT '=== CRITICAL INDEXES STATUS ===' as section;
 
 SELECT 
@@ -254,9 +254,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 8. CONSTRAINTS STATUS
--- =====================================================
+-- ====
 SELECT '=== CONSTRAINTS STATUS ===' as section;
 
 SELECT 
@@ -269,9 +269,9 @@ WHERE table_schema = 'public'
 GROUP BY table_name
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 9. DEPLOYMENT SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 
 SELECT 
@@ -344,9 +344,9 @@ SELECT
 FROM pg_policies 
 WHERE schemaname = 'public';
 
--- =====================================================
+-- ====
 -- 10. IMMEDIATE ACTION ITEMS
--- =====================================================
+-- ====
 SELECT '=== IMMEDIATE ACTION ITEMS ===' as section;
 
 SELECT 
@@ -368,6 +368,6 @@ SELECT
         ELSE '✅ All critical objects deployed successfully'
     END as action_required;
 
--- =====================================================
+-- ====
 -- END OF DEPLOYMENT VERIFICATION
--- =====================================================
+-- ====

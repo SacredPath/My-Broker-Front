@@ -60,7 +60,7 @@ function extendedTrace(fn) {
     try {
       return fn(arg);
     } catch (err) {
-      err.stack += `\n    =============\n${rootStack}`;
+      err.stack += `\n    ======\n${rootStack}`;
       throw err;
     }
   };

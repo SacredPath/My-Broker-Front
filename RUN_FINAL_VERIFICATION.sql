@@ -1,9 +1,9 @@
 -- FINAL DATABASE VERIFICATION
 -- Run this to check current deployment status after all fixes
 
--- =====================================================
+-- ====
 -- 1. TABLES STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES STATUS ===' as section;
 SELECT 
     table_name,
@@ -23,9 +23,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. FUNCTIONS STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS STATUS ===' as section;
 SELECT 
     routine_name,
@@ -43,9 +43,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 3. TRIGGERS STATUS
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS STATUS ===' as section;
 SELECT 
     trigger_name,
@@ -66,9 +66,9 @@ FROM (VALUES
 ) AS t(trigger_name)
 ORDER BY trigger_name;
 
--- =====================================================
+-- ====
 -- 4. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 SELECT 
     tablename,
@@ -82,9 +82,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 5. INVESTMENT TIERS VERIFICATION
--- =====================================================
+-- ====
 SELECT '=== INVESTMENT TIERS VERIFICATION ===' as section;
 SELECT 
     id,
@@ -106,9 +106,9 @@ SELECT
 FROM public.investment_tiers
 ORDER BY sort_order;
 
--- =====================================================
+-- ====
 -- 6. DEPLOYMENT SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 SELECT 
     'Tables' as component,
@@ -156,9 +156,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 7. REMAINING CRITICAL ITEMS
--- =====================================================
+-- ====
 SELECT '=== REMAINING CRITICAL ITEMS ===' as section;
 SELECT 
     CASE 

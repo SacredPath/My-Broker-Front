@@ -38,11 +38,11 @@ SELECT
         WHEN EXISTS (
             SELECT 1 FROM deposit_methods 
             WHERE method_type = 'paypal' 
-<<<<<<< HEAD
+
             AND paypal_email = 'dogeinitiative@gmail.com'
-=======
+
             AND paypal_email = 'palantirinvestment@gmail.com'
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
         ) THEN 'CORRECT_EMAIL_FOUND'
         ELSE 'INCORRECT_OR_MISSING_EMAIL'
     END as status;

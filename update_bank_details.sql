@@ -1,8 +1,8 @@
-<<<<<<< HEAD
+
 -- Update bank details to BANK OF AMERICA and account name DOGE INITIATIVE
-=======
+
 -- Update bank details to BANK OF AMERICA and account name PALANTIR INVESTMENTS
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
 
 -- 1. Update bank name and account name
 UPDATE deposit_methods 

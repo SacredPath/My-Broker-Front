@@ -1,9 +1,9 @@
 -- FINAL DATABASE CHECK - Uses only confirmed existing columns
 -- Run this to check current deployment status
 
--- =====================================================
+-- ====
 -- 1. TABLES STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES STATUS ===' as section;
 SELECT 
     table_name,
@@ -23,9 +23,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. FUNCTIONS STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS STATUS ===' as section;
 SELECT 
     routine_name,
@@ -43,9 +43,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 3. TRIGGERS STATUS (Safe Version)
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS STATUS ===' as section;
 SELECT 
     expected_trigger,
@@ -65,9 +65,9 @@ FROM (VALUES
 ) AS t(expected_trigger)
 ORDER BY expected_trigger;
 
--- =====================================================
+-- ====
 -- 4. SHOW ACTUAL TRIGGERS
--- =====================================================
+-- ====
 SELECT '=== ACTUAL TRIGGERS FOUND ===' as section;
 SELECT 
     trigger_schema,
@@ -77,9 +77,9 @@ FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth')
 ORDER BY trigger_schema, trigger_name;
 
--- =====================================================
+-- ====
 -- 5. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 SELECT 
     tablename,
@@ -93,9 +93,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 6. INVESTMENT TIERS VERIFICATION
--- =====================================================
+-- ====
 SELECT '=== INVESTMENT TIERS VERIFICATION ===' as section;
 SELECT 
     id,
@@ -117,9 +117,9 @@ SELECT
 FROM public.investment_tiers
 ORDER BY sort_order;
 
--- =====================================================
+-- ====
 -- 7. DEPLOYMENT SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 SELECT 
     'Tables' as component,
@@ -167,9 +167,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 8. REMAINING CRITICAL ITEMS
--- =====================================================
+-- ====
 SELECT '=== REMAINING CRITICAL ITEMS ===' as section;
 SELECT 
     CASE 

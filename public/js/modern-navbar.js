@@ -37,11 +37,7 @@ class ModernNavbar {
                 </svg>
             </button>
             <div class="brand-logo">PI</div>
-<<<<<<< HEAD
-            <h1 class="brand-text">DOGE INITIATIVE</h1>
-=======
-            <h1 class="brand-text">PALANTIR INVESTMENTS</h1>
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+<h1 class="brand-text">DOGE INITIATIVE</h1>
         </div>
 
         <!-- Center Section: Icon Navigation -->

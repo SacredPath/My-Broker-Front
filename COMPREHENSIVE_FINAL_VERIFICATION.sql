@@ -1,9 +1,9 @@
 -- COMPREHENSIVE FINAL VERIFICATION
 -- Checks all referenced tables, columns, policies, triggers and functions
 
--- =====================================================
+-- ====
 -- 1. COMPLETE TABLES INVENTORY
--- =====================================================
+-- ====
 SELECT '=== COMPLETE TABLES INVENTORY ===' as section;
 SELECT 
     table_name,
@@ -34,9 +34,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. CRITICAL COLUMNS VERIFICATION
--- =====================================================
+-- ====
 SELECT '=== CRITICAL COLUMNS VERIFICATION ===' as section;
 
 -- Check profiles table critical columns
@@ -102,9 +102,9 @@ ORDER BY
     END,
     ordinal_position;
 
--- =====================================================
+-- ====
 -- 3. ALL FUNCTIONS INVENTORY
--- =====================================================
+-- ====
 SELECT '=== ALL FUNCTIONS INVENTORY ===' as section;
 SELECT 
     routine_name,
@@ -128,9 +128,9 @@ ORDER BY
     END,
     routine_name;
 
--- =====================================================
+-- ====
 -- 4. ALL TRIGGERS INVENTORY
--- =====================================================
+-- ====
 SELECT '=== ALL TRIGGERS INVENTORY ===' as section;
 SELECT 
     trigger_schema,
@@ -152,9 +152,9 @@ ORDER BY
     END,
     trigger_name;
 
--- =====================================================
+-- ====
 -- 5. RLS POLICIES INVENTORY
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES INVENTORY ===' as section;
 SELECT 
     tablename,
@@ -170,9 +170,9 @@ FROM pg_policies
 WHERE schemaname = 'public'
 ORDER BY tablename, policyname;
 
--- =====================================================
+-- ====
 -- 6. FOREIGN KEY RELATIONSHIPS
--- =====================================================
+-- ====
 SELECT '=== FOREIGN KEY RELATIONSHIPS ===' as section;
 SELECT 
     tc.table_name,
@@ -202,9 +202,9 @@ ORDER BY
     tc.table_name,
     tc.constraint_name;
 
--- =====================================================
+-- ====
 -- 7. INDEXES INVENTORY
--- =====================================================
+-- ====
 SELECT '=== INDEXES INVENTORY ===' as section;
 SELECT 
     tablename,
@@ -224,9 +224,9 @@ ORDER BY
     tablename,
     indexname;
 
--- =====================================================
+-- ====
 -- 8. FINAL DEPLOYMENT STATUS
--- =====================================================
+-- ====
 SELECT '=== FINAL DEPLOYMENT STATUS ===' as section;
 
 SELECT 
@@ -282,9 +282,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 9. CRITICAL OBJECTS VERIFICATION SUMMARY
--- =====================================================
+-- ====
 SELECT '=== CRITICAL OBJECTS VERIFICATION SUMMARY ===' as section;
 
 -- Check critical tables
@@ -330,9 +330,9 @@ SELECT
 FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth');
 
--- =====================================================
+-- ====
 -- 10. FINAL STATUS MESSAGE
--- =====================================================
+-- ====
 SELECT '=== FINAL STATUS MESSAGE ===' as section;
 SELECT 
     CASE 

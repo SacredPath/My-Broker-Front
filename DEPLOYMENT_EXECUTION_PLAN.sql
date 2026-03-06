@@ -1,9 +1,9 @@
 -- DEPLOYMENT EXECUTION PLAN
 -- Run these scripts in order to fix missing database objects
 
--- =====================================================
+-- ====
 -- STEP 1: Create Core Tables (Dependencies First)
--- =====================================================
+-- ====
 
 -- 1. Create audit_log_entries table (referenced by functions)
 -- Run: create_audit_log_table.sql
@@ -17,38 +17,38 @@
 -- 4. Create investment_tiers table
 -- Run: create_investment_tiers.sql
 
--- =====================================================
+-- ====
 -- STEP 2: Create Functions
--- =====================================================
+-- ====
 
 -- 5. Create handle_new_user function
 -- Run: create_handle_new_user.sql
 
--- =====================================================
+-- ====
 -- STEP 3: Create Additional Tables
--- =====================================================
+-- ====
 
 -- 6. Create notification system
 -- Run: create_notifications_system.sql
 
--- =====================================================
+-- ====
 -- STEP 4: Verify Deployment
--- =====================================================
+-- ====
 
 -- 7. Run final verification
 -- Run: FINAL_WORKING_VERIFICATION.sql
 
--- =====================================================
+-- ====
 -- QUICK EXECUTION - ALL IN ONE SCRIPT
--- =====================================================
+-- ====
 
 -- NOTE: If you want to run everything at once, 
 -- copy the contents of each script in the order above
 -- or run them individually to better track any errors
 
--- =====================================================
+-- ====
 -- CURRENT STATUS CHECK
--- =====================================================
+-- ====
 
 -- Check what we have right now
 SELECT '=== CURRENT DEPLOYMENT STATUS ===' as section;
@@ -87,9 +87,9 @@ SELECT
         ELSE '❌ NEEDS WORK'
     END as status;
 
--- =====================================================
+-- ====
 -- PRIORITY ACTIONS
--- =====================================================
+-- ====
 
 SELECT '=== PRIORITY ACTIONS ===' as section;
 

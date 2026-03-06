@@ -1,8 +1,8 @@
-<<<<<<< HEAD
+
 -- Force update PayPal email to dogeinitiative@gmail.com and business name
-=======
+
 -- Force update PayPal email to palantirinvestment@gmail.com and business name
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
 
 -- 1. First, check current PayPal method
 SELECT 
@@ -22,15 +22,15 @@ WHERE method_name = 'PayPal Payment' AND currency = 'USD';
 -- 2. Force update with exact values
 UPDATE deposit_methods 
 SET 
-<<<<<<< HEAD
+
     paypal_email = 'dogeinitiative@gmail.com',
     paypal_business_name = 'Doge Initiative',
     address = 'dogeinitiative@gmail.com', -- Keep address consistent
-=======
+
     paypal_email = 'palantirinvestment@gmail.com',
     paypal_business_name = 'Palantir Investments',
     address = 'palantirinvestment@gmail.com', -- Keep address consistent
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
     updated_at = NOW()
 WHERE method_name = 'PayPal Payment' AND currency = 'USD';
 

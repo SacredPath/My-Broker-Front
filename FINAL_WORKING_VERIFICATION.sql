@@ -1,9 +1,9 @@
 -- FINAL WORKING DEPLOYMENT VERIFICATION
 -- Uses only confirmed existing columns
 
--- =====================================================
+-- ====
 -- 1. TABLES STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES STATUS ===' as section;
 SELECT 
     table_name,
@@ -23,9 +23,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. FUNCTIONS STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS STATUS ===' as section;
 SELECT 
     routine_name,
@@ -43,9 +43,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 3. TRIGGERS STATUS (Working Version)
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS STATUS ===' as section;
 SELECT 
     expected_trigger,
@@ -65,9 +65,9 @@ FROM (VALUES
 ) AS t(expected_trigger)
 ORDER BY expected_trigger;
 
--- =====================================================
+-- ====
 -- 4. SHOW ACTUAL TRIGGERS FOUND
--- =====================================================
+-- ====
 SELECT '=== ACTUAL TRIGGERS FOUND ===' as section;
 SELECT 
     trigger_schema,
@@ -78,9 +78,9 @@ FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth')
 ORDER BY trigger_schema, trigger_name;
 
--- =====================================================
+-- ====
 -- 5. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 SELECT 
     tablename,
@@ -94,9 +94,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 6. DEPLOYMENT SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 SELECT 
     'Tables' as component,
@@ -144,9 +144,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 7. CRITICAL MISSING ITEMS
--- =====================================================
+-- ====
 SELECT '=== CRITICAL MISSING ITEMS ===' as section;
 SELECT 
     CASE 
@@ -167,9 +167,9 @@ SELECT
         ELSE '✅ All critical objects appear to be deployed'
     END as action_required;
 
--- =====================================================
+-- ====
 -- 8. QUICK FIX SUGGESTIONS
--- =====================================================
+-- ====
 SELECT '=== QUICK FIX SUGGESTIONS ===' as section;
 SELECT 
     'Create missing audit_log_entries table' as suggestion,

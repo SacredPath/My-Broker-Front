@@ -18,19 +18,19 @@ SELECT
 SELECT 
     'PAYPAL_DATA_FINAL_CHECK' as info,
     COUNT(*) as total_paypal_methods,
-<<<<<<< HEAD
+
     COUNT(CASE WHEN paypal_email = 'dogeinitiative@gmail.com' THEN 1 END) as correct_email_count,
     COUNT(CASE WHEN paypal_business_name = 'Doge Initiative' THEN 1 END) as correct_business_count,
     MAX(updated_at) as last_updated,
     CASE 
         WHEN COUNT(CASE WHEN paypal_email = 'dogeinitiative@gmail.com' THEN 1 END) > 0 
-=======
+
     COUNT(CASE WHEN paypal_email = 'palantirinvestment@gmail.com' THEN 1 END) as correct_email_count,
     COUNT(CASE WHEN paypal_business_name = 'Palantir Investments' THEN 1 END) as correct_business_count,
     MAX(updated_at) as last_updated,
     CASE 
         WHEN COUNT(CASE WHEN paypal_email = 'palantirinvestment@gmail.com' THEN 1 END) > 0 
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
         THEN 'CORRECT_PAYPAL_DATA_FOUND'
         ELSE 'INCORRECT_OR_MISSING_PAYPAL_DATA'
     END as paypal_status

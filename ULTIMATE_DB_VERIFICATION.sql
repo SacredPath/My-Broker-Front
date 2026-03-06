@@ -1,9 +1,9 @@
 -- ULTIMATE DATABASE VERIFICATION
 -- Fixed version with consistent column counts
 
--- =====================================================
+-- ====
 -- 1. COMPLETE TABLES INVENTORY
--- =====================================================
+-- ====
 SELECT '=== COMPLETE TABLES INVENTORY ===' as section;
 SELECT 
     table_name,
@@ -34,9 +34,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. CRITICAL COLUMNS VERIFICATION
--- =====================================================
+-- ====
 SELECT '=== CRITICAL COLUMNS VERIFICATION ===' as section;
 
 -- Check profiles table critical columns
@@ -60,9 +60,9 @@ ORDER BY
     END,
     ordinal_position;
 
--- =====================================================
+-- ====
 -- 3. ALL FUNCTIONS INVENTORY
--- =====================================================
+-- ====
 SELECT '=== ALL FUNCTIONS INVENTORY ===' as section;
 SELECT 
     routine_name,
@@ -80,9 +80,9 @@ FROM information_schema.routines
 WHERE routine_schema = 'public' AND routine_type = 'FUNCTION'
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 4. ALL TRIGGERS INVENTORY
--- =====================================================
+-- ====
 SELECT '=== ALL TRIGGERS INVENTORY ===' as section;
 SELECT 
     trigger_schema,
@@ -98,9 +98,9 @@ FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth')
 ORDER BY trigger_schema, trigger_name;
 
--- =====================================================
+-- ====
 -- 5. RLS POLICIES INVENTORY
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES INVENTORY ===' as section;
 SELECT 
     tablename,
@@ -116,9 +116,9 @@ FROM pg_policies
 WHERE schemaname = 'public'
 ORDER BY tablename, policyname;
 
--- =====================================================
+-- ====
 -- 6. FINAL DEPLOYMENT SUMMARY
--- =====================================================
+-- ====
 SELECT '=== FINAL DEPLOYMENT SUMMARY ===' as section;
 
 -- Tables Summary
@@ -175,9 +175,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 7. CRITICAL OBJECTS VERIFICATION
--- =====================================================
+-- ====
 SELECT '=== CRITICAL OBJECTS VERIFICATION ===' as section;
 
 -- Count critical tables
@@ -223,9 +223,9 @@ SELECT
 FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth');
 
--- =====================================================
+-- ====
 -- 8. FINAL STATUS MESSAGE
--- =====================================================
+-- ====
 SELECT '=== FINAL STATUS MESSAGE ===' as section;
 SELECT 
     CASE 

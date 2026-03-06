@@ -1,9 +1,9 @@
 -- SAFE DEPLOYMENT VERIFICATION
 -- Handles missing tables gracefully and uses only confirmed columns
 
--- =====================================================
+-- ====
 -- 1. TABLES STATUS
--- =====================================================
+-- ====
 SELECT '=== TABLES STATUS ===' as section;
 SELECT 
     table_name,
@@ -23,9 +23,9 @@ FROM (VALUES
 ) AS t(table_name)
 ORDER BY table_name;
 
--- =====================================================
+-- ====
 -- 2. FUNCTIONS STATUS
--- =====================================================
+-- ====
 SELECT '=== FUNCTIONS STATUS ===' as section;
 SELECT 
     routine_name,
@@ -43,9 +43,9 @@ FROM (VALUES
 ) AS f(routine_name)
 ORDER BY routine_name;
 
--- =====================================================
+-- ====
 -- 3. TRIGGERS STATUS (Safe Version)
--- =====================================================
+-- ====
 SELECT '=== TRIGGERS STATUS ===' as section;
 SELECT 
     trigger_name,
@@ -65,9 +65,9 @@ FROM (VALUES
 ) AS t(trigger_name)
 ORDER BY trigger_name;
 
--- =====================================================
+-- ====
 -- 4. SHOW ACTUAL TRIGGERS
--- =====================================================
+-- ====
 SELECT '=== ACTUAL TRIGGERS FOUND ===' as section;
 SELECT 
     trigger_schema,
@@ -78,9 +78,9 @@ FROM information_schema.triggers
 WHERE trigger_schema IN ('public', 'auth')
 ORDER BY trigger_schema, trigger_name;
 
--- =====================================================
+-- ====
 -- 5. RLS POLICIES STATUS
--- =====================================================
+-- ====
 SELECT '=== RLS POLICIES STATUS ===' as section;
 SELECT 
     tablename,
@@ -94,9 +94,9 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 
--- =====================================================
+-- ====
 -- 6. SUMMARY
--- =====================================================
+-- ====
 SELECT '=== DEPLOYMENT SUMMARY ===' as section;
 SELECT 
     'Tables' as component,
@@ -144,9 +144,9 @@ SELECT
         ELSE '❌ VULNERABLE'
     END as status;
 
--- =====================================================
+-- ====
 -- 7. CRITICAL MISSING ITEMS
--- =====================================================
+-- ====
 SELECT '=== CRITICAL MISSING ITEMS ===' as section;
 SELECT 
     CASE 

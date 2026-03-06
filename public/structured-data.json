@@ -20,11 +20,11 @@
   },
   "provider": {
     "@type": "Organization",
-<<<<<<< HEAD
+
     "name": "DOGE INITIATIVE",
-=======
+
     "name": "PALANTIR INVESTMENTS",
->>>>>>> 33b48acf8a9f1410b814f5e2e1783de41fecabec
+
     "url": "https://exchange.example.com"
   },
   "serviceType": "Cryptocurrency Trading",
