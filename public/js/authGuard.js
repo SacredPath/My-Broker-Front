@@ -215,9 +215,6 @@ class AuthGuard {
 
   // Redirect to login page
   redirectToLogin() {
-    // Store intended destination
-    sessionStorage.setItem('intendedDestination', window.location.pathname + window.location.search);
-    
     // Show notification if available
     if (window.Notify) {
       window.Notify.warning('Please sign in to continue');
@@ -228,20 +225,20 @@ class AuthGuard {
     
     return { 
       allowed: false, 
-      reason: 'not_authenticated',
+      reason: 'redirect_to_login',
       redirect: '/login.html'
     };
   }
 
   // Handle insufficient role
   handleInsufficientRole(userRole) {
-    let redirectUrl = '/src/pages/dashboard.html';
+    let redirectUrl = '/app/home.html';
     
     // Redirect based on current role
     if (userRole === 'user') {
-      redirectUrl = '/src/pages/dashboard.html';
+      redirectUrl = '/app/home.html';
       if (window.Notify) {
-        window.Notify.warning('Access denied. Redirecting to dashboard.');
+        window.Notify.warning('Access denied. Redirecting to home.');
       }
     } else {
       redirectUrl = '/login.html';
@@ -285,28 +282,17 @@ class AuthGuard {
     // Clear any stored data
     sessionStorage.removeItem('intendedDestination');
     
-    // If currently on a protected route, redirect to home
-    const requirements = this.getCurrentRouteRequirements();
-    if (requirements.requireAuth) {
-      window.location.href = '/app/home.html';
-    }
+    // Always redirect to login page after sign out
+    window.location.href = '/login.html';
   }
 
   // Handle sign in
   handleSignIn() {
     console.log('AuthGuard: User signed in');
     
-    // Check if there's an intended destination
-    const intendedDestination = sessionStorage.getItem('intendedDestination');
-    if (intendedDestination && intendedDestination !== window.location.pathname) {
-      console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
-      sessionStorage.removeItem('intendedDestination');
-      window.location.href = intendedDestination;
-    } else {
-      // Stay on current page instead of redirecting to home
-      console.log('AuthGuard: Staying on current page:', window.location.pathname);
-      // No redirect needed - user stays on current page
-    }
+    // Always redirect to home after successful login
+    console.log('AuthGuard: Redirecting to home after successful login');
+    window.location.href = '/app/home.html';
   }
 
   // Add new protected route
