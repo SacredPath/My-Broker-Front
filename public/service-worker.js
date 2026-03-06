@@ -1,12 +1,12 @@
 /**
- * Service Worker for Broker Trading Platform
+ * Service Worker for DOGE INITIATIVE Investment Platform
  * Handles offline caching, background sync, and push notifications
  */
 
-const CACHE_NAME = 'broker-v2';
-const RUNTIME_CACHE = 'broker-runtime';
-const STATIC_CACHE = 'broker-static';
-const DYNAMIC_CACHE = 'broker-dynamic';
+const CACHE_NAME = 'dogeinitiative-v2';
+const RUNTIME_CACHE = 'dogeinitiative-runtime';
+const STATIC_CACHE = 'dogeinitiative-static';
+const DYNAMIC_CACHE = 'dogeinitiative-dynamic';
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [

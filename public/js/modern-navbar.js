@@ -137,7 +137,7 @@ class ModernNavbar {
                     </div>
                     
                     <div class="dropdown-section">
-                        <div class="dropdown-title">Trading</div>
+                        <div class="dropdown-title">Investing</div>
                         <a href="/app/portfolio.html" class="dropdown-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -208,7 +208,7 @@ class ModernNavbar {
         </div>
         
         <div class="mobile-nav-section">
-            <div class="mobile-nav-title">Trading</div>
+            <div class="mobile-nav-title">Investing</div>
             <a href="/app/tiers.html" class="mobile-nav-item" data-page="tiers">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>

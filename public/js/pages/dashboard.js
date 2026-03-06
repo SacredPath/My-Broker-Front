@@ -100,13 +100,13 @@ class DashboardPage {
       });
     });
 
-    const tradeBtn = document.getElementById('trade-btn');
-    if (tradeBtn) {
-      tradeBtn.addEventListener('click', () => {
+    const investBtn = document.getElementById('invest-btn');
+    if (investBtn) {
+      investBtn.addEventListener('click', () => {
         if (window.Notify) {
-          window.Notify.info('Trading feature coming soon! We\'re working hard to bring you the best trading experience.');
+          window.Notify.info('Investing feature coming soon! We\'re working hard to bring you the best investment experience.');
         } else {
-          console.log('Trading feature coming soon!');
+          console.log('Investing feature coming soon!');
         }
       });
     }
@@ -370,7 +370,7 @@ class DashboardPage {
     if (!window.UI) return;
 
     const modalId = window.UI.createModal({
-      title: 'Trading Analytics',
+      title: 'Investment Analytics',
       body: `
         <div class="analytics-content">
           <div class="analytics-metric">

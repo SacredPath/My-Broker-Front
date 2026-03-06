@@ -1,7 +1,7 @@
 {
   "name": "DOGE INITIATIVE",
   "short_name": "DOGE INITIATIVE",
-  "description": "Professional trading platform with real-time portfolio management and investment opportunities",
+  "description": "Professional investment platform with real-time portfolio management and investment opportunities",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -22,7 +22,7 @@
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "View your portfolio and trading dashboard",
+      "description": "View your portfolio and investment dashboard",
       "url": "/app/home.html",
       "icons": [
         {

@@ -111,9 +111,9 @@ class SignalsPage {
 
   async loadSignals() {
     try {
-      // Query trading_signals table directly
+      // Query investment_signals table directly
       const { data, error } = await window.API.serviceClient
-        .from('trading_signals')
+        .from('investment_signals')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });

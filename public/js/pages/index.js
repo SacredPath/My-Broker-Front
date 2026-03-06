@@ -172,9 +172,9 @@ class IndexPage {
       learnMoreBtn.addEventListener('click', () => {
         if (window.UI) {
           window.UI.createModal({
-            title: 'About Exchange',
+            title: 'About DOGE INITIATIVE',
             body: `
-              <p>Exchange is a premium trading platform designed for both beginners and experienced traders.</p>
+              <p>DOGE INITIATIVE is a premium investment platform designed for both beginners and experienced investors.</p>
               <h3>Key Features:</h3>
               <ul>
                 <li>Real-time market data</li>
@@ -183,7 +183,7 @@ class IndexPage {
                 <li>24/7 customer support</li>
                 <li>Mobile-first design</li>
               </ul>
-              <p>Get started today and experience the future of trading!</p>
+              <p>Get started today and experience the future of investing!</p>
             `,
             footer: `<button class="btn btn-primary" onclick="window.UI.closeAllModals()">Got it</button>`
           });

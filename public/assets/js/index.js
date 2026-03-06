@@ -168,18 +168,17 @@ class IndexPage {
       learnMoreBtn.addEventListener('click', () => {
         if (window.UI) {
           window.UI.createModal({
-            title: 'About Broker',
+            title: 'About DOGE INITIATIVE',
             body: `
-              <p>Broker is a premium trading platform designed for both beginners and experienced traders.</p>
+              <p>DOGE INITIATIVE is a premium investment platform designed for both beginners and experienced investors.</p>
               <h3>Key Features:</h3>
               <ul>
-                <li>Real-time market data</li>
                 <li>Advanced charting tools</li>
                 <li>Secure wallet integration</li>
                 <li>24/7 customer support</li>
                 <li>Mobile-first design</li>
               </ul>
-              <p>Get started today and experience the future of trading!</p>
+              <p>Get started today and experience the future of investing!</p>
             `,
             footer: `<button class="btn btn-primary" onclick="window.UI.closeAllModals()">Got it</button>`
           });
@@ -188,8 +187,8 @@ class IndexPage {
       });
     }
 
-    if (tradeBtn) {
-      tradeBtn.addEventListener('click', () => {
+    if (investBtn) {
+      investBtn.addEventListener('click', () => {
         this.showComingSoonModal();
       });
     }
@@ -199,8 +198,8 @@ class IndexPage {
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
-        // Handle trade link specifically
-        if (e.target.id === 'trade-link') {
+        // Handle invest link specifically
+        if (e.target.id === 'invest-link') {
           e.preventDefault();
           this.showComingSoonModal();
           return;
@@ -216,7 +215,7 @@ class IndexPage {
 
   showComingSoonModal() {
     if (window.Notify) {
-      window.Notify.info('Trading feature coming soon! We\'re working hard to bring you the best trading experience.');
+      window.Notify.info('Investing feature coming soon! We\'re working hard to bring you the best investment experience.');
     } else {
       // Fallback: create a simple modal
       const modalId = `modal-${Date.now()}`;
@@ -249,7 +248,7 @@ class IndexPage {
           <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
           <h3 style="margin-bottom: 16px; color: var(--text);">Coming Soon!</h3>
           <p style="color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5;">
-            Trading feature coming soon! We're working hard to bring you the best trading experience.
+            Investing feature coming soon! We're working hard to bring you the best investment experience.
           </p>
           <button class="btn btn-primary" onclick="document.getElementById('${modalId}').remove()" style="background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
             Got it!

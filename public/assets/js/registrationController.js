@@ -342,7 +342,7 @@ collectCurrentStepData() {
                     <h4 style="color: var(--primary); margin: 0 0 12px 0; font-size: 16px;">🔐 Account Details</h4>
                     <div style="display: grid; gap: 8px;">
                         <div><strong>Password:</strong> •••••••• (8+ characters)</div>
-                        <div><strong>Account Type:</strong> Standard Trading Account</div>
+                        <div><strong>Account Type:</strong> Standard Investment Account</div>
                         <div><strong>Status:</strong> Pending Verification</div>
                     </div>
                 </div>

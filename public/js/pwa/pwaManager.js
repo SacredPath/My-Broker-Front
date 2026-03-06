@@ -1,5 +1,5 @@
 /**
- * PWA Manager for Exchange Trading Platform
+ * PWA Manager for DOGE INITIATIVE Investment Platform
  * Handles service worker registration, install prompts, and offline functionality
  */
 

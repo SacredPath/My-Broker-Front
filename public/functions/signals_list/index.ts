@@ -13,7 +13,7 @@ serve(async (req: Request) => {
     const supabase = adminClient();
     
     const { data, error } = await supabase
-      .from("trading_signals")
+      .from("investment_signals")
       .select("id,title,category,risk_rating,description,price_usdt,access_days,type,pdf_path,status,created_at")
       .eq("status", "active")
       .order("created_at", { ascending: false });

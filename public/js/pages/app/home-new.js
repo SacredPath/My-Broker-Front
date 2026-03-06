@@ -134,7 +134,7 @@ class HomePage {
       let activeSignals = 0;
       try {
         const { data: signalData, error: signalError } = await window.API.supabase
-          .from('trading_signals')
+          .from('investment_signals')
           .select('id')
           .eq('status', 'active');
 
@@ -268,7 +268,7 @@ class HomePage {
       // Load recent signal purchases
       try {
         const { data: signalData, error: signalError } = await window.API.supabase
-          .from('trading_signals')
+          .from('investment_signals')
           .select('title, created_at, category, risk_level')
           .eq('status', 'active')
           .order('created_at', { ascending: false })

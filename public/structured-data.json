@@ -1,16 +1,16 @@
 {
   "@context": "https://schema.org",
   "@type": "FinancialService",
-  "name": "Exchange",
-  "alternateName": "Exchange Trading Platform",
-  "description": "Professional trading platform with real-time portfolio management and investment opportunities",
-  "url": "https://exchange.example.com",
-  "logo": "https://exchange.example.com/icons/icon-512x512.png",
-  "image": "https://exchange.example.com/social-share-image.svg",
+  "name": "DOGE INITIATIVE Investment Platform",
+  "alternateName": "DOGE INITIATIVE Investment Platform",
+  "description": "Professional investment platform with real-time portfolio management and investment opportunities",
+  "url": "https://dogeinitiative.example.com",
+  "logo": "https://dogeinitiative.example.com/logo.svg",
+  "image": "https://dogeinitiative.example.com/social-share-image.svg",
   "sameAs": [
-    "https://twitter.com/exchange",
-    "https://facebook.com/exchange",
-    "https://linkedin.com/company/exchange"
+    "https://twitter.com/dogeinitiative",
+    "https://facebook.com/dogeinitiative",
+    "https://linkedin.com/company/dogeinitiative"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
@@ -23,19 +23,17 @@
 
     "name": "DOGE INITIATIVE",
 
-    "name": "PALANTIR INVESTMENTS",
-
-    "url": "https://exchange.example.com"
+    "url": "https://dogeinitiative.example.com"
   },
-  "serviceType": "Cryptocurrency Trading",
+  "serviceType": "Investment Management",
   "offers": {
     "@type": "Offer",
-    "name": "Professional Trading Services",
-    "description": "Real-time cryptocurrency trading with advanced analytics",
+    "name": "Professional Investment Services",
+    "description": "Real-time investment management with advanced analytics",
     "areaServed": "Worldwide"
   },
   "featureList": [
-    "Real-time trading",
+    "Real-time investment management",
     "Portfolio management",
     "Advanced analytics",
     "Bank-level security",
@@ -43,6 +41,6 @@
   ],
   "audience": {
     "@type": "Audience",
-    "audienceType": "Cryptocurrency traders and investors"
+    "audienceType": "Cryptocurrency investors and traders"
   }
 }
