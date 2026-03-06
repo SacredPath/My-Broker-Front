@@ -608,43 +608,6 @@
     <script type="module" src="/assets/js/money.js?v=202602211308"></script>
     <script type="module" src="/assets/js/api.js?v=202602250500"></script>
     <script type="module" src="/assets/js/pages/app/tiers.js?v=202602250300"></script>
-    <script>
-        // Debug script to check tiers functionality
-        setTimeout(() => {
-            console.log('=== TIERS DEBUG ===');
-            console.log('Document ready state:', document.readyState);
-            console.log('All scripts loaded:', document.querySelectorAll('script').length);
-            
-            const sidebarToggle = document.querySelector('[data-action="sidebar-toggle"]');
-            const sidebar = document.querySelector('[data-role="sidebar"]');
-            const overlay = document.querySelector('[data-role="sidebar-overlay"]');
-            
-            console.log('Sidebar toggle found:', !!sidebarToggle);
-            console.log('Sidebar found:', !!sidebar);
-            console.log('Overlay found:', !!overlay);
-            console.log('AppShell initialized:', !!window.AppShell);
-            console.log('AppShell type:', typeof window.AppShell);
-            console.log('API client available:', !!window.API);
-            console.log('TiersPage initialized:', !!window.tiersPage);
-            console.log('TiersPage type:', typeof window.tiersPage);
-            
-            // Check if window.AppShell has the expected methods
-            if (window.AppShell) {
-                console.log('AppShell methods:', Object.getOwnPropertyNames(window.AppShell));
-            }
-            
-            if (window.tiersPage) {
-                console.log('TiersPage methods:', Object.getOwnPropertyNames(window.tiersPage));
-            }
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    console.log('Manual toggle clicked');
-                    document.documentElement.classList.toggle('sidebar-open');
-                });
-            }
-        }, 3000); // Increased timeout to 3 seconds
-    </script>
 
 <!-- Mobile Bottom Navigation -->
 <div id="mobile-bottom-nav-container"></div>

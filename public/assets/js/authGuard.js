@@ -228,6 +228,9 @@ class AuthGuard {
 
   // Redirect to login page
   redirectToLogin() {
+    // Store intended destination for after login
+    sessionStorage.setItem('intendedDestination', window.location.pathname + window.location.search);
+    
     // Show notification if available
     if (window.Notify) {
       window.Notify.warning('Please sign in to continue');
@@ -304,15 +307,22 @@ class AuthGuard {
     console.log('AuthGuard: User signed in');
     console.log('AuthGuard: Current pathname:', window.location.pathname);
     
-    // Prevent redirect loops - if already on home page, don't redirect
-    if (window.location.pathname === '/app/home.html') {
-      console.log('AuthGuard: Already on home page, no redirect needed');
-      return;
-    }
+    // Check if there's an intended destination from login flow
+    const intendedDestination = sessionStorage.getItem('intendedDestination');
+    console.log('AuthGuard: Intended destination:', intendedDestination);
     
-    // Always redirect to home on successful login
-    console.log('AuthGuard: Redirecting to home page');
-    window.location.href = '/app/home.html';
+    if (intendedDestination) {
+      console.log('AuthGuard: Redirecting to intended destination:', intendedDestination);
+      sessionStorage.removeItem('intendedDestination');
+      window.location.href = intendedDestination;
+    } else if (window.location.pathname === '/login.html') {
+      // Only redirect to home if actually coming from login page
+      console.log('AuthGuard: Coming from login, redirecting to home page');
+      window.location.href = '/app/home.html';
+    } else {
+      // User is already on a protected page, no redirect needed
+      console.log('AuthGuard: User already on protected page, no redirect needed');
+    }
   }
 
   // Add new protected route
