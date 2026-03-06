@@ -295,6 +295,7 @@ class ModernNavbar {
 
         if (userDropdown && userMenu && dropdownMenu) {
             userMenu.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 this.toggleUserDropdown();
             });

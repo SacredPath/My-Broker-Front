@@ -401,6 +401,7 @@ class AppShell {
     document.addEventListener('click', (e) => {
       // Handle user menu button click
       if (e.target.closest('#user-menu-btn')) {
+        e.preventDefault();
         e.stopPropagation();
         this.toggleUserDropdown();
         return;
