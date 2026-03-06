@@ -182,7 +182,7 @@ class SignalDetailPage {
         
         ${this.signal.strategy ? `
             <div class="signal-section">
-                <h3>Trading Strategy</h3>
+                <h3>Investment Strategy</h3>
                 <p>${this.signal.strategy}</p>
             </div>
         ` : ''}
