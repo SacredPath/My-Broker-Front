@@ -337,9 +337,11 @@
         height: 100%;
         background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(10px);
-        z-index: 10000;
+        z-index: 99999;
         opacity: 0;
         transition: opacity 0.3s ease;
+        align-items: center;
+        justify-content: center;
     }
 
     .crypto-buy-modal.show {
@@ -351,15 +353,15 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 16px;
-        max-width: 600px;
+        max-width: 500px;
         width: 90%;
-        max-height: 85vh;
+        max-height: 80vh;
         overflow-y: auto;
-        margin: auto;
         position: relative;
         transform: scale(0.9);
         transition: transform 0.3s ease;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        margin: 20px;
     }
 
     .crypto-buy-modal.show .crypto-buy-modal-content {
@@ -572,7 +574,9 @@
     @media (max-width: 640px) {
         .crypto-buy-modal-content {
             width: 95%;
-            margin: 20px;
+            max-width: 400px;
+            margin: 10px;
+            max-height: 85vh;
         }
 
         .crypto-buy-buttons {
@@ -581,7 +585,7 @@
 
         .crypto-buy-modal-header,
         .crypto-buy-modal-body {
-            padding: 20px;
+            padding: 16px;
         }
     }
 </style>
