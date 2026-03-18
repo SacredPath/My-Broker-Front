@@ -325,12 +325,334 @@
                 font-size: 5px;
             }
         }
-    </style>
+    }
+
+    /* Crypto Buy Modal Styles */
+    .crypto-buy-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .crypto-buy-modal.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .crypto-buy-modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        margin: auto;
+        position: relative;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .crypto-buy-modal.show .crypto-buy-modal-content {
+        transform: scale(1);
+    }
+
+    .crypto-buy-modal-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .crypto-buy-modal-title {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .crypto-buy-modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .crypto-buy-modal-close:hover {
+        background: var(--surface-light);
+        color: var(--text);
+    }
+
+    .crypto-buy-modal-body {
+        padding: 24px;
+    }
+
+    .crypto-buy-section {
+        margin-bottom: 32px;
+    }
+
+    .crypto-buy-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .crypto-buy-section-title {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 16px;
+    }
+
+    .crypto-buy-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .crypto-buy-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .crypto-buy-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .crypto-buy-button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .crypto-steps {
+        margin-bottom: 24px;
+    }
+
+    .crypto-steps h4 {
+        font-size: 1em;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 12px;
+    }
+
+    .crypto-step-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .crypto-step-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 8px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    .crypto-step-number {
+        background: var(--primary);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .crypto-warnings {
+        background: rgba(255, 87, 34, 0.1);
+        border: 1px solid rgba(255, 87, 34, 0.3);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .crypto-warning-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #ff5722;
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+
+    .crypto-warning-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .crypto-wallet-address {
+        background: var(--surface-light);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .crypto-address-text {
+        flex: 1;
+        font-family: monospace;
+        font-size: 14px;
+        color: var(--text-secondary);
+        word-break: break-all;
+    }
+
+    .crypto-copy-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .crypto-copy-button:hover {
+        background: var(--primary-dark);
+    }
+
+    .crypto-copy-button.copied {
+        background: var(--success);
+    }
+
+    .crypto-action-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .crypto-action-button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 640px) {
+        .crypto-buy-modal-content {
+            width: 95%;
+            margin: 20px;
+        }
+
+        .crypto-buy-buttons {
+            grid-template-columns: 1fr;
+        }
+
+        .crypto-buy-modal-header,
+        .crypto-buy-modal-body {
+            padding: 20px;
+        }
+    }
+</style>
 
 <!-- Mobile Bottom Navigation -->
 <link rel="stylesheet" href="/css/mobile-bottom-nav.css">
 </head>
 <body>
+    <!-- Crypto Buy Modal -->
+    <div id="crypto-buy-modal" class="crypto-buy-modal">
+        <div class="crypto-buy-modal-content">
+            <div class="crypto-buy-modal-header">
+                <h2 class="crypto-buy-modal-title">How to Buy Bitcoin or USDT (USA)</h2>
+                <button class="crypto-buy-modal-close" onclick="closeCryptoBuyModal()">&times;</button>
+            </div>
+            <div class="crypto-buy-modal-body">
+                <!-- Section 1 -->
+                <div class="crypto-buy-section">
+                    <p class="crypto-buy-text">Buy instantly using trusted platforms. Takes 2–5 minutes.</p>
+                    <div class="crypto-buy-buttons">
+                        <a href="https://www.moonpay.com" target="_blank" class="crypto-buy-button">Buy with MoonPay</a>
+                        <a href="https://ramp.network" target="_blank" class="crypto-buy-button">Buy with Ramp</a>
+                        <a href="https://www.coinbase.com" target="_blank" class="crypto-buy-button">Buy with Coinbase</a>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="crypto-buy-section">
+                    <div class="crypto-steps">
+                        <h4>Steps to Buy Bitcoin (BTC)</h4>
+                        <ul class="crypto-step-list">
+                            <li><span class="crypto-step-number">1</span> Create account</li>
+                            <li><span class="crypto-step-number">2</span> Verify identity</li>
+                            <li><span class="crypto-step-number">3</span> Add payment method</li>
+                            <li><span class="crypto-step-number">4</span> Buy BTC</li>
+                            <li><span class="crypto-step-number">5</span> Send to your wallet</li>
+                        </ul>
+                    </div>
+
+                    <div class="crypto-steps">
+                        <h4>Steps to Buy USDT (TRC20)</h4>
+                        <ul class="crypto-step-list">
+                            <li><span class="crypto-step-number">1</span> Buy USDT or BTC</li>
+                            <li><span class="crypto-step-number">2</span> Transfer to wallet (Trust Wallet)</li>
+                            <li><span class="crypto-step-number">3</span> Select TRC20 network</li>
+                            <li><span class="crypto-step-number">4</span> Send USDT to your address</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="crypto-buy-section">
+                    <div class="crypto-warnings">
+                        <div class="crypto-warning-item">⚠️ Only send BTC to BTC address</div>
+                        <div class="crypto-warning-item">⚠️ Only send USDT via TRC20</div>
+                        <div class="crypto-warning-item">⚠️ Wrong network = permanent loss</div>
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div class="crypto-buy-section">
+                    <div class="crypto-wallet-address">
+                        <div class="crypto-address-text" id="wallet-address-placeholder">Your wallet address will appear here</div>
+                        <button class="crypto-copy-button" id="crypto-copy-btn" onclick="copyWalletAddress()">Copy</button>
+                    </div>
+                    <button class="crypto-action-button" onclick="confirmPaymentSent()">I've Sent Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modern Navbar -->
     <div id="modern-navbar-container"></div>
 
@@ -391,6 +713,13 @@
         <section class="deposit-methods">
             <div id="deposit-methods">
                 <!-- Deposit method cards will be dynamically inserted here -->
+            </div>
+            
+            <!-- How to Buy Crypto Button -->
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="openCryptoBuyModal()" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
+                    🚀 How to Buy Bitcoin or USDT
+                </button>
             </div>
         </section>
         
@@ -485,6 +814,64 @@
             .then(html => {
                 document.getElementById('footer-container').innerHTML = html;
             });
+    </script>
+
+    <!-- Crypto Buy Modal JavaScript -->
+    <script>
+        function openCryptoBuyModal() {
+            const modal = document.getElementById('crypto-buy-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeCryptoBuyModal() {
+            const modal = document.getElementById('crypto-buy-modal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function copyWalletAddress() {
+            const addressText = document.getElementById('wallet-address-placeholder');
+            const copyBtn = document.getElementById('crypto-copy-btn');
+            
+            if (addressText && addressText.textContent !== 'Your wallet address will appear here') {
+                navigator.clipboard.writeText(addressText.textContent).then(() => {
+                    copyBtn.textContent = 'Copied ✅';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            }
+        }
+
+        function confirmPaymentSent() {
+            // Handle payment confirmation
+            if (window.Notify) {
+                window.Notify.success('Payment confirmation received! We will verify your transaction.');
+            } else {
+                alert('Payment confirmation received! We will verify your transaction.');
+            }
+            closeCryptoBuyModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('crypto-buy-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCryptoBuyModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCryptoBuyModal();
+            }
+        });
+
+        // Make function globally available
+        window.openCryptoBuyModal = openCryptoBuyModal;
     </script>
 
 </body>
