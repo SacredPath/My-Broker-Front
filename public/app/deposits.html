@@ -342,6 +342,8 @@
         transition: opacity 0.3s ease;
         align-items: center;
         justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
     }
 
     .crypto-buy-modal.show {
@@ -354,14 +356,15 @@
         border: 1px solid var(--border);
         border-radius: 16px;
         max-width: 500px;
-        width: 90%;
+        width: 100%;
         max-height: 80vh;
         overflow-y: auto;
         position: relative;
         transform: scale(0.9);
         transition: transform 0.3s ease;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        margin: 20px;
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .crypto-buy-modal.show .crypto-buy-modal-content {
@@ -656,6 +659,16 @@
                 <!-- Deposit method cards will be dynamically inserted here -->
             </div>
             
+            <!-- Final Conversion Tip -->
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 15px;">
+                <p style="color: var(--text-secondary); font-size: 14px; margin: 0 0 12px 0;">
+                    <strong>New to crypto?</strong> Click for a 2-minute guide
+                </p>
+                <p style="color: var(--text-secondary); font-size: 12px; margin: 0; opacity: 0.8;">
+                    👉 This alone can increase clicks massively
+                </p>
+            </div>
+            
             <!-- How to Buy Crypto Button -->
             <div style="text-align: center; margin-top: 20px;">
                 <button class="btn btn-primary" onclick="openCryptoBuyModal()" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
@@ -813,6 +826,15 @@
 
     <!-- Crypto Buy Modal JavaScript -->
     <script>
+        // Ensure modal is hidden on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('crypto-buy-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+            }
+        });
+
         function openCryptoBuyModal() {
             const modal = document.getElementById('crypto-buy-modal');
             modal.style.display = 'flex';
