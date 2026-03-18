@@ -594,69 +594,6 @@
 <link rel="stylesheet" href="/css/mobile-bottom-nav.css">
 </head>
 <body>
-    <!-- Crypto Buy Modal -->
-    <div id="crypto-buy-modal" class="crypto-buy-modal">
-        <div class="crypto-buy-modal-content">
-            <div class="crypto-buy-modal-header">
-                <h2 class="crypto-buy-modal-title">How to Buy Bitcoin or USDT (USA)</h2>
-                <button class="crypto-buy-modal-close" onclick="closeCryptoBuyModal()">&times;</button>
-            </div>
-            <div class="crypto-buy-modal-body">
-                <!-- Section 1 -->
-                <div class="crypto-buy-section">
-                    <p class="crypto-buy-text">Buy instantly using trusted platforms. Takes 2–5 minutes.</p>
-                    <div class="crypto-buy-buttons">
-                        <a href="https://www.moonpay.com" target="_blank" class="crypto-buy-button">Buy with MoonPay</a>
-                        <a href="https://ramp.network" target="_blank" class="crypto-buy-button">Buy with Ramp</a>
-                        <a href="https://www.coinbase.com" target="_blank" class="crypto-buy-button">Buy with Coinbase</a>
-                    </div>
-                </div>
-
-                <!-- Section 2 -->
-                <div class="crypto-buy-section">
-                    <div class="crypto-steps">
-                        <h4>Steps to Buy Bitcoin (BTC)</h4>
-                        <ul class="crypto-step-list">
-                            <li><span class="crypto-step-number">1</span> Create account</li>
-                            <li><span class="crypto-step-number">2</span> Verify identity</li>
-                            <li><span class="crypto-step-number">3</span> Add payment method</li>
-                            <li><span class="crypto-step-number">4</span> Buy BTC</li>
-                            <li><span class="crypto-step-number">5</span> Send to your wallet</li>
-                        </ul>
-                    </div>
-
-                    <div class="crypto-steps">
-                        <h4>Steps to Buy USDT (TRC20)</h4>
-                        <ul class="crypto-step-list">
-                            <li><span class="crypto-step-number">1</span> Buy USDT or BTC</li>
-                            <li><span class="crypto-step-number">2</span> Transfer to wallet (Trust Wallet)</li>
-                            <li><span class="crypto-step-number">3</span> Select TRC20 network</li>
-                            <li><span class="crypto-step-number">4</span> Send USDT to your address</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Section 3 -->
-                <div class="crypto-buy-section">
-                    <div class="crypto-warnings">
-                        <div class="crypto-warning-item">⚠️ Only send BTC to BTC address</div>
-                        <div class="crypto-warning-item">⚠️ Only send USDT via TRC20</div>
-                        <div class="crypto-warning-item">⚠️ Wrong network = permanent loss</div>
-                    </div>
-                </div>
-
-                <!-- Section 4 -->
-                <div class="crypto-buy-section">
-                    <div class="crypto-wallet-address">
-                        <div class="crypto-address-text" id="wallet-address-placeholder">Your wallet address will appear here</div>
-                        <button class="crypto-copy-button" id="crypto-copy-btn" onclick="copyWalletAddress()">Copy</button>
-                    </div>
-                    <button class="crypto-action-button" onclick="confirmPaymentSent()">I've Sent Payment</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modern Navbar -->
     <div id="modern-navbar-container"></div>
 
@@ -755,6 +692,60 @@
         </div>
     </main>
     
+    <!-- Crypto Buy Modal -->
+    <div id="crypto-buy-modal" class="crypto-buy-modal">
+        <div class="crypto-buy-modal-content">
+            <div class="crypto-buy-modal-header">
+                <h2 class="crypto-buy-modal-title">How to Buy Bitcoin or USDT</h2>
+                <button class="crypto-buy-modal-close" onclick="closeCryptoBuyModal()">&times;</button>
+            </div>
+            <div class="crypto-buy-modal-body">
+                <!-- Section 1 -->
+                <div class="crypto-buy-section">
+                    <p class="crypto-buy-text">Buy instantly using trusted platforms. Takes 2–5 minutes.</p>
+                    <div class="crypto-buy-buttons">
+                        <a href="https://www.moonpay.com" target="_blank" class="crypto-buy-button">Buy with MoonPay</a>
+                        <a href="https://ramp.network" target="_blank" class="crypto-buy-button">Buy with Ramp</a>
+                        <a href="https://www.coinbase.com" target="_blank" class="crypto-buy-button">Buy with Coinbase</a>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="crypto-buy-section">
+                    <div class="crypto-steps">
+                        <h4>Steps to Buy Bitcoin (BTC)</h4>
+                        <ul class="crypto-step-list">
+                            <li><span class="crypto-step-number">1</span> Create account</li>
+                            <li><span class="crypto-step-number">2</span> Verify identity</li>
+                            <li><span class="crypto-step-number">3</span> Add payment method</li>
+                            <li><span class="crypto-step-number">4</span> Buy BTC</li>
+                            <li><span class="crypto-step-number">5</span> Send to your wallet</li>
+                        </ul>
+                    </div>
+
+                    <div class="crypto-steps">
+                        <h4>Steps to Buy USDT (TRC20)</h4>
+                        <ul class="crypto-step-list">
+                            <li><span class="crypto-step-number">1</span> Buy USDT or BTC</li>
+                            <li><span class="crypto-step-number">2</span> Transfer to wallet (Trust Wallet)</li>
+                            <li><span class="crypto-step-number">3</span> Select TRC20 network</li>
+                            <li><span class="crypto-step-number">4</span> Send USDT to your address</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="crypto-buy-section">
+                    <div class="crypto-warnings">
+                        <div class="crypto-warning-item">⚠️ Only send BTC to BTC address</div>
+                        <div class="crypto-warning-item">⚠️ Only send USDT via TRC20</div>
+                        <div class="crypto-warning-item">⚠️ Wrong network = permanent loss</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="/assets/js/env.js"></script>
     <script src="/assets/js/_shared/theme.js"></script>
@@ -832,32 +823,6 @@
             const modal = document.getElementById('crypto-buy-modal');
             modal.classList.remove('show');
             setTimeout(() => modal.style.display = 'none', 300);
-        }
-
-        function copyWalletAddress() {
-            const addressText = document.getElementById('wallet-address-placeholder');
-            const copyBtn = document.getElementById('crypto-copy-btn');
-            
-            if (addressText && addressText.textContent !== 'Your wallet address will appear here') {
-                navigator.clipboard.writeText(addressText.textContent).then(() => {
-                    copyBtn.textContent = 'Copied ✅';
-                    copyBtn.classList.add('copied');
-                    setTimeout(() => {
-                        copyBtn.textContent = 'Copy';
-                        copyBtn.classList.remove('copied');
-                    }, 2000);
-                });
-            }
-        }
-
-        function confirmPaymentSent() {
-            // Handle payment confirmation
-            if (window.Notify) {
-                window.Notify.success('Payment confirmation received! We will verify your transaction.');
-            } else {
-                alert('Payment confirmation received! We will verify your transaction.');
-            }
-            closeCryptoBuyModal();
         }
 
         // Close modal when clicking outside
